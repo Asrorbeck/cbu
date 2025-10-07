@@ -11,10 +11,13 @@ const TermsAndConditionsPage = () => {
   const { t } = useTranslation();
   const [isAgreed, setIsAgreed] = useState(false);
 
+  // Decode the vacancy ID from URL
+  const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
+
   // Get vacancy info from location state or URL params
   const vacancyInfo = location.state?.vacancyInfo || {
     departmentId,
-    vacancyId,
+    vacancyId: decodedVacancyId,
   };
 
   const handleBack = () => {

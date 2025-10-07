@@ -38,13 +38,18 @@ const VacancyCard = ({ vacancy, onSelect }) => {
   const isUrgent = daysRemaining <= 7 && daysRemaining > 0;
 
   const handleCardClick = () => {
-    // Department sahifasidan kelayotgan bo'lsa, department ID ni ham URL ga qo'shamiz
-    const currentPath = window.location.pathname;
-    if (currentPath.includes("/departments/")) {
-      const departmentId = currentPath.split("/departments/")[1];
-      navigate(`/departments/${departmentId}/${vacancy?.id}`);
+    // Use onSelect prop if provided (for DepartmentPage), otherwise use default navigation
+    if (onSelect) {
+      onSelect(vacancy);
     } else {
-      navigate(`/vacancy/${vacancy?.id}`);
+      // Department sahifasidan kelayotgan bo'lsa, department ID ni ham URL ga qo'shamiz
+      const currentPath = window.location.pathname;
+      if (currentPath.includes("/departments/")) {
+        const departmentId = currentPath.split("/departments/")[1];
+        navigate(`/departments/${departmentId}/${vacancy?.id}`);
+      } else {
+        navigate(`/vacancy/${vacancy?.id}`);
+      }
     }
   };
 

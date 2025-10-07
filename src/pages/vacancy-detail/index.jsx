@@ -1,222 +1,126 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
+import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
+import { vacanciesAPI } from "../../services/api";
 
 const VacancyDetailPage = () => {
   const { departmentId, vacancyId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // All vacancies data
-  const allVacancies = {
-    "it-001": {
-      id: "it-001",
-      title: "Senior Software Developer",
-      department: "Axborot Texnologiyalari Departamenti",
-      location: "Markaziy apparat",
-      type: "Full-time",
-      deadline: "2025-02-10",
-      testDeadline: "2025-02-15",
-      salary: "16,000,000 - 22,000,000 UZS",
-      description:
-        "Develop and maintain banking software systems, ensuring security and reliability of IT infrastructure.",
-      fullDescription: `We are seeking a highly qualified Senior Software Developer to join our Information Technology Department. The successful candidate will play a crucial role in developing and maintaining banking software systems, ensuring security and reliability of our IT infrastructure.
+  const [vacancy, setVacancy] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-This position offers an excellent opportunity to contribute to Uzbekistan's digital banking transformation and work with cutting-edge technologies.`,
-      requirements: [
-        "Bachelor's degree in Computer Science or IT",
-        "Minimum 5 years of software development experience",
-        "Proficiency in Java, Python, or C#",
-        "Experience with database management systems",
-        "Knowledge of cybersecurity best practices",
-        "Experience with cloud platforms (AWS, Azure, or GCP)",
-      ],
-      responsibilities: [
-        "Design and develop banking applications",
-        "Maintain and optimize existing systems",
-        "Implement security measures and protocols",
-        "Collaborate with cross-functional teams",
-        "Code review and mentoring junior developers",
-        "Participate in system architecture decisions",
-      ],
-    },
-    "it-002": {
-      id: "it-002",
-      title: "Cybersecurity Specialist",
-      department: "Axborot Texnologiyalari Departamenti",
-      location: "Toshkent viloyati",
-      type: "Full-time",
-      deadline: "2025-01-15",
-      testDeadline: "2025-01-20",
-      salary: "18,000,000 - 25,000,000 UZS",
-      description:
-        "Protect banking systems from cyber threats and ensure compliance with security standards.",
-      fullDescription: `We are looking for an experienced Cybersecurity Specialist to join our Information Technology Department. The successful candidate will be responsible for protecting our banking systems from cyber threats and ensuring compliance with security standards.
+  // Decode the vacancy ID from URL
+  const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
 
-This role offers the opportunity to work with state-of-the-art security technologies and contribute to the bank's cybersecurity strategy.`,
-      requirements: [
-        "Bachelor's degree in Cybersecurity, Computer Science, or related field",
-        "Minimum 4 years of cybersecurity experience",
-        "Certifications: CISSP, CISM, or CEH preferred",
-        "Knowledge of banking security regulations",
-        "Experience with security tools and technologies",
-        "Strong analytical and problem-solving skills",
-      ],
-      responsibilities: [
-        "Monitor and analyze security threats",
-        "Implement security policies and procedures",
-        "Conduct security assessments and audits",
-        "Respond to security incidents",
-        "Train staff on security best practices",
-        "Maintain security documentation",
-      ],
-    },
-    "it-003": {
-      id: "it-003",
-      title: "Boshqarma boshligi orinbosari",
-      department: "Axborot Texnologiyalari Departamenti",
-      location: "Markaziy apparat",
-      type: "Full-time",
-      deadline: "2025-02-28",
-      testDeadline: "2025-03-05",
-      salary: "20,000,000 - 30,000,000 UZS",
-      description:
-        "Интеграция ва маълумотларни шакллантириш бошқармаси бошлиғи ўринбосари",
-      fullDescription: `Интеграция ва маълумотларни шакллантириш бошқармаси бошлиғи ўринбосари лавозими учун ишчи кучи изламоқдамиз. Ушбу лавозимга мурожаат қилган номзод интеграцион ечимларни лойиҳалаш, ишлаб чиқиш ва жорий этиш соҳасида кенг тажрибага эга бўлиши керак.
+  // Fetch vacancy data from API
+  useEffect(() => {
+    const fetchVacancyData = async () => {
+      if (!decodedVacancyId) {
+        setError("Invalid vacancy ID");
+        setLoading(false);
+        return;
+      }
 
-Бу лавозим Узбекистоннинг рақамли банк трансформациясига ҳисса қўшиш ва замонавий технологиялар билан ишлаш учун ажойиб имконият тақдим этади.`,
-      requirements: [
-        "Маълумоти: ахборот технологиялари, дастурий инжиниринг, амалий математика ва информатика, иқтисодиётда ахборот тизимлари ёки рақамли иқтисодиёт йўналишлари бўйича бакалавр даражаси",
-        "Иш тажрибаси: тегишли сохада камида 5 йиллик иш тажрибаси талаб этилади",
-        "Хорижий тилларни билиш даражаси: инглиз(B1) ва рус тили(B2) даражада талаб этилади",
-        "MS Office дастурларида бемалол ишлай олиши лозим",
-        "Python ва/ёки Java дастурлаш тилларида асосий кўникмаларга эга бўлиши",
-        "Маълумотлар билан ишлаш учун асосий ва мураккаб SQL сўровларини ёзиш қобилияти",
-        "Техник топшириқлар, тавсифлар ва йўриқномаларни Миллий стандартлар (O'z DSt) асосида ёза олиши лозим",
-        "Маълумотларни таҳлил қилиш ва тегишли таҳлилий инструментлардан фойдаланиш бўйича амалий тажрибага эга бўлиши",
-        "Сунъий интеллект (AI) технологияларининг асосий тамойилларини тушуниши ва хизмат фаолиятида улларни қўллаш кўникмасига эга бўлиши лозим",
-      ],
-      responsibilities: [
-        "Ички ва ташқи ахборот тизимлари ўртасидаги интеграцион ечимларни лойиҳалаш, ишлаб чиқиш ва жорий этиш ва назорат қилиб бориш",
-        "Интеграцион ечимлар бўйича технологик йўриқнома, техник паспорт, фойдаланувчи қўлланмаси ва тест сценарийларини ишлаб чиқиш ва назорат қилиб бориш",
-        "Маълумотлар структуралари ва форматлари билан мустақил ишлаш (JSON, XML, CSV каби умумий форматлар)",
-        "Мураккаб API ларни ишлаб чиқиш, шунингдек, иш жараёнларини автоматлаштириш ва маълумотларни қайта ишлаш билан боғлиқ лойиҳаларни ишлаб чиқиш ва назорат қилиш",
-        "Ички хизмат ҳужжатлари ва меъёрий-ҳуқуқий ҳужжатлар билан ишлаш, уларни таҳлил қилиш, расмийлаштириш ва назорат қилиш",
-        "Интеграция ва маълумотлар алмашинуви соҳасига оид амалдаги норматив-ҳуқуқий ҳужжатларни тизимли ўрганиш ва такомиллаштириш бўйича таклифлар ишлаб чиқиш",
-      ],
-    },
-    "it-004": {
-      id: "it-004",
-      title: "Yetakchi mutahassis",
-      department: "Axborot Texnologiyalari Departamenti",
-      location: "Markaziy apparat",
-      type: "Full-time",
-      deadline: "2025-11-25",
-      testDeadline: "2025-12-01",
-      salary: "15,000,000 - 22,000,000 UZS",
-      description:
-        "Интеграция ва маълумотларни шакллантириш бошқармаси етакчи мутахассиси",
-      fullDescription: `Интеграция ва маълумотларни шакллантириш бошқармаси етакчи мутахассиси лавозими учун ишчи кучи изламоқдамиз. Ушбу лавозимга мурожаат қилган номзод интеграцион ечимларни лойиҳалаш ва ишлаб чиқиш соҳасида тажрибага эга бўлиши керак.
+      try {
+        setLoading(true);
+        setError(null);
 
-Бу лавозим замонавий интеграцион технологиялар билан ишлаш ва банкнинг рақамли трансформациясига ҳисса қўшиш учун ажойиб имконият тақдим этади.`,
-      requirements: [
-        "Маълумоти: Ахборот технологиялари, дастурий инжиниринг, амалий математика ва информатика, иқтисодиётда ахборот тизимлари ёки рақамли иқтисодиёт йўналишлари бўйича бакалавр даражаси",
-        "Иш тажрибаси: тегишли сохада камида 1 йиллик иш тажрибаси талаб этилади",
-        "Хорижий тилларни билиш даражаси: инглиз(B1) ва рус тили(B1) даражада талаб этилади",
-        "MS Office дастурларида бемалол ишлай олиши лозим",
-        "Python ва(ёки) Java дастурлаш тилида асосий кўникмаларга эга бўлиши",
-        "Маълумотлар билан ишлаш учун асосий ва ўрта мураккабликдаги SQL сўровларини ёзиш қобилияти",
-        "Техник топшириқлар, тавсифлар, йўриқномалар ёза олиши ва Миллий стандартларни (O'z DSt) билиши талаб этилади",
-        "Маълумотларни таҳлил қилиш ва тегишли таҳлилий инструментлардан фойдаланиши бўйича амалий кўникмага эга бўлиши лозим",
-        "Сунъий интеллект (AI) технологияларининг асосий тамойилларини тушуниши ва хизмат фаолиятида уларни қўллаш кўникмасига эга бўлиши лозим",
-      ],
-      responsibilities: [
-        "Ички ва ташқи ахборот тизимлари ўртасидаги интеграцион ечимларни лойиҳалаш, ишлаб чиқиш ва жорий этишда иштирок этиш",
-        "Интеграцион ечимлар бўйича технологик йўриқнома, техник паспорт, фойдаланувчи қўлланмаси ва тест сценарийларини ишлаб чиқиш",
-        "Маълумотлар структуралари ва форматлари билан ишлаш (JSON, XML, CSV каби умумий форматлар)",
-        "API ишлаб чиқиш учун (Flask/FastAPI/Django REST Framework каби фреймворклардан фойдаланган ҳолда), автоматлаштириш учун скриптлар ёзиш",
-        "Ички хизмат ҳужжатлари ва меъёрий-ҳуқуқий ҳужжатлар билан ишлаш, уларни белгиланган тартибда шакллантириш, мувофиқлаштириш ва юритиш",
-        "Интеграцион лойиҳаларни техник жиҳатдан қўллаб-қувватлаш ва назорат қилиш",
-      ],
-    },
-    "fin-001": {
-      id: "fin-001",
-      title: "Senior Financial Analyst",
-      department: "Moliyaviy boshqaruv departamenti",
-      location: "Toshkent viloyati",
-      type: "Full-time",
-      deadline: "2025-02-20",
-      testDeadline: "2025-02-25",
-      salary: "14,000,000 - 20,000,000 UZS",
-      description: "Financial analysis and reporting for banking operations.",
-      fullDescription:
-        "We are looking for an experienced Financial Analyst to join our Finance Department.",
-      requirements: [
-        "Bachelor's degree in Finance or Economics",
-        "Minimum 3 years of financial analysis experience",
-        "Proficiency in Excel and financial modeling",
-        "Knowledge of banking regulations",
-      ],
-      responsibilities: [
-        "Prepare financial reports",
-        "Analyze market trends",
-        "Support budget planning",
-      ],
-    },
-    "hr-001": {
-      id: "hr-001",
-      title: "HR Specialist",
-      department: "Kadrlar departamenti",
-      location: "Markaziy apparat",
-      type: "Full-time",
-      deadline: "2025-02-15",
-      testDeadline: "2025-02-20",
-      salary: "12,000,000 - 18,000,000 UZS",
-      description: "Human resources management and employee relations.",
-      fullDescription:
-        "We are seeking an HR Specialist to join our Human Resources Department.",
-      requirements: [
-        "Bachelor's degree in HR or related field",
-        "Minimum 2 years of HR experience",
-        "Knowledge of labor laws",
-        "Strong communication skills",
-      ],
-      responsibilities: [
-        "Recruit and onboard employees",
-        "Manage employee records",
-        "Handle employee relations",
-      ],
-    },
-    "risk-001": {
-      id: "risk-001",
-      title: "Risk Analyst",
-      department: "Risk boshqaruvi departamenti",
-      location: "Markaziy apparat",
-      type: "Full-time",
-      deadline: "2025-02-25",
-      testDeadline: "2025-03-01",
-      salary: "15,000,000 - 22,000,000 UZS",
-      description: "Risk assessment and management for banking operations.",
-      fullDescription:
-        "We are looking for a Risk Analyst to join our Risk Management Department.",
-      requirements: [
-        "Bachelor's degree in Finance or Risk Management",
-        "Minimum 3 years of risk analysis experience",
-        "Knowledge of banking risk frameworks",
-        "Strong analytical skills",
-      ],
-      responsibilities: [
-        "Assess credit and operational risks",
-        "Develop risk management strategies",
-        "Monitor risk indicators",
-      ],
-    },
+        const vacancyData = await vacanciesAPI.getVacancyById(decodedVacancyId);
+
+        // Transform the API response to match our component structure
+        const transformedVacancy = {
+          id: vacancyData.id.toString(),
+          title: vacancyData.title,
+          department: vacancyData.management?.name || "Markaziy apparat",
+          location: vacancyData.management?.name || "Markaziy apparat",
+          type: "Full-time",
+          deadline: vacancyData.application_deadline,
+          testDeadline: vacancyData.application_deadline,
+          salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
+          description: vacancyData.management?.name
+            ? `${vacancyData.management.name} - ${vacancyData.title}`
+            : vacancyData.title,
+          fullDescription: vacancyData.description,
+          requirements: parseJsonArray(vacancyData.requirements),
+          responsibilities: parseJsonArray(vacancyData.job_tasks),
+        };
+
+        setVacancy(transformedVacancy);
+      } catch (error) {
+        console.error("Error fetching vacancy:", error);
+        setError("Failed to load vacancy details. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVacancyData();
+  }, [decodedVacancyId]);
+
+  // Helper function to parse JSON string arrays
+  const parseJsonArray = (jsonString) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed)
+        ? parsed.map((item) => item.task || item)
+        : [];
+    } catch (error) {
+      console.error("Error parsing JSON array:", error);
+      return [];
+    }
   };
 
-  // Get the specific vacancy based on vacancyId
-  const vacancy = allVacancies[vacancyId] || allVacancies["it-001"];
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <LoadingSkeleton type="cards" count={3} />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !vacancy) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <Icon
+                name="AlertCircle"
+                size={48}
+                className="text-red-500 mx-auto mb-4"
+              />
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Error Loading Vacancy
+              </h1>
+              <p className="text-muted-foreground mb-6">
+                {error || "Vacancy not found"}
+              </p>
+              <button
+                onClick={() => navigate("/departments")}
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                {t("jobs.back_to_departments")}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const formatDeadline = (deadline) => {
     const date = new Date(deadline);

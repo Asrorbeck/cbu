@@ -10,6 +10,7 @@ import VacancyCard from "./components/VacancyCard";
 import JobDetailModal from "./components/JobDetailModal";
 import Breadcrumb from "./components/Breadcrumb";
 import LoadingSkeleton from "./components/LoadingSkeleton";
+import { departmentsAPI } from "../../services/api";
 
 const JobVacanciesBrowser = () => {
   const navigate = useNavigate();
@@ -20,19 +21,52 @@ const JobVacanciesBrowser = () => {
   const [showJobModal, setShowJobModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [departments, setDepartments] = useState([]);
+  const [apiError, setApiError] = useState(null);
 
-  // Mock departments data
-  const departments = [
-    {
-      id: "information-technology",
-      name: t("jobs.departments.information_technology.name"),
-      description: t("jobs.departments.information_technology.description"),
-      icon: "Monitor",
-      color: "text-warning",
-      bgColor: "bg-warning/10",
-      openings: 1,
-    },
-  ];
+  // Fetch departments from API
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setLoading(true);
+      setApiError(null);
+      try {
+        const data = await departmentsAPI.getDepartments();
+        // Transform API data to match component structure
+        const transformedDepartments = data.map((dept) => ({
+          id: dept.id.toString(),
+          name: dept.name,
+          description: dept.description,
+          icon: "Monitor", // Default icon, can be customized based on department
+          color: "text-warning",
+          bgColor: "bg-warning/10",
+          openings: 0, // This can be calculated from vacancies if needed
+          department_tasks: dept.department_tasks || [],
+        }));
+        setDepartments(transformedDepartments);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        setApiError("Failed to load departments. Please try again later.");
+        // Fallback to mock data in case of API failure
+        setDepartments([
+          {
+            id: "information-technology",
+            name: t("jobs.departments.information_technology.name"),
+            description: t(
+              "jobs.departments.information_technology.description"
+            ),
+            icon: "Monitor",
+            color: "text-warning",
+            bgColor: "bg-warning/10",
+            openings: 1,
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, [t]);
 
   // Filter departments based on search query
   const filteredDepartments = departments.filter((dept) =>
@@ -223,6 +257,27 @@ const JobVacanciesBrowser = () => {
 
   const renderDepartments = () => (
     <div className="space-y-6">
+      {/* Error Message */}
+      {apiError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center">
+            <Icon
+              name="AlertCircle"
+              size={20}
+              className="text-red-600 dark:text-red-400 mr-3"
+            />
+            <div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                Error loading departments
+              </h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                {apiError}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search Section */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
         <div className="space-y-4">

@@ -33,16 +33,6 @@ const DepartmentCard = ({ department }) => {
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
           {department?.description}
         </p>
-        <div className="flex items-center space-x-2 mt-2">
-          <Icon
-            name="Briefcase"
-            size={16}
-            className="text-blue-600 dark:text-blue-400"
-          />
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-            {department?.openings} {t("jobs.open_positions")}
-          </span>
-        </div>
       </div>
 
       {/* Action */}

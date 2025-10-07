@@ -5,9 +5,11 @@ import Icon from "../../../components/AppIcon";
 const DepartmentDetails = ({ department }) => {
   const { t } = useTranslation();
 
-  const departmentTasks = t("jobs.department_tasks.tasks", {
-    returnObjects: true,
-  });
+  // Use department_tasks from API data if available, otherwise fallback to translation
+  const departmentTasks =
+    department?.department_tasks?.length > 0
+      ? department.department_tasks.map((task) => task.task)
+      : t("jobs.department_tasks.tasks", { returnObjects: true });
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">

@@ -7,6 +7,7 @@ import VacancyCard from "../job-vacancies-browser/components/VacancyCard";
 import JobDetailModal from "../job-vacancies-browser/components/JobDetailModal";
 import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
 import Icon from "../../components/AppIcon";
+import { departmentsAPI, vacanciesAPI } from "../../services/api";
 
 const DepartmentPage = () => {
   const { departmentId } = useParams();
@@ -15,139 +16,104 @@ const DepartmentPage = () => {
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [department, setDepartment] = useState(null);
+  const [apiError, setApiError] = useState(null);
+  const [vacancies, setVacancies] = useState([]);
+  const [vacanciesLoading, setVacanciesLoading] = useState(false);
+  const [vacanciesError, setVacanciesError] = useState(null);
 
-  // Mock departments data
-  const departments = {
-    "information-technology": {
-      id: "information-technology",
-      name: t("jobs.departments.information_technology.name"),
-      description: t("jobs.departments.information_technology.description"),
-      openings: 1,
-    },
+  // Fetch department and vacancies data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!departmentId) return;
+
+      setLoading(true);
+      setApiError(null);
+      setVacanciesLoading(true);
+      setVacanciesError(null);
+
+      try {
+        // Fetch department data
+        const departmentData = await departmentsAPI.getDepartmentById(
+          departmentId
+        );
+        const transformedDepartment = {
+          id: departmentData.id.toString(),
+          name: departmentData.name,
+          description: departmentData.description,
+          openings: 0, // Will be updated after fetching vacancies
+          department_tasks: departmentData.department_tasks || [],
+        };
+        setDepartment(transformedDepartment);
+
+        // Fetch vacancies data
+        const vacanciesData = await vacanciesAPI.getVacanciesByDepartment(
+          departmentId
+        );
+        const transformedVacancies = vacanciesData.map((vacancy) => ({
+          id: vacancy.id, // Keep original numeric ID for encoding
+          title: vacancy.title, // Keep original title from backend
+          department: departmentData.name,
+          location: vacancy.management?.name || "Markaziy apparat",
+          type: "Full-time",
+          deadline: vacancy.application_deadline,
+          testDeadline: vacancy.application_deadline, // Using application_deadline until test deadline field is available
+          salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
+          description: vacancy.management?.name
+            ? `${vacancy.management.name} - ${vacancy.title}`
+            : vacancy.title, // Use management.name + title for short description
+          fullDescription: vacancy.description,
+          requirements: parseJsonArray(vacancy.requirements),
+          responsibilities: parseJsonArray(vacancy.job_tasks),
+        }));
+        setVacancies(transformedVacancies);
+
+        // Update department openings count
+        setDepartment((prev) => ({
+          ...prev,
+          openings: transformedVacancies.length,
+        }));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setApiError("Failed to load department. Please try again later.");
+        setVacanciesError("Failed to load vacancies. Please try again later.");
+
+        // Fallback to mock data
+        setDepartment({
+          id: "information-technology",
+          name: t("jobs.departments.information_technology.name"),
+          description: t("jobs.departments.information_technology.description"),
+          openings: 1,
+        });
+        setVacancies([]);
+      } finally {
+        setLoading(false);
+        setVacanciesLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [departmentId, t]);
+
+  // Helper function to parse JSON string arrays
+  const parseJsonArray = (jsonString) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed)
+        ? parsed.map((item) => item.task || item)
+        : [];
+    } catch (error) {
+      console.error("Error parsing JSON array:", error);
+      return [];
+    }
   };
 
-  // Mock vacancies data
-  const vacanciesByDepartment = {
-    "information-technology": [
-      {
-        id: "it-004",
-        title: "Yetakchi mutahassis",
-        department: t("jobs.departments.information_technology.name"),
-        location: "Markaziy apparat",
-        type: "Full-time",
-        deadline: "2025-11-25",
-        testDeadline: "2025-12-01",
-        salary: "15,000,000 - 22,000,000 UZS",
-        description:
-          "Интеграция ва маълумотларни шакллантириш бошқармаси етакчи мутахассиси",
-        fullDescription: `Интеграция ва маълумотларни шакллантириш бошқармаси етакчи мутахассиси лавозими учун ишчи кучи изламоқдамиз. Ушбу лавозимга мурожаат қилган номзод интеграцион ечимларни лойиҳалаш ва ишлаб чиқиш соҳасида тажрибага эга бўлиши керак.\n\nБу лавозим замонавий интеграцион технологиялар билан ишлаш ва банкнинг рақамли трансформациясига ҳисса қўшиш учун ажойиб имконият тақдим этади.`,
-        requirements: [
-          "Маълумоти: Ахборот технологиялари, дастурий инжиниринг, амалий математика ва информатика, иқтисодиётда ахборот тизимлари ёки рақамли иқтисодиёт йўналишлари бўйича бакалавр даражаси",
-          "Иш тажрибаси: тегишли сохада камида 1 йиллик иш тажрибаси талаб этилади",
-          "Хорижий тилларни билиш даражаси: инглиз(B1) ва рус тили(B1) даражада талаб этилади",
-          "MS Office дастурларида бемалол ишлай олиши лозим",
-          "Python ва(ёки) Java дастурлаш тилида асосий кўникмаларга эга бўлиши",
-          "Маълумотлар билан ишлаш учун асосий ва ўрта мураккабликдаги SQL сўровларини ёзиш қобилияти",
-          "Техник топшириқлар, тавсифлар, йўриқномалар ёза олиши ва Миллий стандартларни (O'z DSt) билиши талаб этилади",
-          "Маълумотларни таҳлил қилиш ва тегишли таҳлилий инструментлардан фойдаланиши бўйича амалий кўникмага эга бўлиши лозим",
-          "Сунъий интеллект (AI) технологияларининг асосий тамойилларини тушуниши ва хизмат фаолиятида уларни қўллаш кўникмасига эга бўлиши лозим",
-        ],
-        responsibilities: [
-          "Ички ва ташқи ахборот тизимлари ўртасидаги интеграцион ечимларни лойиҳалаш, ишлаб чиқиш ва жорий этишда иштирок этиш",
-          "Интеграцион ечимлар бўйича технологик йўриқнома, техник паспорт, фойдаланувчи қўлланмаси ва тест сценарийларини ишлаб чиқиш",
-          "Маълумотлар структуралари ва форматлари билан ишлаш (JSON, XML, CSV каби умумий форматлар)",
-          "API ишлаб чиқиш учун (Flask/FastAPI/Django REST Framework каби фреймворклардан фойдаланган ҳолда), автоматлаштириш учун скриптлар ёзиш",
-          "Ички хизмат ҳужжатлари ва меъёрий-ҳуқуқий ҳужжатлар билан ишлаш, уларни белгиланган тартибда шакллантириш, мувофиқлаштириш ва юритиш",
-          "Интеграцион лойиҳаларни техник жиҳатдан қўллаб-қувватлаш ва назорат қилиш",
-        ],
-      },
-    ],
-    finance: [
-      {
-        id: "fin-001",
-        title: "Senior Financial Analyst",
-        department: "Moliyaviy boshqaruv departamenti",
-        location: "Toshkent viloyati",
-        type: "Full-time",
-        deadline: "2025-02-20",
-        testDeadline: "2025-02-25",
-        salary: "14,000,000 - 20,000,000 UZS",
-        description: "Financial analysis and reporting for banking operations.",
-        fullDescription:
-          "We are looking for an experienced Financial Analyst to join our Finance Department.",
-        requirements: [
-          "Bachelor's degree in Finance or Economics",
-          "Minimum 3 years of financial analysis experience",
-          "Proficiency in Excel and financial modeling",
-          "Knowledge of banking regulations",
-        ],
-        responsibilities: [
-          "Prepare financial reports",
-          "Analyze market trends",
-          "Support budget planning",
-        ],
-      },
-    ],
-    hr: [
-      {
-        id: "hr-001",
-        title: "HR Specialist",
-        department: "Kadrlar departamenti",
-        location: "Markaziy apparat",
-        type: "Full-time",
-        deadline: "2025-02-15",
-        testDeadline: "2025-02-20",
-        salary: "12,000,000 - 18,000,000 UZS",
-        description: "Human resources management and employee relations.",
-        fullDescription:
-          "We are seeking an HR Specialist to join our Human Resources Department.",
-        requirements: [
-          "Bachelor's degree in HR or related field",
-          "Minimum 2 years of HR experience",
-          "Knowledge of labor laws",
-          "Strong communication skills",
-        ],
-        responsibilities: [
-          "Recruit and onboard employees",
-          "Manage employee records",
-          "Handle employee relations",
-        ],
-      },
-    ],
-    risk: [
-      {
-        id: "risk-001",
-        title: "Risk Analyst",
-        department: "Risk boshqaruvi departamenti",
-        location: "Markaziy apparat",
-        type: "Full-time",
-        deadline: "2025-02-25",
-        testDeadline: "2025-03-01",
-        salary: "15,000,000 - 22,000,000 UZS",
-        description: "Risk assessment and management for banking operations.",
-        fullDescription:
-          "We are looking for a Risk Analyst to join our Risk Management Department.",
-        requirements: [
-          "Bachelor's degree in Finance or Risk Management",
-          "Minimum 3 years of risk analysis experience",
-          "Knowledge of banking risk frameworks",
-          "Strong analytical skills",
-        ],
-        responsibilities: [
-          "Assess credit and operational risks",
-          "Develop risk management strategies",
-          "Monitor risk indicators",
-        ],
-      },
-    ],
-  };
-
-  const department = departments[departmentId];
-  const vacancies = vacanciesByDepartment[departmentId] || [];
+  // Vacancies are now fetched from API and stored in state
 
   const handleVacancySelect = (vacancy) => {
-    setSelectedVacancy(vacancy);
-    setShowJobModal(true);
+    // Encode the vacancy ID for URL (ensure it's a string for btoa)
+    const encodedId = btoa(vacancy.id.toString());
+    navigate(`/departments/${departmentId}/${encodedId}`);
   };
 
   const handleCloseModal = () => {
@@ -155,6 +121,51 @@ const DepartmentPage = () => {
     setSelectedVacancy(null);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <LoadingSkeleton type="cards" count={3} />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (apiError && !department) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <Icon
+                name="AlertCircle"
+                size={48}
+                className="text-red-500 mx-auto mb-4"
+              />
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Error Loading Department
+              </h1>
+              <p className="text-muted-foreground mb-6">{apiError}</p>
+              <button
+                onClick={() => navigate("/departments")}
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                {t("jobs.back_to_departments")}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show not found state
   if (!department) {
     return (
       <div className="min-h-screen bg-background">
@@ -202,6 +213,27 @@ const DepartmentPage = () => {
             </button>
           </div>
 
+          {/* Error Message */}
+          {apiError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <Icon
+                  name="AlertCircle"
+                  size={20}
+                  className="text-red-600 dark:text-red-400 mr-3"
+                />
+                <div>
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Error loading department
+                  </h3>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                    {apiError}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Department Details */}
           <DepartmentDetails department={department} />
 
@@ -211,7 +243,28 @@ const DepartmentPage = () => {
               {t("jobs.available_positions")} ({vacancies.length})
             </h2>
 
-            {loading ? (
+            {/* Vacancies Error Message */}
+            {vacanciesError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-center">
+                  <Icon
+                    name="AlertCircle"
+                    size={20}
+                    className="text-red-600 dark:text-red-400 mr-3"
+                  />
+                  <div>
+                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Error loading vacancies
+                    </h3>
+                    <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                      {vacanciesError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {vacanciesLoading ? (
               <LoadingSkeleton type="vacancies" count={4} />
             ) : vacancies.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

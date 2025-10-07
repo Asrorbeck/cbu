@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
@@ -9,62 +9,110 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import { Checkbox } from "../../components/ui/Checkbox";
+import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
+import { vacanciesAPI } from "../../services/api";
+import apiClient from "../../services/api";
 
 const JobApplicationForm = () => {
   const { departmentId, vacancyId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [vacancy, setVacancy] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // All vacancies data (same as in vacancy-detail)
-  const allVacancies = {
-    "it-001": {
-      id: "it-001",
-      title: "Senior Software Developer",
-      department: "Axborot Texnologiyalari Departamenti",
-    },
-    "it-002": {
-      id: "it-002",
-      title: "Cybersecurity Specialist",
-      department: "Axborot Texnologiyalari Departamenti",
-    },
-    "it-003": {
-      id: "it-003",
-      title: "Boshqarma boshligi orinbosari",
-      department: "Axborot Texnologiyalari Departamenti",
-    },
-    "it-004": {
-      id: "it-004",
-      title: "Yetakchi mutahassis",
-      department: "Axborot Texnologiyalari Departamenti",
-    },
-    "fin-001": {
-      id: "fin-001",
-      title: "Senior Financial Analyst",
-      department: "Moliyaviy boshqaruv departamenti",
-    },
-    "hr-001": {
-      id: "hr-001",
-      title: "HR Specialist",
-      department: "Kadrlar departamenti",
-    },
-    "risk-001": {
-      id: "risk-001",
-      title: "Risk Analyst",
-      department: "Risk boshqaruvi departamenti",
-    },
+  // Decode the vacancy ID from URL
+  const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
+
+  // Fetch vacancy data from API
+  useEffect(() => {
+    const fetchVacancyData = async () => {
+      if (!decodedVacancyId) {
+        setError("Invalid vacancy ID");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const vacancyData = await vacanciesAPI.getVacancyById(decodedVacancyId);
+
+        // Transform the API response to match our component structure
+        const transformedVacancy = {
+          id: vacancyData.id.toString(),
+          title: vacancyData.title,
+          department: vacancyData.management?.name || "Markaziy apparat",
+          location: vacancyData.management?.name || "Markaziy apparat",
+          type: "Full-time",
+          deadline: vacancyData.application_deadline,
+          testDeadline: vacancyData.application_deadline,
+          salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
+          description: vacancyData.management?.name
+            ? `${vacancyData.management.name} - ${vacancyData.title}`
+            : vacancyData.title,
+          fullDescription: vacancyData.description,
+          requirements: parseJsonArray(vacancyData.requirements),
+          responsibilities: parseJsonArray(vacancyData.job_tasks),
+        };
+
+        setVacancy(transformedVacancy);
+      } catch (error) {
+        console.error("Error fetching vacancy:", error);
+        setError("Failed to load vacancy details. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVacancyData();
+  }, [decodedVacancyId]);
+
+  // Helper function to parse JSON string arrays
+  const parseJsonArray = (jsonString) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed)
+        ? parsed.map((item) => item.task || item)
+        : [];
+    } catch (error) {
+      console.error("Error parsing JSON array:", error);
+      return [];
+    }
   };
 
-  // Get the specific vacancy based on vacancyId
-  const currentVacancy = allVacancies[vacancyId] || allVacancies["it-001"];
+  // Get the specific vacancy based on API data
+  const currentVacancy = vacancy || {
+    title: "Loading...",
+    department: "Loading...",
+  };
 
   // Form state
   const [formData, setFormData] = useState({
     fullName: "",
     birthDate: "",
-    phoneNumber: "",
-    education: [{ period: "", institution: "", degree: "", specialty: "" }],
-    workExperience: [{ period: "", company: "", position: "" }],
+    phone: "",
+    education: [
+      {
+        startYear: "",
+        endYear: "",
+        isCurrent: false,
+        institution: "",
+        degree: "",
+        specialty: "",
+      },
+    ],
+    workExperience: [
+      {
+        startYear: "",
+        endYear: "",
+        isCurrent: false,
+        company: "",
+        position: "",
+      },
+    ],
     languages: {
       uzbek: "",
       russian: "",
@@ -75,12 +123,31 @@ const JobApplicationForm = () => {
     additionalInfo: "",
   });
 
+  // Generate year options (from 1950 to current year)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = currentYear; year >= 1950; year--) {
+      years.push({ value: year.toString(), label: year.toString() });
+    }
+    return years;
+  };
+
+  const yearOptions = generateYearOptions();
+
+  // Degree options
+  const degreeOptions = [
+    { value: "Bachelor", label: "Bakalavr" },
+    { value: "Master", label: "Magistr" },
+    { value: "PhD", label: "PhD" },
+  ];
+
   // Language proficiency options
   const languageLevels = [
-    { value: "dont-know", label: t("jobs.application.form.dont_know") },
+    { value: "dont_know", label: t("jobs.application.form.dont_know") },
     { value: "beginner", label: t("jobs.application.form.beginner") },
     { value: "intermediate", label: t("jobs.application.form.intermediate") },
-    { value: "advanced", label: t("jobs.application.form.advanced") },
+    { value: "excellent", label: t("jobs.application.form.excellent") },
   ];
 
   // Salary range options
@@ -184,26 +251,75 @@ const JobApplicationForm = () => {
 
     setIsSubmitting(true);
 
+    // Helper function to convert year to full date
+    const yearToDate = (year, isEndDate = false) => {
+      if (!year) return "";
+      if (isEndDate) {
+        return `${year}-12-31`;
+      }
+      return `${year}-01-01`;
+    };
+
+    // Helper function to get current date
+    const getCurrentDate = () => {
+      const today = new Date();
+      return today.toISOString().split("T")[0];
+    };
+
+    // Transform form data to match API format
     const formDataToSend = {
-      departmentId,
-      vacancyId,
-      ...formData,
+      job: parseInt(decodedVacancyId), // Convert to integer
+      full_name: formData.fullName,
+      data_of_birth: formData.birthDate,
+      phone: formData.phone,
+      additional_information: formData.additionalInfo || "",
+      graduations: formData.education.map((edu) => ({
+        date_from: yearToDate(edu.startYear),
+        date_to: edu.isCurrent
+          ? getCurrentDate()
+          : yearToDate(edu.endYear, true),
+        university: edu.institution,
+        degree: edu.degree,
+        specialization: edu.specialty,
+      })),
+      employments: formData.workExperience.map((work) => ({
+        date_from: yearToDate(work.startYear),
+        date_to: work.isCurrent
+          ? getCurrentDate()
+          : yearToDate(work.endYear, true),
+        organization_name: work.company,
+        position: work.position,
+      })),
+      languages: Object.entries(formData.languages).map(
+        ([language, level]) => ({
+          language_name: language,
+          degree: level,
+        })
+      ),
     };
 
     console.log("Job Application Form Data:", formDataToSend);
 
     try {
-      // Send to Telegram
-      await sendToTelegram(formDataToSend);
+      // Send to API using apiClient
+      const response = await apiClient.post("/apply-jobs/", formDataToSend);
 
-      // Save to localStorage
+      console.log("Application submitted successfully:", response.data);
+
+      // Show success toast
+      toast.success(t("jobs.application.form.success_message"), {
+        duration: 4000,
+        position: "top-center",
+      });
+
+      // Save to localStorage for backup
       const applicationData = {
         id: Date.now().toString(),
         ...formDataToSend,
         status: "pending",
         submittedAt: new Date().toISOString(),
         vacancyTitle: currentVacancy?.title,
-        departmentName: currentVacancy?.department,
+        departmentName: currentVacancy?.management?.name || "Noma'lum",
       };
 
       // Get existing applications
@@ -215,12 +331,6 @@ const JobApplicationForm = () => {
         "jobApplications",
         JSON.stringify(existingApplications)
       );
-
-      // Show success toast
-      toast.success(t("jobs.application.form.success_message"), {
-        duration: 4000,
-        position: "top-center",
-      });
 
       // Clear form
       clearForm();
@@ -290,7 +400,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
 
 🏢 *Vakansiya ma'lumotlari:*
 • Departament ID: ${departmentId}
-• Vakansiya ID: ${vacancyId}
+• Vakansiya ID: ${decodedVacancyId}
 • Vakansiya nomi: ${currentVacancy?.title || "Noma'lum"}
 
 ⏰ *Yuborilgan vaqt:* ${new Date().toLocaleString("uz-UZ")}`;
@@ -317,8 +427,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
         `Telegram API error: ${data.description || "Unknown error"}`
       );
     }
-
-    console.log("Telegram message sent successfully");
   };
 
   const handleBack = () => {
@@ -330,10 +438,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
     setFormData({
       fullName: "",
       birthDate: "",
-      phoneNumber: "",
+      phone: "",
       education: [
         {
-          period: "",
+          startYear: "",
+          endYear: "",
+          isCurrent: false,
           institution: "",
           degree: "",
           specialty: "",
@@ -341,7 +451,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
       ],
       workExperience: [
         {
-          period: "",
+          startYear: "",
+          endYear: "",
+          isCurrent: false,
           company: "",
           position: "",
         },
@@ -356,6 +468,52 @@ ${formData.additionalInfo || "Kiritilmagan"}
       additionalInfo: "",
     });
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <LoadingSkeleton type="cards" count={3} />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !vacancy) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <Icon
+                name="AlertCircle"
+                size={48}
+                className="text-red-500 mx-auto mb-4"
+              />
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Error Loading Vacancy
+              </h1>
+              <p className="text-muted-foreground mb-6">
+                {error || "Vacancy not found"}
+              </p>
+              <button
+                onClick={() => navigate("/departments")}
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                {t("jobs.back_to_departments")}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -439,7 +597,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       <Input
                         type="tel"
                         placeholder="+998 90 123 45 67"
-                        value={formData.phoneNumber}
+                        value={formData.phone}
                         onChange={(e) => {
                           let value = e.target.value;
                           // Remove all non-digit characters except +
@@ -464,7 +622,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             value = value.substring(0, 13);
                           }
 
-                          handleInputChange("phoneNumber", value);
+                          handleInputChange("phone", value);
                         }}
                         required
                       />
@@ -502,23 +660,60 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.education_period")}
+                              {t("jobs.application.form.start_year")}
                             </label>
-                            <Input
-                              type="text"
-                              placeholder={t(
-                                "jobs.application.form.education_period_placeholder"
-                              )}
-                              value={edu.period}
-                              onChange={(e) =>
-                                handleEducationChange(
-                                  index,
-                                  "period",
-                                  e.target.value
-                                )
+                            <Select
+                              value={edu.startYear}
+                              onChange={(value) =>
+                                handleEducationChange(index, "startYear", value)
                               }
+                              options={yearOptions}
+                              placeholder={t(
+                                "jobs.application.form.select_year"
+                              )}
                               required
                             />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("jobs.application.form.end_year")}
+                            </label>
+                            <div className="space-y-2">
+                              <Select
+                                value={edu.endYear}
+                                onChange={(value) =>
+                                  handleEducationChange(index, "endYear", value)
+                                }
+                                options={yearOptions}
+                                placeholder={t(
+                                  "jobs.application.form.select_year"
+                                )}
+                                disabled={edu.isCurrent}
+                                required={!edu.isCurrent}
+                              />
+                              <div className="flex items-center">
+                                <Checkbox
+                                  id={`edu-current-${index}`}
+                                  checked={edu.isCurrent}
+                                  onChange={(checked) =>
+                                    handleEducationChange(
+                                      index,
+                                      "isCurrent",
+                                      checked
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`edu-current-${index}`}
+                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                >
+                                  {t(
+                                    "jobs.application.form.currently_studying"
+                                  )}
+                                </label>
+                              </div>
+                            </div>
                           </div>
 
                           <div>
@@ -546,19 +741,15 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               {t("jobs.application.form.degree")}
                             </label>
-                            <Input
-                              type="text"
+                            <Select
+                              value={edu.degree}
+                              onChange={(value) =>
+                                handleEducationChange(index, "degree", value)
+                              }
+                              options={degreeOptions}
                               placeholder={t(
                                 "jobs.application.form.degree_placeholder"
                               )}
-                              value={edu.degree}
-                              onChange={(e) =>
-                                handleEducationChange(
-                                  index,
-                                  "degree",
-                                  e.target.value
-                                )
-                              }
                               required
                             />
                           </div>
@@ -626,26 +817,69 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.work_period")}
+                              {t("jobs.application.form.start_year")}
                             </label>
-                            <Input
-                              type="text"
-                              placeholder={t(
-                                "jobs.application.form.work_period_placeholder"
-                              )}
-                              value={work.period}
-                              onChange={(e) =>
+                            <Select
+                              value={work.startYear}
+                              onChange={(value) =>
                                 handleWorkExperienceChange(
                                   index,
-                                  "period",
-                                  e.target.value
+                                  "startYear",
+                                  value
                                 )
                               }
+                              options={yearOptions}
+                              placeholder={t(
+                                "jobs.application.form.select_year"
+                              )}
                               required
                             />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {t("jobs.application.form.end_year")}
+                            </label>
+                            <div className="space-y-2">
+                              <Select
+                                value={work.endYear}
+                                onChange={(value) =>
+                                  handleWorkExperienceChange(
+                                    index,
+                                    "endYear",
+                                    value
+                                  )
+                                }
+                                options={yearOptions}
+                                placeholder={t(
+                                  "jobs.application.form.select_year"
+                                )}
+                                disabled={work.isCurrent}
+                                required={!work.isCurrent}
+                              />
+                              <div className="flex items-center">
+                                <Checkbox
+                                  id={`work-current-${index}`}
+                                  checked={work.isCurrent}
+                                  onChange={(checked) =>
+                                    handleWorkExperienceChange(
+                                      index,
+                                      "isCurrent",
+                                      checked
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`work-current-${index}`}
+                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                >
+                                  {t("jobs.application.form.currently_working")}
+                                </label>
+                              </div>
+                            </div>
                           </div>
 
                           <div>

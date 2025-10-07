@@ -4,20 +4,65 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
+import { departmentsAPI, vacanciesAPI } from "../../services/api";
 
 const Applications = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   useEffect(() => {
-    // Load applications from localStorage
-    const savedApplications = JSON.parse(
-      localStorage.getItem("jobApplications") || "[]"
-    );
-    setApplications(savedApplications);
-    setIsLoading(false);
+    const loadApplications = async () => {
+      try {
+        // Load applications from localStorage
+        const savedApplications = JSON.parse(
+          localStorage.getItem("jobApplications") || "[]"
+        );
+
+        // Fetch department and vacancy details for each application
+        const applicationsWithDetails = await Promise.all(
+          savedApplications.map(async (app) => {
+            try {
+              // Get vacancy details
+              const vacancyDetails = await vacanciesAPI.getVacancyById(app.job);
+
+              // Get department details
+              const departmentDetails = await departmentsAPI.getDepartmentById(
+                vacancyDetails.management.department
+              );
+
+              return {
+                ...app,
+                vacancyTitle: vacancyDetails.title,
+                departmentName: departmentDetails.name,
+              };
+            } catch (error) {
+              console.error(
+                `Error fetching details for application ${app.id}:`,
+                error
+              );
+              // Return original app if API fails
+              return app;
+            }
+          })
+        );
+
+        setApplications(applicationsWithDetails);
+      } catch (error) {
+        console.error("Error loading applications:", error);
+        // Fallback to localStorage data only
+        const savedApplications = JSON.parse(
+          localStorage.getItem("jobApplications") || "[]"
+        );
+        setApplications(savedApplications);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadApplications();
   }, []);
 
   const formatDate = (dateString) => {
@@ -52,6 +97,46 @@ const Applications = () => {
       default:
         return "Noma'lum";
     }
+  };
+
+  const getLanguageLevelText = (level) => {
+    switch (level) {
+      case "dont_know":
+        return "Bilmayman";
+      case "beginner":
+        return "Boshlang'ich";
+      case "intermediate":
+        return "O'rta";
+      case "excellent":
+        return "A'lo";
+      default:
+        return level;
+    }
+  };
+
+  const getLanguageNameText = (language) => {
+    switch (language) {
+      case "uzbek":
+        return "O'zbek tili";
+      case "russian":
+        return "Rus tili";
+      case "english":
+        return "Ingliz tili";
+      default:
+        return language;
+    }
+  };
+
+  const toggleCard = (applicationId) => {
+    setExpandedCards((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(applicationId)) {
+        newSet.delete(applicationId);
+      } else {
+        newSet.add(applicationId);
+      }
+      return newSet;
+    });
   };
 
   const getStatusIcon = (status) => {
@@ -185,170 +270,188 @@ const Applications = () => {
 
               {/* Applications */}
               <div className="space-y-4">
-                {applications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-                  >
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-xl font-semibold text-card-foreground">
-                            {application.vacancyTitle}
-                          </h3>
-                          <div
-                            className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
-                              application.status
-                            )}`}
-                          >
+                {applications.map((application) => {
+                  const isExpanded = expandedCards.has(application.id);
+
+                  return (
+                    <div
+                      key={application.id}
+                      className="bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      {/* Header - Always Visible */}
+                      <div
+                        className="p-6 cursor-pointer"
+                        onClick={() => toggleCard(application.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="text-xl font-semibold text-card-foreground">
+                                {application.vacancyTitle}
+                              </h3>
+                              <div
+                                className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
+                                  application.status
+                                )}`}
+                              >
+                                <Icon
+                                  name={getStatusIcon(application.status)}
+                                  size={12}
+                                />
+                                <span>{getStatusText(application.status)}</span>
+                              </div>
+                            </div>
+                            <p className="text-muted-foreground">
+                              {application.departmentName}
+                            </p>
+                          </div>
+                          <div className="ml-4">
                             <Icon
-                              name={getStatusIcon(application.status)}
-                              size={12}
+                              name={isExpanded ? "ChevronUp" : "ChevronDown"}
+                              size={20}
+                              className="text-muted-foreground transition-transform duration-200"
                             />
-                            <span>{getStatusText(application.status)}</span>
                           </div>
                         </div>
-                        <p className="text-muted-foreground">
-                          {application.departmentName}
-                        </p>
                       </div>
-                    </div>
 
-                    {/* Application Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Ism:</span>
-                          <span className="text-card-foreground font-medium">
-                            {application.fullName}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Telefon:
-                          </span>
-                          <span className="text-card-foreground font-medium">
-                            {application.phoneNumber}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Yuborilgan:
-                          </span>
-                          <span className="text-card-foreground font-medium">
-                            {formatDate(application.submittedAt)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Maosh:</span>
-                          <span className="text-card-foreground font-medium">
-                            {application.salaryRange}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Jinoiy javobgarlik:
-                          </span>
-                          <span className="text-card-foreground font-medium">
-                            {application.hasCriminalRecord ? "Ha" : "Yo'q"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                      {/* Expandable Content */}
+                      {isExpanded && (
+                        <div className="px-6 pb-6 border-t border-border">
+                          {/* Application Details */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pt-4">
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Ism:
+                                </span>
+                                <span className="text-card-foreground font-medium">
+                                  {application.full_name}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Telefon:
+                                </span>
+                                <span className="text-card-foreground font-medium">
+                                  {application.phone}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Yuborilgan:
+                                </span>
+                                <span className="text-card-foreground font-medium">
+                                  {formatDate(application.submittedAt)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Jinoiy javobgarlik:
+                                </span>
+                                <span className="text-card-foreground font-medium">
+                                  {application.hasCriminalRecord
+                                    ? "Ha"
+                                    : "Yo'q"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
 
-                    {/* Education */}
-                    {application.education &&
-                      application.education.length > 0 && (
-                        <div className="mb-4 pt-4 border-t border-border">
-                          <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                            Ta'lim:
-                          </h4>
-                          <div className="space-y-2">
-                            {application.education.map((edu, index) => (
-                              <div key={index} className="text-sm">
-                                <div className="font-medium text-card-foreground">
-                                  {edu.degree} - {edu.specialty}
-                                </div>
-                                <div className="text-muted-foreground">
-                                  {edu.institution} ({edu.period})
+                          {/* Education */}
+                          {application.graduations &&
+                            application.graduations.length > 0 && (
+                              <div className="mb-4 pt-4 border-t border-border">
+                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
+                                  Ta'lim:
+                                </h4>
+                                <div className="space-y-2">
+                                  {application.graduations.map((edu, index) => (
+                                    <div key={index} className="text-sm">
+                                      <div className="font-medium text-card-foreground">
+                                        {edu.degree} - {edu.specialization}
+                                      </div>
+                                      <div className="text-muted-foreground">
+                                        {edu.university} ({edu.date_from} -{" "}
+                                        {edu.date_to})
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                            )}
 
-                    {/* Work Experience */}
-                    {application.workExperience &&
-                      application.workExperience.length > 0 && (
-                        <div className="mb-4 pt-4 border-t border-border">
-                          <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                            Ish tajribasi:
-                          </h4>
-                          <div className="space-y-2">
-                            {application.workExperience.map((work, index) => (
-                              <div key={index} className="text-sm">
-                                <div className="font-medium text-card-foreground">
-                                  {work.position} - {work.company}
-                                </div>
-                                <div className="text-muted-foreground">
-                                  {work.period}
+                          {/* Work Experience */}
+                          {application.employments &&
+                            application.employments.length > 0 && (
+                              <div className="mb-4 pt-4 border-t border-border">
+                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
+                                  Ish tajribasi:
+                                </h4>
+                                <div className="space-y-2">
+                                  {application.employments.map(
+                                    (work, index) => (
+                                      <div key={index} className="text-sm">
+                                        <div className="font-medium text-card-foreground">
+                                          {work.position} -{" "}
+                                          {work.organization_name}
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          {work.date_from} - {work.date_to}
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                            )}
+
+                          {/* Languages */}
+                          {application.languages &&
+                            application.languages.length > 0 && (
+                              <div className="mb-4 pt-4 border-t border-border">
+                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
+                                  Til bilish:
+                                </h4>
+                                <div className="space-y-2">
+                                  {application.languages.map((lang, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex justify-between text-sm"
+                                    >
+                                      <span className="text-muted-foreground">
+                                        {getLanguageNameText(
+                                          lang.language_name
+                                        )}
+                                        :
+                                      </span>
+                                      <span className="text-card-foreground">
+                                        {getLanguageLevelText(lang.degree)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                          {/* Additional Info */}
+                          {application.additional_information && (
+                            <div className="pt-4 border-t border-border">
+                              <h4 className="text-sm font-semibold text-card-foreground mb-2">
+                                Qo'shimcha ma'lumot:
+                              </h4>
+                              <p className="text-sm text-card-foreground">
+                                {application.additional_information}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
-
-                    {/* Languages */}
-                    {application.languages && (
-                      <div className="mb-4 pt-4 border-t border-border">
-                        <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                          Til bilish:
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              O'zbek:
-                            </span>
-                            <span className="text-card-foreground">
-                              {application.languages.uzbek}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Rus:</span>
-                            <span className="text-card-foreground">
-                              {application.languages.russian}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Ingliz:
-                            </span>
-                            <span className="text-card-foreground">
-                              {application.languages.english}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Additional Info */}
-                    {application.additionalInfo && (
-                      <div className="pt-4 border-t border-border">
-                        <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                          Qo'shimcha ma'lumot:
-                        </h4>
-                        <p className="text-sm text-card-foreground">
-                          {application.additionalInfo}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
