@@ -15,6 +15,12 @@ import TermsAndConditionsPage from "./pages/terms-and-conditions";
 import CurrencyExchangeRates from "./pages/currency-exchange-rates";
 import Profile from "./pages/profile";
 import Applications from "./pages/applications";
+import ConsumerRightsSubmission from "./pages/consumer-rights-submission";
+import CorruptionSubmission from "./pages/corruption-submission";
+import CheckLicense from "./pages/check-license";
+import SubmitComplaint from "./pages/submit-complaint";
+import ApplicationDetail from "./pages/application-detail";
+import EditCorruption from "./pages/edit-corruption";
 
 const Routes = () => {
   return (
@@ -26,7 +32,7 @@ const Routes = () => {
           <Route path="/" element={<HomeDashboard />} />
           <Route path="/home-dashboard" element={<HomeDashboard />} />
           <Route path="/news-articles-hub" element={<NewsArticlesHub />} />
-          <Route path="/feedback-submission" element={<FeedbackSubmission />} />
+          <Route path="/submissions" element={<FeedbackSubmission />} />
           <Route path="/departments" element={<JobVacanciesBrowser />} />
           <Route
             path="/departments/:departmentId"
@@ -55,6 +61,18 @@ const Routes = () => {
           />
           <Route path="/profile" element={<Profile />} />
           <Route path="/applications" element={<Applications />} />
+          <Route path="/applications/:id" element={<ApplicationDetail />} />
+          <Route
+            path="/submissions/consumer-rights"
+            element={<ConsumerRightsSubmission />}
+          />
+          <Route
+            path="/submissions/corruption"
+            element={<CorruptionSubmission />}
+          />
+          <Route path="/check-license" element={<CheckLicense />} />
+          <Route path="/submit-complaint" element={<SubmitComplaint />} />
+          <Route path="/edit-corruption/:id" element={<EditCorruption />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
         <BottomNavigation />

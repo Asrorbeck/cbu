@@ -11,17 +11,21 @@ const Applications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedCards, setExpandedCards] = useState(new Set());
 
   useEffect(() => {
     const loadApplications = async () => {
       try {
-        // Load applications from localStorage
+        // Load job applications from localStorage
         const savedApplications = JSON.parse(
           localStorage.getItem("jobApplications") || "[]"
         );
 
-        // Fetch department and vacancy details for each application
+        // Load submissions (corruption & consumer rights) from localStorage
+        const savedSubmissions = JSON.parse(
+          localStorage.getItem("submissions") || "[]"
+        );
+
+        // Fetch department and vacancy details for job applications
         const applicationsWithDetails = await Promise.all(
           savedApplications.map(async (app) => {
             try {
@@ -35,6 +39,7 @@ const Applications = () => {
 
               return {
                 ...app,
+                applicationType: "job",
                 vacancyTitle: vacancyDetails.title,
                 departmentName: departmentDetails.name,
               };
@@ -44,19 +49,43 @@ const Applications = () => {
                 error
               );
               // Return original app if API fails
-              return app;
+              return {
+                ...app,
+                applicationType: "job",
+              };
             }
           })
         );
 
-        setApplications(applicationsWithDetails);
+        // Combine job applications and submissions
+        const allApplications = [
+          ...applicationsWithDetails,
+          ...savedSubmissions.map((sub) => ({
+            ...sub,
+            applicationType: "submission",
+          })),
+        ].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+        setApplications(allApplications);
       } catch (error) {
         console.error("Error loading applications:", error);
         // Fallback to localStorage data only
         const savedApplications = JSON.parse(
           localStorage.getItem("jobApplications") || "[]"
         );
-        setApplications(savedApplications);
+        const savedSubmissions = JSON.parse(
+          localStorage.getItem("submissions") || "[]"
+        );
+        setApplications([
+          ...savedApplications.map((app) => ({
+            ...app,
+            applicationType: "job",
+          })),
+          ...savedSubmissions.map((sub) => ({
+            ...sub,
+            applicationType: "submission",
+          })),
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -65,17 +94,10 @@ const Applications = () => {
     loadApplications();
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
+      case "Ko'rib chiqilmoqda":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "approved":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
@@ -87,6 +109,8 @@ const Applications = () => {
   };
 
   const getStatusText = (status) => {
+    if (status === "Ko'rib chiqilmoqda") return status;
+
     switch (status) {
       case "pending":
         return "Kutilmoqda";
@@ -95,53 +119,18 @@ const Applications = () => {
       case "rejected":
         return "Rad etildi";
       default:
-        return "Noma'lum";
+        return status || "Noma'lum";
     }
   };
 
-  const getLanguageLevelText = (level) => {
-    switch (level) {
-      case "dont_know":
-        return "Bilmayman";
-      case "beginner":
-        return "Boshlang'ich";
-      case "intermediate":
-        return "O'rta";
-      case "excellent":
-        return "A'lo";
-      default:
-        return level;
-    }
-  };
-
-  const getLanguageNameText = (language) => {
-    switch (language) {
-      case "uzbek":
-        return "O'zbek tili";
-      case "russian":
-        return "Rus tili";
-      case "english":
-        return "Ingliz tili";
-      default:
-        return language;
-    }
-  };
-
-  const toggleCard = (applicationId) => {
-    setExpandedCards((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(applicationId)) {
-        newSet.delete(applicationId);
-      } else {
-        newSet.add(applicationId);
-      }
-      return newSet;
-    });
+  const handleCardClick = (applicationId) => {
+    navigate(`/applications/${applicationId}`);
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
+      case "Ko'rib chiqilmoqda":
         return "Clock";
       case "approved":
         return "CheckCircle";
@@ -203,7 +192,7 @@ const Applications = () => {
                 Mening arizalarim
               </h1>
               <p className="text-muted-foreground">
-                Barcha yuborilgan ish arizalaringizni ko'ring
+                Barcha yuborilgan ariza va murojaatlaringizni ko'ring
               </p>
             </div>
           </div>
@@ -221,7 +210,7 @@ const Applications = () => {
                   Hozircha arizalar yo'q
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Siz hali hech qanday ish uchun ariza bermagansiz
+                  Siz hali hech qanday ariza yoki murojaat yubormagansiz
                 </p>
                 <Button
                   onClick={() => navigate("/departments")}
@@ -247,8 +236,11 @@ const Applications = () => {
                 <div className="bg-card border border-border rounded-xl p-4 text-center">
                   <div className="text-2xl font-bold text-yellow-600 mb-1">
                     {
-                      applications.filter((app) => app.status === "pending")
-                        .length
+                      applications.filter(
+                        (app) =>
+                          app.status === "pending" ||
+                          app.status === "Ko'rib chiqilmoqda"
+                      ).length
                     }
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -268,187 +260,78 @@ const Applications = () => {
                 </div>
               </div>
 
-              {/* Applications */}
+              {/* Applications Cards */}
               <div className="space-y-4">
                 {applications.map((application) => {
-                  const isExpanded = expandedCards.has(application.id);
-
                   return (
                     <div
                       key={application.id}
-                      className="bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                      onClick={() => handleCardClick(application.id)}
+                      className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer p-5 md:p-6"
                     >
-                      {/* Header - Always Visible */}
-                      <div
-                        className="p-6 cursor-pointer"
-                        onClick={() => toggleCard(application.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-xl font-semibold text-card-foreground">
-                                {application.vacancyTitle}
-                              </h3>
+                      <div>
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex-1 min-w-0">
+                            {/* Type Badge */}
+                            {application.applicationType === "submission" && (
                               <div
-                                className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
-                                  application.status
-                                )}`}
+                                className={`inline-flex px-3 py-1 rounded-lg text-xs font-semibold mb-3 ${
+                                  application.type === "corruption"
+                                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                }`}
                               >
-                                <Icon
-                                  name={getStatusIcon(application.status)}
-                                  size={12}
-                                />
-                                <span>{getStatusText(application.status)}</span>
+                                {application.typeLabel}
                               </div>
-                            </div>
-                            <p className="text-muted-foreground">
-                              {application.departmentName}
+                            )}
+
+                            {/* Title */}
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                              {application.applicationType === "job"
+                                ? application.vacancyTitle
+                                : application.subject}
+                            </h3>
+
+                            {/* Subtitle */}
+                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                              {application.applicationType === "job"
+                                ? application.departmentName
+                                : `Murojaat raqami: ${application.id}`}
                             </p>
                           </div>
-                          <div className="ml-4">
-                            <Icon
-                              name={isExpanded ? "ChevronUp" : "ChevronDown"}
-                              size={20}
-                              className="text-muted-foreground transition-transform duration-200"
-                            />
+
+                          {/* Arrow Icon */}
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-colors duration-200">
+                              <Icon
+                                name="ArrowRight"
+                                size={20}
+                                className="text-gray-600 dark:text-gray-400"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status - Bottom */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Holati:
+                            </span>
+                            <div
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${getStatusColor(
+                                application.status
+                              )}`}
+                            >
+                              <Icon
+                                name={getStatusIcon(application.status)}
+                                size={12}
+                              />
+                              <span>{getStatusText(application.status)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-
-                      {/* Expandable Content */}
-                      {isExpanded && (
-                        <div className="px-6 pb-6 border-t border-border">
-                          {/* Application Details */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pt-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                  Ism:
-                                </span>
-                                <span className="text-card-foreground font-medium">
-                                  {application.full_name}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                  Telefon:
-                                </span>
-                                <span className="text-card-foreground font-medium">
-                                  {application.phone}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                  Yuborilgan:
-                                </span>
-                                <span className="text-card-foreground font-medium">
-                                  {formatDate(application.submittedAt)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                  Jinoiy javobgarlik:
-                                </span>
-                                <span className="text-card-foreground font-medium">
-                                  {application.hasCriminalRecord
-                                    ? "Ha"
-                                    : "Yo'q"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Education */}
-                          {application.graduations &&
-                            application.graduations.length > 0 && (
-                              <div className="mb-4 pt-4 border-t border-border">
-                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                                  Ta'lim:
-                                </h4>
-                                <div className="space-y-2">
-                                  {application.graduations.map((edu, index) => (
-                                    <div key={index} className="text-sm">
-                                      <div className="font-medium text-card-foreground">
-                                        {edu.degree} - {edu.specialization}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        {edu.university} ({edu.date_from} -{" "}
-                                        {edu.date_to})
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Work Experience */}
-                          {application.employments &&
-                            application.employments.length > 0 && (
-                              <div className="mb-4 pt-4 border-t border-border">
-                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                                  Ish tajribasi:
-                                </h4>
-                                <div className="space-y-2">
-                                  {application.employments.map(
-                                    (work, index) => (
-                                      <div key={index} className="text-sm">
-                                        <div className="font-medium text-card-foreground">
-                                          {work.position} -{" "}
-                                          {work.organization_name}
-                                        </div>
-                                        <div className="text-muted-foreground">
-                                          {work.date_from} - {work.date_to}
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Languages */}
-                          {application.languages &&
-                            application.languages.length > 0 && (
-                              <div className="mb-4 pt-4 border-t border-border">
-                                <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                                  Til bilish:
-                                </h4>
-                                <div className="space-y-2">
-                                  {application.languages.map((lang, index) => (
-                                    <div
-                                      key={index}
-                                      className="flex justify-between text-sm"
-                                    >
-                                      <span className="text-muted-foreground">
-                                        {getLanguageNameText(
-                                          lang.language_name
-                                        )}
-                                        :
-                                      </span>
-                                      <span className="text-card-foreground">
-                                        {getLanguageLevelText(lang.degree)}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Additional Info */}
-                          {application.additional_information && (
-                            <div className="pt-4 border-t border-border">
-                              <h4 className="text-sm font-semibold text-card-foreground mb-2">
-                                Qo'shimcha ma'lumot:
-                              </h4>
-                              <p className="text-sm text-card-foreground">
-                                {application.additional_information}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   );
                 })}

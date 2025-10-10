@@ -16,10 +16,10 @@ const BottomNavigation = () => {
       label: t("bottom_nav.home"),
     },
     {
-      id: "currency",
-      path: "/currency-exchange-rates",
-      icon: "TrendingUp",
-      label: t("bottom_nav.currency") || "Valyuta",
+      id: "submissions",
+      path: "/submissions",
+      icon: "FileText",
+      label: "Murojaatlar",
     },
     {
       id: "jobs",
@@ -43,11 +43,13 @@ const BottomNavigation = () => {
         location.pathname.startsWith("/departments/")
       );
     }
-    if (path === "/currency-exchange-rates") {
-      // Currency pages uchun ham active bo'lsin
+    if (path === "/submissions") {
+      // Submissions pages uchun ham active bo'lsin
       return (
         location.pathname === path ||
-        location.pathname.startsWith("/currency-exchange-rates")
+        location.pathname.startsWith("/submissions/") ||
+        location.pathname === "/check-license" ||
+        location.pathname === "/submit-complaint"
       );
     }
     return location.pathname === path;

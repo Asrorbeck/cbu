@@ -1,99 +1,50 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet";
 import Navbar from "../../components/ui/Navbar";
-import FeedbackHeader from "./components/FeedbackHeader";
-import FeedbackForm from "./components/FeedbackForm";
-import SuccessModal from "./components/SuccessModal";
+import SubmissionTypeCard from "./components/SubmissionTypeCard";
 import Button from "../../components/ui/Button";
-import Icon from "../../components/AppIcon";
 
 const FeedbackSubmission = () => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [referenceNumber, setReferenceNumber] = useState("");
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("language") || "en";
-  });
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem("language") || "en";
-    setLanguage(savedLanguage);
-  }, []);
-
-  const translations = {
-    en: {
-      backToDashboard: "Back to Dashboard",
-      pageTitle: "Feedback Submission - Central Bank",
-    },
-    "uz-latn": {
-      backToDashboard: "Bosh sahifaga qaytish",
-      pageTitle: "Fikr-mulohaza yuborish - Markaziy Bank",
-    },
-    "uz-cyrl": {
-      backToDashboard: "Бош саҳифага қайтиш",
-      pageTitle: "Фикр-мулоҳаза юбориш - Марказий Банк",
-    },
-    ru: {
-      backToDashboard: "Вернуться на главную",
-      pageTitle: "Отправка отзыва - Центральный Банк",
-    },
-  };
-
-  const t = translations?.[language] || translations?.en;
-
-  // Generate reference number
-  const generateReferenceNumber = () => {
-    const timestamp = Date.now()?.toString()?.slice(-6);
-    const random = Math.random()?.toString(36)?.substring(2, 6)?.toUpperCase();
-    return `FB${timestamp}${random}`;
-  };
-
-  const handleFormSubmit = async (formData) => {
-    setIsSubmitting(true);
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Generate reference number
-      const refNumber = generateReferenceNumber();
-      setReferenceNumber(refNumber);
-
-      // Show success modal
-      setShowSuccessModal(true);
-
-      console.log("Feedback submitted:", {
-        ...formData,
-        referenceNumber: refNumber,
-        submittedAt: new Date()?.toISOString(),
-        language: language,
-      });
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      // In a real app, you would show an error message here
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const { t } = useTranslation();
 
   const handleBackToDashboard = () => {
     navigate("/home-dashboard");
   };
 
-  const handleCloseSuccessModal = () => {
-    setShowSuccessModal(false);
-  };
+  const submissionTypes = [
+    {
+      id: "consumer-rights",
+      type: "consumer-rights",
+      title: t("submissions.types.consumer_rights.title"),
+      description: t("submissions.types.consumer_rights.description"),
+      icon: "ShieldAlert",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+    },
+    {
+      id: "corruption",
+      type: "corruption",
+      title: t("submissions.types.corruption.title"),
+      description: t("submissions.types.corruption.description"),
+      icon: "AlertTriangle",
+      color: "text-orange-600 dark:text-orange-400",
+      bgColor: "bg-orange-100 dark:bg-orange-900/30",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Set page title */}
-      <title>{t?.pageTitle}</title>
+      <Helmet>
+        <title>{t("submissions.title")} - Markaziy Bank</title>
+      </Helmet>
       {/* Navigation */}
       <Navbar />
       {/* Main Content */}
       <main className="pt-20 pb-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <div className="mb-8">
             <Button
@@ -103,57 +54,36 @@ const FeedbackSubmission = () => {
               iconPosition="left"
               className="text-muted-foreground hover:text-foreground"
             >
-              {t?.backToDashboard}
+              {t("submissions.back_to_dashboard")}
             </Button>
           </div>
 
           {/* Header Section */}
-          <FeedbackHeader />
-
-          {/* Feedback Form Container */}
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-card border border-border rounded-2xl shadow-lg p-8">
-              <FeedbackForm
-                onSubmit={handleFormSubmit}
-                isSubmitting={isSubmitting}
-              />
-            </div>
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              {t("submissions.title")}
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t("submissions.subtitle")}
+            </p>
           </div>
 
-          {/* Additional Information */}
-          <div className="max-w-2xl mx-auto mt-8">
-            <div className="bg-muted/30 rounded-xl p-6">
-              <div className="flex items-start space-x-4">
-                <Icon name="Shield" size={24} className="text-primary mt-1" />
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">
-                    {language === "en" && "Privacy & Security"}
-                    {language === "uz-latn" && "Maxfiylik va xavfsizlik"}
-                    {language === "uz-cyrl" && "Махфийлик ва хавфсизлик"}
-                    {language === "ru" && "Конфиденциальность и безопасность"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {language === "en" &&
-                      "Your feedback is confidential and will only be used to improve our services. We do not share personal information with third parties."}
-                    {language === "uz-latn" &&
-                      "Sizning fikr-mulohazangiz maxfiy bo'lib, faqat xizmatlarimizni yaxshilash uchun ishlatiladi. Biz shaxsiy ma'lumotlarni uchinchi shaxslarga bermayamiz."}
-                    {language === "uz-cyrl" &&
-                      "Сизнинг фикр-мулоҳазангиз махфий бўлиб, фақат хизматларимизни яхшилаш учун ишлатилади. Биз шахсий маълумотларни учинчи шахсларга бермаймиз."}
-                    {language === "ru" &&
-                      "Ваш отзыв конфиденциален и будет использоваться только для улучшения наших услуг. Мы не передаем личную информацию третьим лицам."}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* Submission Type Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {submissionTypes.map((type) => (
+              <SubmissionTypeCard
+                key={type.id}
+                type={type.type}
+                title={type.title}
+                description={type.description}
+                icon={type.icon}
+                color={type.color}
+                bgColor={type.bgColor}
+              />
+            ))}
           </div>
         </div>
       </main>
-      {/* Success Modal */}
-      <SuccessModal
-        isOpen={showSuccessModal}
-        onClose={handleCloseSuccessModal}
-        referenceNumber={referenceNumber}
-      />
       {/* Bottom navigation spacing - mobile only */}
       <div className="h-20 md:h-0"></div>
     </div>

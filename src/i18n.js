@@ -33,10 +33,9 @@ const resources = {
             title: "Ish o'rinlari",
             description: "Bo'sh ish o'rinlarini ko'ring va ariza yuboring",
           },
-          feedback: {
-            title: "Mijozlar fikri",
-            description:
-              "Xizmatlarimizni yaxshilash uchun tajribangiz bilan bo'lishing",
+          applications: {
+            title: "Murojaatlar",
+            description: "Bankka yangi murojaat yuboring",
           },
           news: {
             title: "Yangiliklar",
@@ -82,6 +81,47 @@ const resources = {
         exchange_rate: "Valyuta kursi",
         rates_reference_only:
           "Kurslar faqat ma'lumot uchun. Haqiqiy kurslar farq qilishi mumkin.",
+      },
+      submissions: {
+        title: "Murojaatlar",
+        subtitle: "Murojaat turini tanlang",
+        back_to_dashboard: "Bosh sahifaga qaytish",
+        types: {
+          consumer_rights: {
+            title: "Iste'molchi huquqlari bo'yicha",
+            description:
+              "Iste'molchi huquqlari buzilishi haqida murojaat yuboring",
+          },
+          corruption: {
+            title: "Korrupsiya bo'yicha",
+            description: "Korrupsiya holatlari haqida xabar bering",
+          },
+        },
+        form: {
+          personal_info: "Shaxsiy ma'lumotlar",
+          full_name: "To'liq ismingiz",
+          full_name_placeholder: "Masalan: Karimov Karim Karimovich",
+          phone: "Telefon raqam",
+          email: "Elektron pochta",
+          anonymous: "Anonim murojaat (shaxsiy ma'lumotlar ko'rsatilmaydi)",
+          submission_details: "Murojaat tafsilotlari",
+          subject: "Mavzu",
+          subject_placeholder: "Murojaat mavzusini kiriting",
+          description: "Batafsil tavsif",
+          description_placeholder: "Murojaatingizni batafsil yozing...",
+          privacy_title: "Maxfiylik va xavfsizlik",
+          privacy_message:
+            "Sizning murojaatingiz maxfiy bo'lib, faqat tegishli bo'limlar tomonidan ko'rib chiqiladi.",
+          cancel: "Bekor qilish",
+          submit: "Murojaat yuborish",
+          submitting: "Yuborilmoqda...",
+          success_title: "Murojaat muvaffaqiyatli yuborildi!",
+          success_message:
+            "Sizning murojaatingiz qabul qilindi va tez orada ko'rib chiqiladi.",
+          reference_number: "Murojaat raqami",
+          back_to_submissions: "Murojaatlarga qaytish",
+          back_to_dashboard: "Bosh sahifaga qaytish",
+        },
       },
       bottom_nav: {
         home: "Bosh sahifa",
@@ -286,10 +326,9 @@ const resources = {
             title: "Иш ўринлари",
             description: "Бўш иш ўринларини кўринг ва ариза юборинг",
           },
-          feedback: {
-            title: "Мижозлар фикри",
-            description:
-              "Хизматларимизни яхшилаш учун тажрибангиз билан бўлишинг",
+          applications: {
+            title: "Мурожаатлар",
+            description: "Банкка янги мурожаат юборинг",
           },
           news: {
             title: "Янгиликлар",
@@ -335,6 +374,47 @@ const resources = {
         exchange_rate: "Валюта курси",
         rates_reference_only:
           "Курслар фақат маълумот учун. Ҳақиқий курслар фарқ қилиши мумкин.",
+      },
+      submissions: {
+        title: "Мурожаатлар",
+        subtitle: "Мурожаат турини танланг",
+        back_to_dashboard: "Бош саҳифага қайтиш",
+        types: {
+          consumer_rights: {
+            title: "Истеъмолчи ҳуқуқлари бўйича",
+            description:
+              "Истеъмолчи ҳуқуқлари бузилиши ҳақида мурожаат юборинг",
+          },
+          corruption: {
+            title: "Коррупция бўйича",
+            description: "Коррупция ҳолатлари ҳақида хабар беринг",
+          },
+        },
+        form: {
+          personal_info: "Шахсий маълумотлар",
+          full_name: "Тўлиқ исмингиз",
+          full_name_placeholder: "Масалан: Каримов Карим Каримович",
+          phone: "Телефон рақам",
+          email: "Электрон почта",
+          anonymous: "Аноним мурожаат (шахсий маълумотлар кўрсатилмайди)",
+          submission_details: "Мурожаат тафсилотлари",
+          subject: "Мавзу",
+          subject_placeholder: "Мурожаат мавзусини киритинг",
+          description: "Батафсил тавсиф",
+          description_placeholder: "Мурожаатингизни батафсил ёзинг...",
+          privacy_title: "Махфийлик ва хавфсизлик",
+          privacy_message:
+            "Сизнинг мурожаатингиз махфий бўлиб, фақат тегишли бўлимлар томонидан кўриб чиқилади.",
+          cancel: "Бекор қилиш",
+          submit: "Мурожаат юбориш",
+          submitting: "Юборилмоқда...",
+          success_title: "Мурожаат муваффақиятли юборилди!",
+          success_message:
+            "Сизнинг мурожаатингиз қабул қилинди ва тез орада кўриб чиқилади.",
+          reference_number: "Мурожаат рақами",
+          back_to_submissions: "Мурожаатларга қайтиш",
+          back_to_dashboard: "Бош саҳифага қайтиш",
+        },
       },
       bottom_nav: {
         home: "Бош саҳифа",
@@ -530,10 +610,9 @@ const resources = {
             title: "Вакансии",
             description: "Просматривайте вакансии и подавайте заявки",
           },
-          feedback: {
-            title: "Обратная связь",
-            description:
-              "Поделитесь опытом и предложениями для улучшения услуг",
+          applications: {
+            title: "Обращения",
+            description: "Отправьте новое обращение в банк",
           },
           news: {
             title: "Новости и обновления",
@@ -579,6 +658,45 @@ const resources = {
         exchange_rate: "Курс обмена",
         rates_reference_only:
           "Курсы только для справки. Фактические курсы могут отличаться.",
+      },
+      submissions: {
+        title: "Обращения",
+        subtitle: "Выберите тип обращения",
+        back_to_dashboard: "Вернуться на главную",
+        types: {
+          consumer_rights: {
+            title: "По правам потребителей",
+            description: "Отправьте обращение о нарушении прав потребителей",
+          },
+          corruption: {
+            title: "По коррупции",
+            description: "Сообщите о случаях коррупции",
+          },
+        },
+        form: {
+          personal_info: "Личная информация",
+          full_name: "Полное имя",
+          full_name_placeholder: "Например: Каримов Карим Каримович",
+          phone: "Номер телефона",
+          email: "Электронная почта",
+          anonymous: "Анонимное обращение (личная информация не отображается)",
+          submission_details: "Детали обращения",
+          subject: "Тема",
+          subject_placeholder: "Введите тему обращения",
+          description: "Подробное описание",
+          description_placeholder: "Напишите ваше обращение подробно...",
+          privacy_title: "Конфиденциальность и безопасность",
+          privacy_message:
+            "Ваше обращение конфиденциально и будет рассмотрено только соответствующими отделами.",
+          cancel: "Отменить",
+          submit: "Отправить обращение",
+          submitting: "Отправка...",
+          success_title: "Обращение успешно отправлено!",
+          success_message: "Ваше обращение принято и скоро будет рассмотрено.",
+          reference_number: "Номер обращения",
+          back_to_submissions: "Вернуться к обращениям",
+          back_to_dashboard: "Вернуться на главную",
+        },
       },
       bottom_nav: {
         home: "Главная",
