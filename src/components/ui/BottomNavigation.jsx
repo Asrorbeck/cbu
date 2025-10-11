@@ -102,7 +102,7 @@ const BottomNavigation = () => {
 
       {/* Desktop Design */}
       <div className="hidden md:block">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-2 py-3">
             {menuItems.map((item) => {
               const active = isActive(item.path);

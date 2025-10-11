@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Icon from "../../../components/AppIcon";
@@ -7,6 +7,60 @@ import Button from "../../../components/ui/Button";
 const HeroSection = ({ currencies = [], lastUpdateDate }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Quick action services
+  const quickActions = [
+    {
+      id: 1,
+      title: "Litsenziya",
+      subtitle: "Tekshirish",
+      icon: "Shield",
+      color: "blue",
+      route: "/check-license",
+    },
+    {
+      id: 2,
+      title: "Ish o'rinlari",
+      subtitle: "Ko'rish",
+      icon: "Briefcase",
+      color: "emerald",
+      route: "/job-vacancies-browser",
+    },
+    {
+      id: 3,
+      title: "Ariza",
+      subtitle: "Topshirish",
+      icon: "MessageSquare",
+      color: "purple",
+      route: "/feedback-submission",
+    },
+    {
+      id: 4,
+      title: "Yangiliklar",
+      subtitle: "O'qish",
+      icon: "Newspaper",
+      color: "orange",
+      route: "/news-articles-hub",
+    },
+    {
+      id: 5,
+      title: "Valyuta",
+      subtitle: "Hisoblash",
+      icon: "Calculator",
+      color: "teal",
+      route: "/currency-exchange-rates",
+    },
+  ];
+
+  // Auto-slide effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % quickActions.length);
+    }, 3000); // Change slide every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [quickActions.length]);
 
   const getFlagImage = (currencyCode) => {
     const flagMap = {
@@ -230,23 +284,62 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
               </div>
             </div>
 
-            {/* Info Stats */}
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {currencies?.length || 0}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
-                  Valyuta turlari
-                </div>
+            {/* Auto-Sliding Quick Actions */}
+            <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="relative overflow-hidden rounded-lg h-20">
+                {quickActions.map((action, index) => {
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => navigate(action.route)}
+                      className={`w-full absolute top-0 left-0 transition-all duration-500 ease-in-out ${
+                        index === currentSlide
+                          ? "opacity-100 translate-x-0"
+                          : "opacity-0 translate-x-full pointer-events-none"
+                      }`}
+                    >
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 hover:shadow-lg transition-shadow duration-300">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-blue-600 dark:bg-blue-700 rounded-lg flex items-center justify-center">
+                            <Icon
+                              name={action.icon}
+                              size={24}
+                              className="text-white"
+                            />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <div className="text-base font-bold text-blue-900 dark:text-blue-100">
+                              {action.title}
+                            </div>
+                            <div className="text-sm text-blue-600 dark:text-blue-400 mt-0.5">
+                              {action.subtitle}
+                            </div>
+                          </div>
+                          <Icon
+                            name="ChevronRight"
+                            size={20}
+                            className="text-blue-500 dark:text-blue-400"
+                          />
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                <div className="text-3xl font-bold text-gray-700 dark:text-gray-300">
-                  24/7
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
-                  Onlayn xizmat
-                </div>
+
+              {/* Slide Indicators */}
+              <div className="flex justify-center space-x-2 mt-3">
+                {quickActions.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentSlide
+                        ? "w-8 bg-primary"
+                        : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>

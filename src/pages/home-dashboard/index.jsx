@@ -102,7 +102,7 @@ const HomeDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-16">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <LoadingComponent
               type="card"
               count={4}
@@ -140,7 +140,7 @@ const HomeDashboard = () => {
       </Helmet>
       <Navbar />
       <main className="pt-16">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Announcement Banner */}
           {/* <AnnouncementBanner /> */}
 

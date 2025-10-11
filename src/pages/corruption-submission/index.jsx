@@ -187,7 +187,7 @@ const CorruptionSubmission = () => {
         </Helmet>
         <Navbar />
         <main className="pt-20 pb-12">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 md:p-12 border border-gray-200 dark:border-slate-700">
               <div className="text-center space-y-6">
                 <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
@@ -248,7 +248,7 @@ const CorruptionSubmission = () => {
       </Helmet>
       <Navbar />
       <main className="pt-20 pb-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <div className="mb-6">
             <Button
@@ -666,7 +666,7 @@ const CorruptionSubmission = () => {
           </div>
         </div>
       </main>
-      <div className="h-20 md:h-0"></div>
+      <div className="h-20"></div>
     </div>
   );
 };

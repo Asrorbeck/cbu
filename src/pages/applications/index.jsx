@@ -146,7 +146,7 @@ const Applications = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-20 pb-20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="animate-pulse space-y-4">
               {[1, 2, 3].map((i) => (
                 <div
@@ -171,7 +171,7 @@ const Applications = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 pb-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
@@ -340,8 +340,8 @@ const Applications = () => {
           )}
         </div>
       </main>
-      {/* Bottom navigation spacing - mobile only */}
-      <div className="h-20 md:h-0"></div>
+      {/* Bottom navigation spacing */}
+      <div className="h-20"></div>
     </div>
   );
 };

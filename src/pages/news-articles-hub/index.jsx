@@ -336,8 +336,8 @@ const NewsArticlesHub = () => {
           </div>
         </div>
       </main>
-      {/* Bottom navigation spacing - mobile only */}
-      <div className="h-20 md:h-0"></div>
+      {/* Bottom navigation spacing */}
+      <div className="h-20"></div>
     </div>
   );
 };

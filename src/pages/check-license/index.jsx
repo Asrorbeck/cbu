@@ -84,7 +84,7 @@ const CheckLicense = () => {
         </Helmet>
         <Navbar />
         <main className="pt-20 pb-12">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
               <Button
                 variant="ghost"
@@ -202,7 +202,7 @@ const CheckLicense = () => {
             </div>
           </div>
         </main>
-        <div className="h-20 md:h-0"></div>
+        <div className="h-20"></div>
       </div>
     );
   }
@@ -214,7 +214,7 @@ const CheckLicense = () => {
       </Helmet>
       <Navbar />
       <main className="pt-20 pb-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <div className="mb-6">
             <Button
@@ -339,7 +339,7 @@ const CheckLicense = () => {
           </div>
         </div>
       </main>
-      <div className="h-20 md:h-0"></div>
+      <div className="h-20"></div>
     </div>
   );
 };

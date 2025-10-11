@@ -399,7 +399,7 @@ const JobVacanciesBrowser = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 pb-12">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-left mb-8">
             <h1 className="text-3xl font-bold text-foreground">
