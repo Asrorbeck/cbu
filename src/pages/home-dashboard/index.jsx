@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import HeroSection from "./components/HeroSection";
 import ServicesGrid from "./components/ServicesGrid";
-import QuickActions from "./components/QuickActions";
-import AnnouncementBanner from "./components/AnnouncementBanner";
 import LoadingComponent from "../../components/ui/LoadingComponent";
 
 const HomeDashboard = () => {
@@ -104,7 +102,7 @@ const HomeDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <LoadingComponent
               type="card"
               count={4}
@@ -142,7 +140,7 @@ const HomeDashboard = () => {
       </Helmet>
       <Navbar />
       <main className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Announcement Banner */}
           {/* <AnnouncementBanner /> */}
 
@@ -164,35 +162,10 @@ const HomeDashboard = () => {
             </div>
             <ServicesGrid />
           </div>
-
-          {/* Quick Actions */}
-          {/* <QuickActions /> */}
-
-          {/* Footer Section */}
-          <div className="mt-12 pt-8 border-t border-border">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
-                <span>Last Updated: September 17, 2025</span>
-                <span>•</span>
-                <span>Version 0.0.1</span>
-              </div>
-              <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-                Central Bank WebApp provides secure access to essential banking
-                services. For technical support or inquiries, please contact our
-                customer service team.
-              </p>
-              <div className="flex items-center justify-center space-x-4 pt-4">
-                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                  <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                  <span>All Systems Operational</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </main>
-      {/* Bottom navigation spacing - mobile only */}
-      <div className="h-20 md:h-0"></div>
+      {/* Bottom navigation spacing */}
+      <div className="h-20"></div>
     </div>
   );
 };

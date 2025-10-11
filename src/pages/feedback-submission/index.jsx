@@ -44,7 +44,7 @@ const FeedbackSubmission = () => {
       <Navbar />
       {/* Main Content */}
       <main className="pt-20 pb-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <div className="mb-8">
             <Button
@@ -84,8 +84,8 @@ const FeedbackSubmission = () => {
           </div>
         </div>
       </main>
-      {/* Bottom navigation spacing - mobile only */}
-      <div className="h-20 md:h-0"></div>
+      {/* Bottom navigation spacing */}
+      <div className="h-20"></div>
     </div>
   );
 };

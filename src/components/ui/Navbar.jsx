@@ -14,6 +14,8 @@ const Navbar = () => {
     return localStorage.getItem("language") || "uz-Latn";
   });
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isTelegramDesktop, setIsTelegramDesktop] = useState(false);
   const { t, i18n } = useTranslation();
 
   const languages = [
@@ -43,6 +45,48 @@ const Navbar = () => {
     }
   }, [language, i18n]);
 
+  // Telegram Web App initialization
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+      // Telegramga tayyor ekanimizni aytish
+      tg.ready();
+
+      // Sahifani kengaytirish
+      tg.expand();
+
+      // Platform va viewport ni tekshirish
+      const platform = tg.platform || "";
+      const viewportHeight = tg.viewportHeight || 0;
+
+      // Desktop telegram: platform "tdesktop", "macos", "windows" bo'lishi mumkin
+      // Va viewport height katta bo'ladi (> 600px odatda)
+      const isDesktop =
+        platform.includes("tdesktop") ||
+        platform.includes("macos") ||
+        platform.includes("windows") ||
+        (viewportHeight > 600 &&
+          !platform.includes("android") &&
+          !platform.includes("ios"));
+
+      setIsTelegramDesktop(isDesktop);
+
+      // Fullscreen event listener
+      if (tg.onEvent) {
+        tg.onEvent("fullscreenChanged", (data) => {
+          setIsFullscreen(data?.isFullscreen || false);
+        });
+      }
+
+      console.log("Telegram WebApp initialized:", {
+        platform,
+        viewportHeight,
+        isDesktop,
+      });
+    }
+  }, []);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
@@ -57,6 +101,27 @@ const Navbar = () => {
     navigate("/home-dashboard");
   };
 
+  const toggleFullscreen = () => {
+    const tg = window.Telegram?.WebApp;
+
+    if (!tg) return;
+
+    if (isFullscreen) {
+      // Fullscreen dan chiqish
+      if (tg.exitFullscreen) {
+        tg.exitFullscreen();
+      }
+    } else {
+      // Fullscreen rejimga o'tish
+      if (tg.requestFullscreen) {
+        tg.requestFullscreen();
+      } else {
+        // Fallback: expand
+        tg.expand();
+      }
+    }
+  };
+
   const currentLanguage = languages?.find((lang) => lang?.code === language);
 
   // Debug current language
@@ -65,7 +130,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 dark:backdrop-blur-sm border-b border-gray-200 dark:border-slate-700 theme-transition shadow-sm dark:shadow-lg dark:shadow-slate-900/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <div
@@ -93,6 +158,27 @@ const Navbar = () => {
 
           {/* Navigation Actions */}
           <div className="flex items-center space-x-4">
+            {/* Telegram Fullscreen Button - Only on Desktop Telegram */}
+            {isTelegramDesktop && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleFullscreen}
+                className="p-2"
+                title={
+                  isFullscreen
+                    ? "Fullscreen dan chiqish"
+                    : "Fullscreen rejimga o'tish"
+                }
+              >
+                <Icon
+                  name={isFullscreen ? "Minimize2" : "Maximize2"}
+                  size={20}
+                  className="transition-transform duration-300 hover:scale-110 text-icon"
+                />
+              </Button>
+            )}
+
             {/* Language Switcher */}
             <div className="relative">
               <Button

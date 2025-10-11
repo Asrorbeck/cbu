@@ -60,8 +60,9 @@ const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg md:hidden">
-      <div className="flex items-center justify-around py-2 px-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg">
+      {/* Mobile Design */}
+      <div className="md:hidden flex items-center justify-around py-2 px-2">
         {menuItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -97,6 +98,35 @@ const BottomNavigation = () => {
             </button>
           );
         })}
+      </div>
+
+      {/* Desktop Design */}
+      <div className="hidden md:block">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 py-3">
+            {menuItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex items-center gap-3 py-2.5 px-6 rounded-lg transition-all duration-200 font-medium ${
+                    active
+                      ? "bg-primary text-white shadow-md"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={20}
+                    className={active ? "text-white" : "text-muted-foreground"}
+                  />
+                  <span className="text-sm">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
