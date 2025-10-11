@@ -15,8 +15,6 @@ const Navbar = () => {
   });
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isTelegramDesktop, setIsTelegramDesktop] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
   const [isTelegramApp, setIsTelegramApp] = useState(false);
   const [showFullscreenButton, setShowFullscreenButton] = useState(false);
   const { t, i18n } = useTranslation();
@@ -48,69 +46,7 @@ const Navbar = () => {
     }
   }, [language, i18n]);
 
-  // Check if device is desktop (not mobile)
-  useEffect(() => {
-    const checkIfDesktop = () => {
-      // Check screen width
-      const isLargeScreen = window.innerWidth >= 768;
-
-      // Check if it's not a mobile device
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-
-      const isDesktopDevice = isLargeScreen && !isMobile;
-      setIsDesktop(isDesktopDevice);
-
-      // Telegram Web App tekshiruvi
-      const tg = window.Telegram?.WebApp;
-      const isTg = !!tg;
-      setIsTelegramApp(isTg);
-
-      // Fullscreen button ko'rsatish shartlari:
-      // 1. Desktop bo'lishi kerak
-      // 2. Agar Telegram bo'lsa - API version 8.0+ bo'lishi kerak
-      // 3. Agar oddiy browser bo'lsa - fullscreen API mavjud bo'lishi kerak
-      if (isDesktopDevice) {
-        if (isTg) {
-          // Telegram Web App versiyasini tekshirish
-          const version = tg.version || "6.0";
-          const versionNumber = parseFloat(version);
-
-          // API 8.0+ da requestFullscreen mavjud
-          const hasFullscreenSupport =
-            versionNumber >= 8.0 && typeof tg.requestFullscreen === "function";
-          setShowFullscreenButton(hasFullscreenSupport);
-
-          console.log(
-            "Telegram Web App version:",
-            version,
-            "Fullscreen support:",
-            hasFullscreenSupport
-          );
-        } else {
-          // Oddiy browser - fullscreen API ni tekshirish
-          const hasFullscreenAPI =
-            document.fullscreenEnabled ||
-            document.webkitFullscreenEnabled ||
-            document.mozFullScreenEnabled ||
-            document.msFullscreenEnabled;
-
-          setShowFullscreenButton(hasFullscreenAPI);
-        }
-      } else {
-        setShowFullscreenButton(false);
-      }
-    };
-
-    checkIfDesktop();
-    window.addEventListener("resize", checkIfDesktop);
-
-    return () => window.removeEventListener("resize", checkIfDesktop);
-  }, []);
-
-  // Telegram Web App initialization
+  // Check if Telegram WebApp supports fullscreen
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
 
@@ -121,69 +57,35 @@ const Navbar = () => {
       // Sahifani kengaytirish
       tg.expand();
 
-      // Platform va viewport ni tekshirish
-      const platform = tg.platform || "";
-      const viewportHeight = tg.viewportHeight || 0;
+      setIsTelegramApp(true);
 
-      // Desktop telegram: platform "tdesktop", "macos", "windows" bo'lishi mumkin
-      // Va viewport height katta bo'ladi (> 600px odatda)
-      const isDesktopTelegram =
-        platform.includes("tdesktop") ||
-        platform.includes("macos") ||
-        platform.includes("windows") ||
-        (viewportHeight > 600 &&
-          !platform.includes("android") &&
-          !platform.includes("ios"));
+      // Faqat requestFullscreen funksiyasi mavjudligini tekshirish
+      const hasFullscreen = typeof tg.requestFullscreen === "function";
+      setShowFullscreenButton(hasFullscreen);
 
-      setIsTelegramDesktop(isDesktopTelegram);
+      console.log(
+        "Telegram WebApp detected. Fullscreen support:",
+        hasFullscreen
+      );
 
-      // Fullscreen event listener
+      // Fullscreen event listener (to'g'ri event nomi: fullscreenChanged)
       if (tg.onEvent) {
-        tg.onEvent("fullscreenChanged", (data) => {
-          setIsFullscreen(data?.isFullscreen || false);
-        });
+        const handleFullscreenChange = (params) => {
+          console.log("Fullscreen changed:", params);
+          // params.isFullscreen yoki to'g'ridan-to'g'ri boolean bo'lishi mumkin
+          const isFull =
+            typeof params === "boolean" ? params : params?.isFullscreen;
+          setIsFullscreen(!!isFull);
+        };
+
+        tg.onEvent("fullscreenChanged", handleFullscreenChange);
+        tg.onEvent("fullscreen_changed", handleFullscreenChange); // Fallback
       }
-
-      console.log("Telegram WebApp initialized:", {
-        platform,
-        viewportHeight,
-        isDesktop: isDesktopTelegram,
-      });
+    } else {
+      setIsTelegramApp(false);
+      setShowFullscreenButton(false);
+      console.log("Not in Telegram WebApp");
     }
-  }, []);
-
-  // Browser fullscreen change listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen =
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement;
-
-      setIsFullscreen(!!isCurrentlyFullscreen);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        handleFullscreenChange
-      );
-      document.removeEventListener(
-        "mozfullscreenchange",
-        handleFullscreenChange
-      );
-      document.removeEventListener(
-        "MSFullscreenChange",
-        handleFullscreenChange
-      );
-    };
   }, []);
 
   const toggleTheme = () => {
@@ -200,44 +102,31 @@ const Navbar = () => {
     navigate("/home-dashboard");
   };
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = () => {
     const tg = window.Telegram?.WebApp;
+
+    if (!tg || !isTelegramApp) {
+      console.log("Telegram WebApp not available");
+      return;
+    }
 
     try {
       if (isFullscreen) {
         // Fullscreen dan chiqish
-        if (isTelegramApp && tg && typeof tg.exitFullscreen === "function") {
-          // Telegram fullscreen dan chiqish
+        if (typeof tg.exitFullscreen === "function") {
+          console.log("Exiting fullscreen...");
           tg.exitFullscreen();
         } else {
-          // Browser fullscreen dan chiqish
-          if (document.exitFullscreen) {
-            await document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) {
-            await document.webkitExitFullscreen();
-          } else if (document.mozCancelFullScreen) {
-            await document.mozCancelFullScreen();
-          } else if (document.msExitFullscreen) {
-            await document.msExitFullscreen();
-          }
+          console.log("exitFullscreen not available");
         }
       } else {
         // Fullscreen rejimga o'tish
-        if (isTelegramApp && tg && typeof tg.requestFullscreen === "function") {
-          // Telegram fullscreen (faqat API 8.0+ da ishlaydi)
+        if (typeof tg.requestFullscreen === "function") {
+          console.log("Requesting fullscreen...");
           tg.requestFullscreen();
         } else {
-          // Browser fullscreen
-          const elem = document.documentElement;
-          if (elem.requestFullscreen) {
-            await elem.requestFullscreen();
-          } else if (elem.webkitRequestFullscreen) {
-            await elem.webkitRequestFullscreen();
-          } else if (elem.mozRequestFullScreen) {
-            await elem.mozRequestFullScreen();
-          } else if (elem.msRequestFullscreen) {
-            await elem.msRequestFullscreen();
-          }
+          console.log("requestFullscreen not available, using expand fallback");
+          tg.expand();
         }
       }
     } catch (error) {
