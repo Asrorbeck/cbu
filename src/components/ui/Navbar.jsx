@@ -68,18 +68,31 @@ const Navbar = () => {
         hasFullscreen
       );
 
-      // Fullscreen event listener (to'g'ri event nomi: fullscreenChanged)
-      if (tg.onEvent) {
-        const handleFullscreenChange = (params) => {
-          console.log("Fullscreen changed:", params);
-          // params.isFullscreen yoki to'g'ridan-to'g'ri boolean bo'lishi mumkin
-          const isFull =
-            typeof params === "boolean" ? params : params?.isFullscreen;
-          setIsFullscreen(!!isFull);
+      // Fullscreen event listener
+      if (tg.onEvent && hasFullscreen) {
+        const handleFullscreenChange = (event) => {
+          console.log("Fullscreen event received:", event);
+
+          // Event structurasi har xil bo'lishi mumkin
+          let isFull = false;
+
+          if (typeof event === "boolean") {
+            // To'g'ridan-to'g'ri boolean
+            isFull = event;
+          } else if (event && typeof event === "object") {
+            // Object bo'lsa, isFullscreen propertyni tekshirish
+            isFull =
+              event.isFullscreen === true || event.is_fullscreen === true;
+          }
+
+          console.log("Setting fullscreen state to:", isFull);
+          setIsFullscreen(isFull);
         };
 
+        // Telegram API 8.0+ event nomi
         tg.onEvent("fullscreenChanged", handleFullscreenChange);
-        tg.onEvent("fullscreen_changed", handleFullscreenChange); // Fallback
+
+        console.log("Fullscreen event listener registered");
       }
     } else {
       setIsTelegramApp(false);
@@ -116,6 +129,12 @@ const Navbar = () => {
         if (typeof tg.exitFullscreen === "function") {
           console.log("Exiting fullscreen...");
           tg.exitFullscreen();
+
+          // Agar event ishlamasa, qo'lda state ni o'zgartirish
+          setTimeout(() => {
+            console.log("Manual state update: setting to false");
+            setIsFullscreen(false);
+          }, 100);
         } else {
           console.log("exitFullscreen not available");
         }
@@ -124,6 +143,12 @@ const Navbar = () => {
         if (typeof tg.requestFullscreen === "function") {
           console.log("Requesting fullscreen...");
           tg.requestFullscreen();
+
+          // Agar event ishlamasa, qo'lda state ni o'zgartirish
+          setTimeout(() => {
+            console.log("Manual state update: setting to true");
+            setIsFullscreen(true);
+          }, 100);
         } else {
           console.log("requestFullscreen not available, using expand fallback");
           tg.expand();
