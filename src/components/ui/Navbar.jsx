@@ -160,23 +160,36 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {/* Telegram Fullscreen Button - Only on Desktop Telegram */}
             {isTelegramDesktop && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleFullscreen}
-                className="p-2"
-                title={
-                  isFullscreen
-                    ? "Fullscreen dan chiqish"
-                    : "Fullscreen rejimga o'tish"
-                }
-              >
-                <Icon
-                  name={isFullscreen ? "Minimize2" : "Maximize2"}
-                  size={20}
-                  className="transition-transform duration-300 hover:scale-110 text-icon"
-                />
-              </Button>
+              <>
+                {isFullscreen ? (
+                  // Fullscreen rejimida - Matnli button
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleFullscreen}
+                    iconName="ArrowLeft"
+                    iconPosition="left"
+                    className="border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                  >
+                    Orqaga qaytish
+                  </Button>
+                ) : (
+                  // Oddiy rejimda - Icon button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleFullscreen}
+                    className="p-2"
+                    title="Fullscreen rejimga o'tish"
+                  >
+                    <Icon
+                      name="Maximize2"
+                      size={20}
+                      className="transition-transform duration-300 hover:scale-110 text-icon"
+                    />
+                  </Button>
+                )}
+              </>
             )}
 
             {/* Language Switcher */}
