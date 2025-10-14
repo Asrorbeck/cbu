@@ -1,9 +1,24 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes as RouterRoutes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import BottomNavigation from "components/ui/BottomNavigation";
 import NotFound from "pages/NotFound";
+
+// Component to conditionally show BottomNavigation
+const ConditionalBottomNavigation = () => {
+  const location = useLocation();
+  // Hide BottomNavigation on test page
+  if (location.pathname.startsWith("/test/")) {
+    return null;
+  }
+  return <BottomNavigation />;
+};
 import HomeDashboard from "./pages/home-dashboard";
 import NewsArticlesHub from "./pages/news-articles-hub";
 import FeedbackSubmission from "./pages/feedback-submission";
@@ -21,6 +36,7 @@ import CheckLicense from "./pages/check-license";
 import SubmitComplaint from "./pages/submit-complaint";
 import ApplicationDetail from "./pages/application-detail";
 import EditCorruption from "./pages/edit-corruption";
+import VacancyTest from "./pages/vacancy-test";
 
 const Routes = () => {
   return (
@@ -46,6 +62,7 @@ const Routes = () => {
             path="/departments/:departmentId/:vacancyId/form"
             element={<JobApplicationForm />}
           />
+          <Route path="/test/:testId" element={<VacancyTest />} />
           <Route
             path="/departments/:departmentId/:vacancyId/terms-and-conditions"
             element={<TermsAndConditionsPage />}
@@ -75,7 +92,7 @@ const Routes = () => {
           <Route path="/edit-corruption/:id" element={<EditCorruption />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
-        <BottomNavigation />
+        <ConditionalBottomNavigation />
       </ErrorBoundary>
     </BrowserRouter>
   );
