@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
@@ -20,113 +20,247 @@ const VacancyTest = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
+  const [violations, setViolations] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const [showViolationModal, setShowViolationModal] = useState(false);
+  const [violationType, setViolationType] = useState("");
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
   // Decode the test ID from URL
   const decodedTestId = testId ? atob(testId) : null;
 
-  // Test savollar - Test questions (10 ta)
-  const testQuestions = [
-    {
-      id: 1,
-      question: t("test.questions.q1.question"),
-      options: [
-        { id: "a", text: t("test.questions.q1.a") },
-        { id: "b", text: t("test.questions.q1.b") },
-        { id: "c", text: t("test.questions.q1.c") },
-        { id: "d", text: t("test.questions.q1.d") },
-      ],
-    },
-    {
-      id: 2,
-      question: t("test.questions.q2.question"),
-      options: [
-        { id: "a", text: t("test.questions.q2.a") },
-        { id: "b", text: t("test.questions.q2.b") },
-        { id: "c", text: t("test.questions.q2.c") },
-        { id: "d", text: t("test.questions.q2.d") },
-      ],
-    },
-    {
-      id: 3,
-      question: t("test.questions.q3.question"),
-      options: [
-        { id: "a", text: t("test.questions.q3.a") },
-        { id: "b", text: t("test.questions.q3.b") },
-        { id: "c", text: t("test.questions.q3.c") },
-        { id: "d", text: t("test.questions.q3.d") },
-      ],
-    },
-    {
-      id: 4,
-      question: t("test.questions.q4.question"),
-      options: [
-        { id: "a", text: t("test.questions.q4.a") },
-        { id: "b", text: t("test.questions.q4.b") },
-        { id: "c", text: t("test.questions.q4.c") },
-        { id: "d", text: t("test.questions.q4.d") },
-      ],
-    },
-    {
-      id: 5,
-      question: t("test.questions.q5.question"),
-      options: [
-        { id: "a", text: t("test.questions.q5.a") },
-        { id: "b", text: t("test.questions.q5.b") },
-        { id: "c", text: t("test.questions.q5.c") },
-        { id: "d", text: t("test.questions.q5.d") },
-      ],
-    },
-    {
-      id: 6,
-      question: t("test.questions.q6.question"),
-      options: [
-        { id: "a", text: t("test.questions.q6.a") },
-        { id: "b", text: t("test.questions.q6.b") },
-        { id: "c", text: t("test.questions.q6.c") },
-        { id: "d", text: t("test.questions.q6.d") },
-      ],
-    },
-    {
-      id: 7,
-      question: t("test.questions.q7.question"),
-      options: [
-        { id: "a", text: t("test.questions.q7.a") },
-        { id: "b", text: t("test.questions.q7.b") },
-        { id: "c", text: t("test.questions.q7.c") },
-        { id: "d", text: t("test.questions.q7.d") },
-      ],
-    },
-    {
-      id: 8,
-      question: t("test.questions.q8.question"),
-      options: [
-        { id: "a", text: t("test.questions.q8.a") },
-        { id: "b", text: t("test.questions.q8.b") },
-        { id: "c", text: t("test.questions.q8.c") },
-        { id: "d", text: t("test.questions.q8.d") },
-      ],
-    },
-    {
-      id: 9,
-      question: t("test.questions.q9.question"),
-      options: [
-        { id: "a", text: t("test.questions.q9.a") },
-        { id: "b", text: t("test.questions.q9.b") },
-        { id: "c", text: t("test.questions.q9.c") },
-        { id: "d", text: t("test.questions.q9.d") },
-      ],
-    },
-    {
-      id: 10,
-      question: t("test.questions.q10.question"),
-      options: [
-        { id: "a", text: t("test.questions.q10.a") },
-        { id: "b", text: t("test.questions.q10.b") },
-        { id: "c", text: t("test.questions.q10.c") },
-        { id: "d", text: t("test.questions.q10.d") },
-      ],
-    },
-  ];
+  // To'g'ri javoblar (Correct answers)
+  const correctAnswers = {
+    1: "a", // 1991 yil 1 sentyabr
+    2: "b", // Milliy valyuta barqarorligini ta'minlash
+    3: "c", // So'm
+    4: "b", // Xodimlarni tanlash va rivojlantirish
+    5: "a", // Ma'suliyatlilik va halollik
+    6: "b", // Rasmiy biznes uslubida
+    7: "c", // Oliy Majlisga
+    8: "b", // Mehnat shartnomasi shartlariga rioya qilinishi
+    9: "c", // Maxfiy joyda tartibli
+    10: "b", // Xushmuomalalik va hurmat
+  };
+
+  // Check if test is blocked or already submitted
+  useEffect(() => {
+    if (!decodedTestId) return;
+
+    // Check if blocked
+    const blockedTests = JSON.parse(
+      localStorage.getItem("blockedTests") || "[]"
+    );
+    if (blockedTests.includes(decodedTestId)) {
+      setIsBlocked(true);
+      setLoading(false);
+      return;
+    }
+
+    // Check if already submitted
+    const previousResult = localStorage.getItem(`test_result_${decodedTestId}`);
+    if (previousResult) {
+      try {
+        const result = JSON.parse(previousResult);
+        setTestResult(result);
+        setAlreadySubmitted(true);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading previous result:", error);
+      }
+    }
+  }, [decodedTestId]);
+
+  // Load saved test state from localStorage
+  useEffect(() => {
+    if (!decodedTestId || isBlocked) return;
+
+    const savedState = localStorage.getItem(`test_state_${decodedTestId}`);
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        setAnswers(state.answers || {});
+        setTimeRemaining(state.timeRemaining || 30 * 60);
+        setCurrentQuestion(state.currentQuestion || 0);
+        setViolations(state.violations || 0);
+        console.log("Restored test state from localStorage");
+      } catch (error) {
+        console.error("Error loading test state:", error);
+      }
+    }
+  }, [decodedTestId, isBlocked]);
+
+  // Save test state to localStorage
+  useEffect(() => {
+    if (!decodedTestId || isBlocked) return;
+
+    const state = {
+      answers,
+      timeRemaining,
+      currentQuestion,
+      violations,
+      lastSaved: new Date().toISOString(),
+    };
+
+    localStorage.setItem(`test_state_${decodedTestId}`, JSON.stringify(state));
+  }, [
+    answers,
+    timeRemaining,
+    currentQuestion,
+    violations,
+    decodedTestId,
+    isBlocked,
+  ]);
+
+  // Handle violations
+  const handleViolation = (type) => {
+    const newViolations = violations + 1;
+    setViolations(newViolations);
+    setViolationType(type);
+
+    if (newViolations >= 5) {
+      // Block the test
+      const blockedTests = JSON.parse(
+        localStorage.getItem("blockedTests") || "[]"
+      );
+      if (!blockedTests.includes(decodedTestId)) {
+        blockedTests.push(decodedTestId);
+        localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
+      }
+      setIsBlocked(true);
+    } else {
+      // Show violation modal
+      setShowViolationModal(true);
+    }
+  };
+
+  // Prevent page refresh/close
+  useEffect(() => {
+    if (isBlocked) return;
+
+    const handleBeforeUnload = (e) => {
+      // Just show warning, don't count as violation
+      // (violation will be counted only if user actually leaves)
+      e.preventDefault();
+      e.returnValue = t("test.security.page_leave_warning");
+      return t("test.security.page_leave_warning");
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isBlocked, t]);
+
+  // Test savollar - Test questions (10 ta) - Memoized
+  const testQuestions = useMemo(
+    () => [
+      {
+        id: 1,
+        question: t("test.questions.q1.question"),
+        options: [
+          { id: "a", text: t("test.questions.q1.a") },
+          { id: "b", text: t("test.questions.q1.b") },
+          { id: "c", text: t("test.questions.q1.c") },
+          { id: "d", text: t("test.questions.q1.d") },
+        ],
+      },
+      {
+        id: 2,
+        question: t("test.questions.q2.question"),
+        options: [
+          { id: "a", text: t("test.questions.q2.a") },
+          { id: "b", text: t("test.questions.q2.b") },
+          { id: "c", text: t("test.questions.q2.c") },
+          { id: "d", text: t("test.questions.q2.d") },
+        ],
+      },
+      {
+        id: 3,
+        question: t("test.questions.q3.question"),
+        options: [
+          { id: "a", text: t("test.questions.q3.a") },
+          { id: "b", text: t("test.questions.q3.b") },
+          { id: "c", text: t("test.questions.q3.c") },
+          { id: "d", text: t("test.questions.q3.d") },
+        ],
+      },
+      {
+        id: 4,
+        question: t("test.questions.q4.question"),
+        options: [
+          { id: "a", text: t("test.questions.q4.a") },
+          { id: "b", text: t("test.questions.q4.b") },
+          { id: "c", text: t("test.questions.q4.c") },
+          { id: "d", text: t("test.questions.q4.d") },
+        ],
+      },
+      {
+        id: 5,
+        question: t("test.questions.q5.question"),
+        options: [
+          { id: "a", text: t("test.questions.q5.a") },
+          { id: "b", text: t("test.questions.q5.b") },
+          { id: "c", text: t("test.questions.q5.c") },
+          { id: "d", text: t("test.questions.q5.d") },
+        ],
+      },
+      {
+        id: 6,
+        question: t("test.questions.q6.question"),
+        options: [
+          { id: "a", text: t("test.questions.q6.a") },
+          { id: "b", text: t("test.questions.q6.b") },
+          { id: "c", text: t("test.questions.q6.c") },
+          { id: "d", text: t("test.questions.q6.d") },
+        ],
+      },
+      {
+        id: 7,
+        question: t("test.questions.q7.question"),
+        options: [
+          { id: "a", text: t("test.questions.q7.a") },
+          { id: "b", text: t("test.questions.q7.b") },
+          { id: "c", text: t("test.questions.q7.c") },
+          { id: "d", text: t("test.questions.q7.d") },
+        ],
+      },
+      {
+        id: 8,
+        question: t("test.questions.q8.question"),
+        options: [
+          { id: "a", text: t("test.questions.q8.a") },
+          { id: "b", text: t("test.questions.q8.b") },
+          { id: "c", text: t("test.questions.q8.c") },
+          { id: "d", text: t("test.questions.q8.d") },
+        ],
+      },
+      {
+        id: 9,
+        question: t("test.questions.q9.question"),
+        options: [
+          { id: "a", text: t("test.questions.q9.a") },
+          { id: "b", text: t("test.questions.q9.b") },
+          { id: "c", text: t("test.questions.q9.c") },
+          { id: "d", text: t("test.questions.q9.d") },
+        ],
+      },
+      {
+        id: 10,
+        question: t("test.questions.q10.question"),
+        options: [
+          { id: "a", text: t("test.questions.q10.a") },
+          { id: "b", text: t("test.questions.q10.b") },
+          { id: "c", text: t("test.questions.q10.c") },
+          { id: "d", text: t("test.questions.q10.d") },
+        ],
+      },
+    ],
+    [t]
+  );
 
   // Fetch vacancy data
   useEffect(() => {
@@ -140,11 +274,30 @@ const VacancyTest = () => {
       try {
         setLoading(true);
         setError(null);
-        const vacancyData = await vacanciesAPI.getVacancyById(decodedTestId);
-        setVacancy(vacancyData);
+
+        // Try to fetch vacancy data from API
+        try {
+          const vacancyData = await vacanciesAPI.getVacancyById(decodedTestId);
+          setVacancy(vacancyData);
+        } catch (apiError) {
+          // If API fails, use default test data
+          console.log("Using default test data");
+          setVacancy({
+            id: decodedTestId,
+            title: "Umumiy bilim testi",
+            description:
+              "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
+          });
+        }
       } catch (error) {
         console.error("Error fetching vacancy:", error);
-        setError("Failed to load test details. Please try again later.");
+        // Use default data even on error
+        setVacancy({
+          id: decodedTestId,
+          title: "Umumiy bilim testi",
+          description:
+            "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
+        });
       } finally {
         setLoading(false);
       }
@@ -155,6 +308,8 @@ const VacancyTest = () => {
 
   // Security: Prevent cheating
   useEffect(() => {
+    if (isBlocked) return;
+
     // Disable right-click
     const handleContextMenu = (e) => {
       e.preventDefault();
@@ -183,13 +338,10 @@ const VacancyTest = () => {
         return false;
       }
 
-      // PrintScreen
+      // PrintScreen - COUNT AS VIOLATION
       if (e.key === "PrintScreen") {
         e.preventDefault();
-        toast.error(t("test.security.no_screenshot"), {
-          duration: 2000,
-          position: "top-center",
-        });
+        handleViolation("screenshot");
         return false;
       }
 
@@ -248,12 +400,9 @@ const VacancyTest = () => {
       return false;
     };
 
-    // Detect tab switch / window blur
+    // Detect tab switch / window blur - COUNT AS VIOLATION
     const handleBlur = () => {
-      toast.warning(t("test.security.tab_switch_warning"), {
-        duration: 3000,
-        position: "top-center",
-      });
+      handleViolation("tab_switch");
     };
 
     // Detect fullscreen exit
@@ -306,12 +455,11 @@ const VacancyTest = () => {
       window.removeEventListener("blur", handleBlur);
       clearInterval(devToolsInterval);
     };
-  }, [t]);
+  }, [t, isBlocked, violations]);
 
   // Timer countdown
   useEffect(() => {
     if (timeRemaining <= 0) {
-      handleSubmit();
       return;
     }
 
@@ -370,31 +518,44 @@ const VacancyTest = () => {
     setIsSubmitting(true);
 
     try {
-      // Here you would submit the test results to your API
+      // Calculate results
+      let correctCount = 0;
+      testQuestions.forEach((q) => {
+        if (answers[q.id] === correctAnswers[q.id]) {
+          correctCount++;
+        }
+      });
+
+      const totalQuestions = testQuestions.length;
+      const percentage = (correctCount / totalQuestions) * 100;
+      const isPassed = percentage >= 50;
+
       const testResults = {
         testId: decodedTestId,
         answers: answers,
+        correctAnswers: correctAnswers,
+        correctCount: correctCount,
+        totalQuestions: totalQuestions,
+        percentage: percentage.toFixed(1),
+        isPassed: isPassed,
         submittedAt: new Date().toISOString(),
         timeSpent: 30 * 60 - timeRemaining,
       };
 
       console.log("Test Results:", testResults);
 
-      // Save to localStorage for backup
+      // Save to localStorage
       localStorage.setItem(
-        `test_${decodedTestId}`,
+        `test_result_${decodedTestId}`,
         JSON.stringify(testResults)
       );
 
-      toast.success(t("test.success_message"), {
-        duration: 4000,
-        position: "top-center",
-      });
+      // Clear test state from localStorage
+      localStorage.removeItem(`test_state_${decodedTestId}`);
 
-      // Navigate back to home after test
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      // Show result modal
+      setTestResult(testResults);
+      setShowResultModal(true);
     } catch (error) {
       console.error("Test submission error:", error);
       toast.error(t("test.error_message"), {
@@ -404,6 +565,12 @@ const VacancyTest = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Close modal and navigate home
+  const handleCloseResultModal = () => {
+    setShowResultModal(false);
+    navigate("/");
   };
 
   const handleBack = () => {
@@ -421,6 +588,115 @@ const VacancyTest = () => {
         <main className="pt-20 pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <LoadingSkeleton type="cards" count={3} />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show already submitted state
+  if (alreadySubmitted && testResult) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <Icon
+                name="CheckCircle"
+                size={64}
+                className="text-blue-500 mx-auto mb-6"
+              />
+              <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-4">
+                {t("test.already_submitted.title")}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
+                {t("test.already_submitted.description")}
+              </p>
+
+              {/* Previous Result */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6 max-w-md mx-auto">
+                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-4">
+                  {t("test.already_submitted.previous_result")}
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {t("test.result.your_score")}:
+                    </span>
+                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {testResult.percentage}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {t("test.result.correct_answers")}:
+                    </span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {testResult.correctCount} / {testResult.totalQuestions}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Holat:
+                    </span>
+                    <span
+                      className={`text-sm font-bold ${
+                        testResult.isPassed
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {testResult.isPassed ? "O'tdi ✓" : "O'tmadi ✗"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => navigate("/")}
+                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+              >
+                {t("test.security.go_home")}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show blocked state
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <Icon
+                name="Ban"
+                size={64}
+                className="text-red-500 mx-auto mb-6"
+              />
+              <h1 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-4">
+                {t("test.security.blocked_title")}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
+                {t("test.security.blocked_description")}
+              </p>
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 max-w-md mx-auto">
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {t("test.security.blocked_reason")}
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/")}
+                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+              >
+                {t("test.security.go_home")}
+              </button>
+            </div>
           </div>
         </main>
       </div>
@@ -463,6 +739,19 @@ const VacancyTest = () => {
   const progress = ((currentQuestion + 1) / testQuestions.length) * 100;
   const answeredCount = Object.keys(answers).length;
 
+  // Developer functions (for testing)
+  const handleClearBlockedTests = () => {
+    localStorage.removeItem("blockedTests");
+    localStorage.removeItem(`test_state_${decodedTestId}`);
+    setIsBlocked(false);
+    setViolations(0);
+    toast.success("Blocked tests cleared!", {
+      duration: 2000,
+      position: "top-center",
+    });
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-background select-none">
       <Helmet>
@@ -484,6 +773,73 @@ const VacancyTest = () => {
         `}</style>
       </Helmet>
       <Navbar />
+
+      {/* Developer Test Controls - Fixed bottom left */}
+      <div className="fixed bottom-4 left-4 z-50 space-y-2">
+        <button
+          onClick={handleClearBlockedTests}
+          className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-semibold transition-colors flex items-center space-x-2"
+        >
+          <Icon name="Trash2" size={14} />
+          <span>Clear Blocked Tests</span>
+        </button>
+      </div>
+
+      {/* Violation Counter - Fixed bottom right */}
+      {!isBlocked && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg border-2 transition-all ${
+              violations === 0
+                ? "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-700"
+                : violations <= 2
+                ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 dark:border-yellow-700"
+                : violations <= 3
+                ? "bg-orange-50 dark:bg-orange-900/20 border-orange-500 dark:border-orange-700"
+                : "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-700"
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Icon
+                name={violations === 0 ? "Shield" : "AlertTriangle"}
+                size={20}
+                className={
+                  violations === 0
+                    ? "text-green-600 dark:text-green-400"
+                    : violations <= 2
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : violations <= 3
+                    ? "text-orange-600 dark:text-orange-400"
+                    : "text-red-600 dark:text-red-400"
+                }
+              />
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                  Qoidabuzarlik
+                </div>
+                <div
+                  className={`text-lg font-bold ${
+                    violations === 0
+                      ? "text-green-600 dark:text-green-400"
+                      : violations <= 2
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : violations <= 3
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {violations}/5
+                </div>
+              </div>
+            </div>
+            {violations > 0 && (
+              <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                {5 - violations} ta imkoniyat qoldi
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <main className="pt-20 pb-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -653,6 +1009,191 @@ const VacancyTest = () => {
           </div>
         </div>
       </main>
+
+      {/* Violation Warning Modal */}
+      {showViolationModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-shake">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 px-6 py-8">
+              <div className="text-center">
+                <Icon
+                  name="AlertTriangle"
+                  size={64}
+                  className="mx-auto mb-4 text-red-600 dark:text-red-400 animate-pulse"
+                />
+                <h2 className="text-2xl font-bold text-red-800 dark:text-red-300 mb-2">
+                  {t("test.violation_modal.title")}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {violationType === "screenshot" &&
+                    t("test.violation_modal.screenshot_detected")}
+                  {violationType === "tab_switch" &&
+                    t("test.violation_modal.tab_switch_detected")}
+                  {violationType === "page_leave" &&
+                    t("test.violation_modal.page_leave_detected")}
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 space-y-4">
+              {/* Violation Count */}
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-700 rounded-lg p-4 text-center">
+                <div className="text-sm text-red-700 dark:text-red-300 mb-2">
+                  {t("test.violation_modal.current_violations")}
+                </div>
+                <div className="text-4xl font-bold text-red-600 dark:text-red-400">
+                  {violations}/5
+                </div>
+                <div className="text-sm text-red-700 dark:text-red-300 mt-2">
+                  {t("test.violation_modal.remaining", {
+                    count: 5 - violations,
+                  })}
+                </div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 dark:border-yellow-700 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
+                  ⚠️ {t("test.violation_modal.warning_message")}
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowViolationModal(false)}
+                className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+              >
+                {t("test.violation_modal.understood")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Result Modal */}
+      {showResultModal && testResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Header */}
+            <div
+              className={`px-6 py-8 ${
+                testResult.isPassed
+                  ? "bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30"
+                  : "bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30"
+              }`}
+            >
+              <div className="text-center">
+                <Icon
+                  name={testResult.isPassed ? "CheckCircle" : "XCircle"}
+                  size={64}
+                  className={`mx-auto mb-4 ${
+                    testResult.isPassed
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                />
+                <h2
+                  className={`text-2xl font-bold mb-2 ${
+                    testResult.isPassed
+                      ? "text-green-800 dark:text-green-300"
+                      : "text-red-800 dark:text-red-300"
+                  }`}
+                >
+                  {testResult.isPassed
+                    ? t("test.result.passed_title")
+                    : t("test.result.failed_title")}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {testResult.isPassed
+                    ? t("test.result.passed_message")
+                    : t("test.result.failed_message")}
+                </p>
+              </div>
+            </div>
+
+            {/* Results */}
+            <div className="px-6 py-6 space-y-4">
+              {/* Score Display */}
+              <div className="text-center mb-6">
+                <div className="inline-flex items-baseline space-x-2">
+                  <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                    {testResult.percentage}%
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  {t("test.result.your_score")}
+                </p>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("test.result.correct_answers")}
+                  </span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {testResult.correctCount} / {testResult.totalQuestions}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("test.result.wrong_answers")}
+                  </span>
+                  <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                    {testResult.totalQuestions - testResult.correctCount}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("test.result.time_spent")}
+                  </span>
+                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {Math.floor(testResult.timeSpent / 60)}{" "}
+                    {t("test.result.minutes")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pass/Fail Info */}
+              <div
+                className={`mt-6 p-4 rounded-lg border-2 ${
+                  testResult.isPassed
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-700"
+                    : "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-700"
+                }`}
+              >
+                <p
+                  className={`text-sm font-medium ${
+                    testResult.isPassed
+                      ? "text-green-800 dark:text-green-300"
+                      : "text-red-800 dark:text-red-300"
+                  }`}
+                >
+                  {testResult.isPassed
+                    ? t("test.result.pass_info")
+                    : t("test.result.fail_info")}
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={handleCloseResultModal}
+                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors mt-6 ${
+                  testResult.isPassed
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {t("test.result.go_home")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

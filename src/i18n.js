@@ -296,6 +296,9 @@ const resources = {
       },
       test: {
         title: "Mutaxassislik testi",
+        default_test_title: "Umumiy bilim testi",
+        default_test_description:
+          "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
         back_button: "Orqaga",
         progress: "Jarayon",
         answered: "Javob berilgan",
@@ -323,6 +326,49 @@ const resources = {
           fullscreen_exit_warning:
             "Ogohlantirish: To'liq ekran rejimidan chiqdingiz!",
           devtools_detected: "Dasturchi vositalari aniqlandi! Iltimos, yoping.",
+          page_leave_warning:
+            "Test davom etmoqda! Sahifadan chiqsangiz, barcha javoblaringiz yo'qoladi!",
+          violation_warning:
+            "Ogohlantirish! Qoidabuzarlik {{count}}/5. {{remaining}} ta imkoniyat qoldi!",
+          blocked_title: "SIZ CHETLATILDINGIZ",
+          blocked_description: "Siz testda ko'p marta qoidabuzarlik qildingiz.",
+          blocked_reason:
+            "5 marta qoidabuzarlik sabab bo'ldi. Bu test endi sizga yopiq.",
+          blocked_message:
+            "Siz testdan chetlatildingiz! 5 marta qoidabuzarlik qildingiz.",
+          go_home: "Bosh sahifaga qaytish",
+        },
+        violation_modal: {
+          title: "QOIDABUZARLIK ANIQLANDI!",
+          screenshot_detected: "Skrinshot olish urinishi aniqlandi",
+          tab_switch_detected: "Boshqa varaqqa o'tish aniqlandi",
+          page_leave_detected: "Sahifadan chiqish urinishi aniqlandi",
+          current_violations: "Joriy qoidabuzarliklar",
+          remaining: "{{count}} ta imkoniyat qoldi",
+          warning_message:
+            "5 marta qoidabuzarlik qilsangiz, testdan butunlay chetlatilasiz!",
+          understood: "Tushundim",
+        },
+        already_submitted: {
+          title: "SIZ ALLAQACHON TEST TOPSHIRGANSIZ",
+          description: "Bir xil testni ikkinchi marta topshirish mumkin emas.",
+          previous_result: "Avvalgi natijangiz",
+        },
+        result: {
+          passed_title: "Tabriklaymiz! Testdan o'tdingiz",
+          failed_title: "Afsuski, testdan o'ta olmadingiz",
+          passed_message: "Siz testni muvaffaqiyatli topshirdingiz!",
+          failed_message: "Keyingi safar ko'proq tayyorgarlik ko'ring.",
+          your_score: "Sizning natijangiz",
+          correct_answers: "To'g'ri javoblar",
+          wrong_answers: "Noto'g'ri javoblar",
+          time_spent: "Sarflangan vaqt",
+          minutes: "daqiqa",
+          pass_info:
+            "Siz kamida 50% to'g'ri javob berdingiz va testdan muvaffaqiyatli o'tdingiz!",
+          fail_info:
+            "Testdan o'tish uchun kamida 50% to'g'ri javob berish kerak edi.",
+          go_home: "Bosh sahifaga qaytish",
         },
         questions: {
           q1: {
@@ -685,6 +731,9 @@ const resources = {
       },
       test: {
         title: "Мутахассислик тести",
+        default_test_title: "Умумий билим тести",
+        default_test_description:
+          "Марказий Банк мутахассислиги бўйича умумий билим тести",
         back_button: "Орқага",
         progress: "Жараён",
         answered: "Жавоб берилган",
@@ -712,6 +761,49 @@ const resources = {
           fullscreen_exit_warning:
             "Огоҳлантириш: Тўлиқ екран режимидан чиқдингиз!",
           devtools_detected: "Дастурчи воситалари аниқланди! Илтимос, ёпинг.",
+          page_leave_warning:
+            "Тест давом етмоқда! Саҳифадан чиқсангиз, барча жавобларингиз йўқолади!",
+          violation_warning:
+            "Огоҳлантириш! Қоидабузарлик {{count}}/5. {{remaining}} та имконият қолди!",
+          blocked_title: "СИЗ ЧЕТЛАТИЛДИНГИЗ",
+          blocked_description: "Сиз тестда кўп марта қоидабузарлик қилдингиз.",
+          blocked_reason:
+            "5 марта қоидабузарлик сабаб бўлди. Бу тест енди сизга ёпиқ.",
+          blocked_message:
+            "Сиз тестдан четлатилдингиз! 5 марта қоидабузарлик қилдингиз.",
+          go_home: "Бош саҳифага қайтиш",
+        },
+        violation_modal: {
+          title: "ҚОИДАБУЗАРЛИК АНИҚЛАНДИ!",
+          screenshot_detected: "Скриншот олиш уриниши аниқланди",
+          tab_switch_detected: "Бошқа вараққа ўтиш аниқланди",
+          page_leave_detected: "Саҳифадан чиқиш уриниши аниқланди",
+          current_violations: "Жорий қоидабузарликлар",
+          remaining: "{{count}} та имконият қолди",
+          warning_message:
+            "5 марта қоидабузарлик қилсангиз, тестдан бутунлай четлатиласиз!",
+          understood: "Тушундим",
+        },
+        already_submitted: {
+          title: "СИЗ АЛЛАҚАЧОН ТЕСТ ТОПШИРГАНСИЗ",
+          description: "Бир хил тестни иккинчи марта топшириш мумкин емас.",
+          previous_result: "Аввалги натижангиз",
+        },
+        result: {
+          passed_title: "Табриклаймиз! Тестдан ўтдингиз",
+          failed_title: "Афсуски, тестдан ўта олмадингиз",
+          passed_message: "Сиз тестни муваффақиятли топширдингиз!",
+          failed_message: "Кейинги сафар кўпроқ тайёргарлик кўринг.",
+          your_score: "Сизнинг натижангиз",
+          correct_answers: "Тўғри жавоблар",
+          wrong_answers: "Нотўғри жавоблар",
+          time_spent: "Сарфланган вақт",
+          minutes: "дақиқа",
+          pass_info:
+            "Сиз камида 50% тўғри жавоб бердингиз ва тестдан муваффақиятли ўтдингиз!",
+          fail_info:
+            "Тестдан ўтиш учун камида 50% тўғри жавоб бериш керак еди.",
+          go_home: "Бош саҳифага қайтиш",
         },
         questions: {
           q1: {
@@ -1074,6 +1166,9 @@ const resources = {
       },
       test: {
         title: "Профессиональный тест",
+        default_test_title: "Общий тест знаний",
+        default_test_description:
+          "Общий тест знаний по специальности Центрального Банка",
         back_button: "Назад",
         progress: "Прогресс",
         answered: "Отвечено",
@@ -1103,6 +1198,49 @@ const resources = {
             "Предупреждение: Вы вышли из полноэкранного режима!",
           devtools_detected:
             "Обнаружены инструменты разработчика! Пожалуйста, закройте их.",
+          page_leave_warning:
+            "Тест продолжается! Если вы покинете страницу, все ответы будут потеряны!",
+          violation_warning:
+            "Предупреждение! Нарушение {{count}}/5. Осталось {{remaining}} попытки!",
+          blocked_title: "ВЫ ОТСТРАНЕНЫ",
+          blocked_description:
+            "Вы совершили множественные нарушения во время теста.",
+          blocked_reason:
+            "5 нарушений привели к отстранению. Этот тест теперь закрыт для вас.",
+          blocked_message: "Вы отстранены от теста! Совершено 5 нарушений.",
+          go_home: "Вернуться на главную",
+        },
+        violation_modal: {
+          title: "ОБНАРУЖЕНО НАРУШЕНИЕ!",
+          screenshot_detected: "Обнаружена попытка сделать скриншот",
+          tab_switch_detected: "Обнаружен переход на другую вкладку",
+          page_leave_detected: "Обнаружена попытка покинуть страницу",
+          current_violations: "Текущие нарушения",
+          remaining: "Осталось {{count}} попытки",
+          warning_message:
+            "После 5 нарушений вы будете полностью отстранены от теста!",
+          understood: "Понятно",
+        },
+        already_submitted: {
+          title: "ВЫ УЖЕ СДАЛИ ЭТОТ ТЕСТ",
+          description: "Один и тот же тест можно сдать только один раз.",
+          previous_result: "Ваш предыдущий результат",
+        },
+        result: {
+          passed_title: "Поздравляем! Вы прошли тест",
+          failed_title: "К сожалению, вы не прошли тест",
+          passed_message: "Вы успешно сдали тест!",
+          failed_message: "В следующий раз подготовьтесь лучше.",
+          your_score: "Ваш результат",
+          correct_answers: "Правильные ответы",
+          wrong_answers: "Неправильные ответы",
+          time_spent: "Затраченное время",
+          minutes: "минут",
+          pass_info:
+            "Вы дали не менее 50% правильных ответов и успешно прошли тест!",
+          fail_info:
+            "Для прохождения теста необходимо было дать не менее 50% правильных ответов.",
+          go_home: "Вернуться на главную",
         },
         questions: {
           q1: {
