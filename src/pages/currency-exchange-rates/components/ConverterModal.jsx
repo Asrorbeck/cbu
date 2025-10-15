@@ -10,7 +10,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
   const { t } = useTranslation();
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("UZS");
-  const [amount, setAmount] = useState("1");
+  const [amount, setAmount] = useState("");
   const [result, setResult] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -137,7 +137,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
   const handleClose = () => {
     onClose();
     // Reset form
-    setAmount("1");
+    setAmount("");
     setFromCurrency("USD");
     setToCurrency("UZS");
   };
@@ -166,7 +166,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e?.target?.value)}
-                  placeholder="1"
+                  placeholder="Son kiriting"
                   min="0"
                   step="0.01"
                   className="text-lg md:text-xl font-semibold h-10 md:h-12 border-2 border-primary/20 focus:border-primary bg-background"

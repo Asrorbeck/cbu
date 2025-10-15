@@ -147,11 +147,6 @@ const CorruptionSubmission = () => {
         ...formData,
         status: "Ko'rib chiqilmoqda",
         submittedAt: new Date().toISOString(),
-        submittedDate: new Date().toLocaleDateString("uz-UZ", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
       };
 
       // Save to localStorage

@@ -1,8 +1,20 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import Routes from "./Routes";
+import migrateDates from "./utils/migrateDates";
 
 function App() {
+  // Run date migration on app load (only once per version)
+  useEffect(() => {
+    const MIGRATION_VERSION = "1.0";
+    const currentVersion = localStorage.getItem("dateMigrationVersion");
+
+    if (currentVersion !== MIGRATION_VERSION) {
+      migrateDates();
+      localStorage.setItem("dateMigrationVersion", MIGRATION_VERSION);
+    }
+  }, []);
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Routes />

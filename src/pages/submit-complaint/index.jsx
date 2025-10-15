@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
+import { appealsAPI } from "../../services/api";
 
 const SubmitComplaint = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const SubmitComplaint = () => {
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const formatPhoneNumber = (value) => {
     // Remove all non-digits
@@ -59,6 +62,15 @@ const SubmitComplaint = () => {
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
     if (name === "phone") {
       const formatted = formatPhoneNumber(value);
       setFormData((prev) => ({
@@ -86,11 +98,45 @@ const SubmitComplaint = () => {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Prepare payload for backend API
+      let payload;
+
+      // If there's a file, use FormData, otherwise use regular JSON
+      if (selectedFile) {
+        payload = new FormData();
+        payload.append("is_anonymous", formData.isAnonymous);
+        payload.append(
+          "full_name",
+          formData.isAnonymous ? "" : formData.fullName
+        );
+        payload.append(
+          "phone_number",
+          formData.isAnonymous ? "" : formData.phone.replace(/\s+/g, "")
+        );
+        payload.append("email", formData.isAnonymous ? "" : formData.email);
+        payload.append("subject", formData.subject);
+        payload.append("message", formData.description);
+        payload.append("attachment", selectedFile); // Add the file
+      } else {
+        payload = {
+          is_anonymous: formData.isAnonymous,
+          full_name: formData.isAnonymous ? "" : formData.fullName,
+          phone_number: formData.isAnonymous
+            ? ""
+            : formData.phone.replace(/\s+/g, ""),
+          email: formData.isAnonymous ? "" : formData.email,
+          subject: formData.subject,
+          message: formData.description,
+        };
+      }
+
+      // Submit to backend API
+      const response = await appealsAPI.submitAppeal(payload);
+
       const refNumber = generateReferenceNumber();
       setReferenceNumber(refNumber);
 
-      // Create submission object
+      // Create submission object for localStorage
       const submission = {
         id: refNumber,
         type: "consumer-rights",
@@ -98,11 +144,6 @@ const SubmitComplaint = () => {
         ...formData,
         status: "Ko'rib chiqilmoqda",
         submittedAt: new Date().toISOString(),
-        submittedDate: new Date().toLocaleDateString("uz-UZ", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
       };
 
       // Save to localStorage
@@ -112,11 +153,66 @@ const SubmitComplaint = () => {
       existingSubmissions.push(submission);
       localStorage.setItem("submissions", JSON.stringify(existingSubmissions));
 
+      // Show success toast
+      toast.success("Murojaat muvaffaqiyatli yuborildi!");
+
       setShowSuccess(true);
 
-      console.log("Complaint submitted:", submission);
+      console.log("Complaint submitted:", response);
     } catch (error) {
       console.error("Error submitting:", error);
+
+      // Parse field-specific errors from backend
+      const backendErrors = error.response?.data;
+
+      if (backendErrors && typeof backendErrors === "object") {
+        const parsedErrors = {};
+        let hasFieldErrors = false;
+
+        // Map backend field names to frontend field names
+        const fieldMapping = {
+          full_name: "fullName",
+          phone_number: "phone",
+          email: "email",
+          subject: "subject",
+          message: "description",
+        };
+
+        // Extract errors for each field
+        Object.keys(backendErrors).forEach((key) => {
+          const frontendFieldName = fieldMapping[key] || key;
+          const errorValue = backendErrors[key];
+
+          // Handle array of errors or single error string
+          if (Array.isArray(errorValue) && errorValue.length > 0) {
+            parsedErrors[frontendFieldName] = errorValue[0];
+            hasFieldErrors = true;
+          } else if (typeof errorValue === "string") {
+            parsedErrors[frontendFieldName] = errorValue;
+            hasFieldErrors = true;
+          }
+        });
+
+        if (hasFieldErrors) {
+          setFieldErrors(parsedErrors);
+          toast.error("Iltimos, formadagi xatolarni tuzating");
+        } else {
+          // Show generic error if no field-specific errors found
+          const errorMessage =
+            backendErrors.message ||
+            backendErrors.error ||
+            "Murojaat yuborishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.";
+
+          toast.error(
+            Array.isArray(errorMessage) ? errorMessage[0] : errorMessage
+          );
+        }
+      } else {
+        // Show generic error
+        toast.error(
+          "Murojaat yuborishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -266,6 +362,7 @@ const SubmitComplaint = () => {
                         onChange={handleInputChange}
                         placeholder="Masalan: Karimov Karim"
                         required={!formData.isAnonymous}
+                        error={fieldErrors.fullName}
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -278,6 +375,7 @@ const SubmitComplaint = () => {
                           placeholder="+998 XX XXX XX XX"
                           required={!formData.isAnonymous}
                           maxLength={17}
+                          error={fieldErrors.phone}
                         />
 
                         <Input
@@ -287,6 +385,7 @@ const SubmitComplaint = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="example@mail.com"
+                          error={fieldErrors.email}
                         />
                       </div>
                     </div>
@@ -307,10 +406,17 @@ const SubmitComplaint = () => {
                   onChange={handleInputChange}
                   placeholder="Qisqacha mavzu"
                   required
+                  error={fieldErrors.subject}
                 />
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      fieldErrors.description
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-foreground"
+                    }`}
+                  >
                     Murojaat matni <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -318,13 +424,23 @@ const SubmitComplaint = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={6}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200"
+                    className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:border-transparent transition-all duration-200 ${
+                      fieldErrors.description
+                        ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
+                        : "border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    }`}
                     placeholder="Murojaatingizni batafsil yozing..."
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Minimum 50 belgidan iborat bo'lishi kerak
-                  </p>
+                  {fieldErrors.description ? (
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                      {fieldErrors.description}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Minimum 50 belgidan iborat bo'lishi kerak
+                    </p>
+                  )}
                 </div>
               </div>
 

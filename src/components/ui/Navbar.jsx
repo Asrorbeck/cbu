@@ -35,9 +35,7 @@ const Navbar = () => {
     try {
       i18n
         .changeLanguage(language)
-        .then(() => {
-          console.log("Language changed to:", language);
-        })
+        .then(() => {})
         .catch((error) => {
           console.error("Language change error:", error);
         });
@@ -63,16 +61,9 @@ const Navbar = () => {
       const hasFullscreen = typeof tg.requestFullscreen === "function";
       setShowFullscreenButton(hasFullscreen);
 
-      console.log(
-        "Telegram WebApp detected. Fullscreen support:",
-        hasFullscreen
-      );
-
       // Fullscreen event listener
       if (tg.onEvent && hasFullscreen) {
         const handleFullscreenChange = (event) => {
-          console.log("Fullscreen event received:", event);
-
           // Event structurasi har xil bo'lishi mumkin
           let isFull = false;
 
@@ -85,19 +76,15 @@ const Navbar = () => {
               event.isFullscreen === true || event.is_fullscreen === true;
           }
 
-          console.log("Setting fullscreen state to:", isFull);
           setIsFullscreen(isFull);
         };
 
         // Telegram API 8.0+ event nomi
         tg.onEvent("fullscreenChanged", handleFullscreenChange);
-
-        console.log("Fullscreen event listener registered");
       }
     } else {
       setIsTelegramApp(false);
       setShowFullscreenButton(false);
-      console.log("Not in Telegram WebApp");
     }
   }, []);
 
@@ -106,7 +93,6 @@ const Navbar = () => {
   };
 
   const handleLanguageChange = (langCode) => {
-    console.log("Changing language to:", langCode);
     setLanguage(langCode);
     setIsLanguageDropdownOpen(false);
   };
@@ -119,7 +105,6 @@ const Navbar = () => {
     const tg = window.Telegram?.WebApp;
 
     if (!tg || !isTelegramApp) {
-      console.log("Telegram WebApp not available");
       return;
     }
 
@@ -127,30 +112,24 @@ const Navbar = () => {
       if (isFullscreen) {
         // Fullscreen dan chiqish
         if (typeof tg.exitFullscreen === "function") {
-          console.log("Exiting fullscreen...");
           tg.exitFullscreen();
 
           // Agar event ishlamasa, qo'lda state ni o'zgartirish
           setTimeout(() => {
-            console.log("Manual state update: setting to false");
             setIsFullscreen(false);
           }, 100);
         } else {
-          console.log("exitFullscreen not available");
         }
       } else {
         // Fullscreen rejimga o'tish
         if (typeof tg.requestFullscreen === "function") {
-          console.log("Requesting fullscreen...");
           tg.requestFullscreen();
 
           // Agar event ishlamasa, qo'lda state ni o'zgartirish
           setTimeout(() => {
-            console.log("Manual state update: setting to true");
             setIsFullscreen(true);
           }, 100);
         } else {
-          console.log("requestFullscreen not available, using expand fallback");
           tg.expand();
         }
       }
@@ -162,8 +141,6 @@ const Navbar = () => {
   const currentLanguage = languages?.find((lang) => lang?.code === language);
 
   // Debug current language
-  console.log("Current language state:", language);
-  console.log("Current language object:", currentLanguage);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 dark:backdrop-blur-sm border-b border-gray-200 dark:border-slate-700 theme-transition shadow-sm dark:shadow-lg dark:shadow-slate-900/50">

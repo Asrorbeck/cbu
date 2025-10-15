@@ -144,7 +144,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                   />
                   <span>
                     {currency?.change > 0 ? "+" : ""}
-                    {currency?.change?.toFixed(2)}%
+                    {formatRate(currency?.change)} so'm
                   </span>
                 </div>
               </div>
@@ -155,7 +155,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
     );
   }
 
-  // Desktop table view
+  // Desktop table view - simplified to match mobile data structure
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-md theme-transition">
       <div className="p-3 md:p-4 border-b border-border">
@@ -173,22 +173,19 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px]">
+        <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left p-2 md:p-4 font-semibold text-card-foreground">
+              <th className="text-left p-3 md:p-4 font-semibold text-card-foreground">
                 {t("currency.currency")}
               </th>
-              <th className="text-left p-2 md:p-4 hidden sm:table-cell font-semibold text-card-foreground">
+              <th className="text-left p-3 md:p-4 font-semibold text-card-foreground">
                 {t("currency.name")}
               </th>
-              <th className="text-right p-2 md:p-4 font-semibold text-card-foreground">
-                {t("currency.buy_rate")}
+              <th className="text-right p-3 md:p-4 font-semibold text-card-foreground">
+                Kurs
               </th>
-              <th className="text-right p-2 md:p-4 font-semibold text-card-foreground">
-                {t("currency.sell_rate")}
-              </th>
-              <th className="text-right p-2 md:p-4 font-semibold text-card-foreground">
+              <th className="text-right p-3 md:p-4 font-semibold text-card-foreground">
                 {t("currency.change")}
               </th>
             </tr>
@@ -199,48 +196,37 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                 key={currency?.code}
                 className="hover:bg-muted/30 transition-colors duration-200"
               >
-                <td className="p-2 md:p-4">
-                  <div className="flex items-center space-x-2 md:space-x-3">
+                <td className="p-3 md:p-4">
+                  <div className="flex items-center space-x-3">
                     <img
                       src={getFlagImage(currency?.code)}
                       alt={`${currency?.code} flag`}
-                      className="w-6 h-5 md:w-7 md:h-6 object-cover rounded-sm"
+                      className="w-8 h-8 object-cover rounded-full"
                       onError={(e) => {
                         e.target.src = "/assets/images/no_image.png";
                       }}
                     />
                     <div>
-                      <span className="font-semibold text-card-foreground text-sm md:text-base">
-                        {currency?.code}
+                      <span className="font-semibold text-card-foreground text-base">
+                        {currency?.nominal || 1} {currency?.code}
                       </span>
-                      <div className="text-xs text-muted-foreground sm:hidden">
-                        {currency?.name}
-                      </div>
                     </div>
                   </div>
                 </td>
-                <td className="p-2 md:p-4 hidden sm:table-cell">
+                <td className="p-3 md:p-4">
                   <span className="text-muted-foreground text-sm">
                     {currency?.name}
                   </span>
                 </td>
-                <td className="p-2 md:p-4 text-right">
+                <td className="p-3 md:p-4 text-right">
                   <div className="space-y-1">
-                    <span className="font-semibold text-success text-sm md:text-base">
-                      {formatRate(currency?.buyRate)}
+                    <span className="font-bold text-card-foreground text-lg">
+                      {formatRate(currency?.rate)}
                     </span>
                     <div className="text-xs text-muted-foreground">UZS</div>
                   </div>
                 </td>
-                <td className="p-2 md:p-4 text-right">
-                  <div className="space-y-1">
-                    <span className="font-semibold text-destructive text-sm md:text-base">
-                      {formatRate(currency?.sellRate)}
-                    </span>
-                    <div className="text-xs text-muted-foreground">UZS</div>
-                  </div>
-                </td>
-                <td className="p-2 md:p-4 text-right">
+                <td className="p-3 md:p-4 text-right">
                   <div
                     className={`flex items-center justify-end space-x-1 ${getRateChangeColor(
                       currency?.change
@@ -254,12 +240,11 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                           ? "TrendingDown"
                           : "Minus"
                       }
-                      size={14}
-                      className="md:w-4 md:h-4"
+                      size={16}
                     />
-                    <span className="font-medium text-xs md:text-sm">
+                    <span className="font-medium text-sm">
                       {currency?.change > 0 ? "+" : ""}
-                      {currency?.change?.toFixed(2)}%
+                      {formatRate(currency?.change)} so'm
                     </span>
                   </div>
                 </td>

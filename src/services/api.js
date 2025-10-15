@@ -16,7 +16,6 @@ const apiClient = axios.create({
 // Add request interceptor for logging
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`Making API request to: ${config.url}`);
     return config;
   },
   (error) => {
@@ -84,6 +83,45 @@ export const vacanciesAPI = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching vacancy ${id}:`, error);
+      throw error;
+    }
+  },
+};
+
+export const appealsAPI = {
+  // Submit an appeal/complaint
+  submitAppeal: async (appealData) => {
+    try {
+      // Check if appealData is FormData or regular object
+      const isFormData = appealData instanceof FormData;
+
+      const response = await apiClient.post("/Appeals/", appealData, {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting appeal:", error);
+      throw error;
+    }
+  },
+};
+
+export const organizationAPI = {
+  // Check organization license
+  checkLicense: async (params) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.inn) queryParams.append("inn", params.inn);
+      if (params.license_number)
+        queryParams.append("license_number", params.license_number);
+
+      const response = await apiClient.get(
+        `/organization/?${queryParams.toString()}`
+      );
+      return response.data;
+    } catch (error) {
       throw error;
     }
   },

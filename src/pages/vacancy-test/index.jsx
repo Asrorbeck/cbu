@@ -600,65 +600,81 @@ const VacancyTest = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-20 pb-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center py-12">
-              <Icon
-                name="CheckCircle"
-                size={64}
-                className="text-blue-500 mx-auto mb-6"
-              />
-              <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-4">
-                {t("test.already_submitted.title")}
-              </h1>
-              <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
-                {t("test.already_submitted.description")}
-              </p>
-
-              {/* Previous Result */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6 max-w-md mx-auto">
-                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-4">
-                  {t("test.already_submitted.previous_result")}
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {t("test.result.your_score")}:
-                    </span>
-                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {testResult.percentage}%
-                    </span>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border-t-4 border-blue-600 dark:border-blue-700 overflow-hidden">
+              {/* Official Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 px-8 py-8">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <Icon name="FileCheck" size={40} className="text-white" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {t("test.result.correct_answers")}:
-                    </span>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {testResult.correctCount} / {testResult.totalQuestions}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Holat:
-                    </span>
-                    <span
-                      className={`text-sm font-bold ${
-                        testResult.isPassed
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-red-600 dark:text-red-400"
-                      }`}
-                    >
-                      {testResult.isPassed ? "O'tdi ✓" : "O'tmadi ✗"}
-                    </span>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
+                      {t("test.already_submitted.title")}
+                    </h1>
+                    <p className="text-blue-100 text-sm mt-1">
+                      {t("test.already_submitted.subtitle")}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate("/")}
-                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-semibold"
-              >
-                {t("test.security.go_home")}
-              </button>
+              {/* Content */}
+              <div className="px-8 py-8 space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-600 p-5">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {t("test.already_submitted.description")}
+                  </p>
+                </div>
+
+                {/* Previous Result */}
+                <div className="bg-gray-50 dark:bg-slate-900 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
+                  <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide border-b border-gray-300 dark:border-gray-600 pb-2">
+                    {t("test.already_submitted.previous_result")}
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("test.result.your_score")}:
+                      </span>
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {testResult.percentage}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("test.result.correct_answers")}:
+                      </span>
+                      <span className="text-base font-semibold text-gray-900 dark:text-white">
+                        {testResult.correctCount} / {testResult.totalQuestions}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("test.already_submitted.status")}:
+                      </span>
+                      <span
+                        className={`px-4 py-1 rounded-md font-bold text-sm ${
+                          testResult.isPassed
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        {testResult.isPassed
+                          ? t("test.already_submitted.passed")
+                          : t("test.already_submitted.failed")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate("/")}
+                  className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white transition-colors uppercase tracking-wide"
+                >
+                  {t("test.security.go_home")}
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -672,30 +688,58 @@ const VacancyTest = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-20 pb-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center py-12">
-              <Icon
-                name="Ban"
-                size={64}
-                className="text-red-500 mx-auto mb-6"
-              />
-              <h1 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-4">
-                {t("test.security.blocked_title")}
-              </h1>
-              <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
-                {t("test.security.blocked_description")}
-              </p>
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 max-w-md mx-auto">
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {t("test.security.blocked_reason")}
-                </p>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border-t-4 border-red-600 dark:border-red-700 overflow-hidden">
+              {/* Official Header */}
+              <div className="bg-gradient-to-r from-red-600 to-red-700 dark:from-red-700 dark:to-red-800 px-8 py-8">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <Icon name="ShieldOff" size={40} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
+                      {t("test.security.blocked_title")}
+                    </h1>
+                    <p className="text-red-100 text-sm mt-1">
+                      {t("test.security.blocked_subtitle")}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => navigate("/")}
-                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-semibold"
-              >
-                {t("test.security.go_home")}
-              </button>
+
+              {/* Content */}
+              <div className="px-8 py-8 space-y-6">
+                <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-600 p-5">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                    {t("test.security.blocked_description")}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-slate-900 rounded-lg p-6 border-2 border-red-600 dark:border-red-700">
+                  <div className="flex items-start space-x-3">
+                    <Icon
+                      name="AlertCircle"
+                      size={24}
+                      className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        {t("test.security.blocked_reason_title")}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {t("test.security.blocked_reason")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate("/")}
+                  className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-gray-800 hover:bg-gray-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white transition-colors uppercase tracking-wide"
+                >
+                  {t("test.security.go_home")}
+                </button>
+              </div>
             </div>
           </div>
         </main>
@@ -1012,20 +1056,31 @@ const VacancyTest = () => {
 
       {/* Violation Warning Modal */}
       {showViolationModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-shake">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-red-50 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 px-6 py-8">
-              <div className="text-center">
-                <Icon
-                  name="AlertTriangle"
-                  size={64}
-                  className="mx-auto mb-4 text-red-600 dark:text-red-400 animate-pulse"
-                />
-                <h2 className="text-2xl font-bold text-red-800 dark:text-red-300 mb-2">
-                  {t("test.violation_modal.title")}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+            {/* Official Header */}
+            <div className="bg-gray-800 dark:bg-gray-900 px-6 py-5">
+              <div className="flex items-center justify-center space-x-3">
+                <Icon name="AlertTriangle" size={28} className="text-red-500" />
+                <div className="text-left">
+                  <h2 className="text-lg font-bold text-red-500 uppercase tracking-wide">
+                    {t("test.violation_modal.title")}
+                  </h2>
+                  <p className="text-red-300 text-xs mt-0.5">
+                    {t("test.violation_modal.official_warning")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 space-y-4">
+              {/* Violation Type */}
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+                  {t("test.violation_modal.violation_type")}
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                   {violationType === "screenshot" &&
                     t("test.violation_modal.screenshot_detected")}
                   {violationType === "tab_switch" &&
@@ -1034,36 +1089,48 @@ const VacancyTest = () => {
                     t("test.violation_modal.page_leave_detected")}
                 </p>
               </div>
-            </div>
 
-            {/* Content */}
-            <div className="px-6 py-6 space-y-4">
               {/* Violation Count */}
-              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-700 rounded-lg p-4 text-center">
-                <div className="text-sm text-red-700 dark:text-red-300 mb-2">
-                  {t("test.violation_modal.current_violations")}
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                    {t("test.violation_modal.current_violations")}
+                  </span>
+                  <span className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                    {violations}/5
+                  </span>
                 </div>
-                <div className="text-4xl font-bold text-red-600 dark:text-red-400">
-                  {violations}/5
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                  <div
+                    className="bg-gray-600 dark:bg-gray-400 h-2 rounded-full transition-all"
+                    style={{ width: `${(violations / 5) * 100}%` }}
+                  ></div>
                 </div>
-                <div className="text-sm text-red-700 dark:text-red-300 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   {t("test.violation_modal.remaining", {
                     count: 5 - violations,
                   })}
-                </div>
+                </p>
               </div>
 
-              {/* Warning Message */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 dark:border-yellow-700 rounded-lg p-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
-                  ⚠️ {t("test.violation_modal.warning_message")}
-                </p>
+              {/* Official Warning */}
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <Icon
+                    name="AlertCircle"
+                    size={18}
+                    className="text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5"
+                  />
+                  <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+                    {t("test.violation_modal.warning_message")}
+                  </p>
+                </div>
               </div>
 
               {/* Close Button */}
               <button
                 onClick={() => setShowViolationModal(false)}
-                className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                className="w-full py-3 px-6 rounded-lg font-semibold text-sm bg-gray-700 hover:bg-gray-800 dark:bg-slate-600 dark:hover:bg-slate-500 text-white transition-colors uppercase tracking-wide"
               >
                 {t("test.violation_modal.understood")}
               </button>

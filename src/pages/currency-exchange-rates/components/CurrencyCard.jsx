@@ -54,36 +54,26 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="w-12 h-12 bg-muted rounded-full animate-pulse"></div>
             <div className="space-y-2">
-              <div className="h-5 bg-gray-200 rounded animate-pulse w-16"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-5 bg-muted rounded animate-pulse w-16"></div>
+              <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
             </div>
           </div>
-          <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
+          <div className="h-6 bg-muted rounded-full animate-pulse w-16"></div>
         </div>
         <div className="mb-4 text-center">
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-12 mx-auto mb-2"></div>
-          <div className="h-8 bg-gray-200 rounded animate-pulse w-32 mx-auto mb-1"></div>
-          <div className="h-3 bg-gray-200 rounded animate-pulse w-8 mx-auto"></div>
+          <div className="h-4 bg-muted rounded animate-pulse w-12 mx-auto mb-2"></div>
+          <div className="h-8 bg-muted rounded animate-pulse w-32 mx-auto mb-1"></div>
+          <div className="h-3 bg-muted rounded animate-pulse w-8 mx-auto"></div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-16 mx-auto mb-2"></div>
-            <div className="h-6 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-12 mx-auto mb-2"></div>
-            <div className="h-6 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
-          </div>
-        </div>
-        <div className="mt-4 pt-3 border-t border-gray-100">
+        <div className="mt-4 pt-3 border-t border-border">
           <div className="flex justify-between">
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            <div className="h-3 bg-muted rounded animate-pulse w-20"></div>
+            <div className="h-3 bg-muted rounded animate-pulse w-16"></div>
           </div>
         </div>
       </div>
@@ -110,11 +100,11 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 theme-transition">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-muted/30 flex items-center justify-center border border-border">
             <img
               src={getFlagImage(currency?.code)}
               alt={`${currency?.code} flag`}
@@ -125,65 +115,57 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
             />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {currency?.code}
+            <h3 className="text-lg font-semibold text-card-foreground">
+              {currency?.nominal || 1} {currency?.code}
             </h3>
-            <p className="text-sm text-gray-600">{currency?.name}</p>
+            <p className="text-sm text-muted-foreground">{currency?.name}</p>
           </div>
         </div>
+        <div className="text-right">
+          <div className="text-xs text-muted-foreground mb-1">Kurs</div>
+          <div className="text-2xl font-bold text-card-foreground">
+            {formatRate(currency?.rate)}
+          </div>
+          <div className="text-xs text-muted-foreground">UZS</div>
+        </div>
+      </div>
+
+      {/* Change Display */}
+      <div className="mb-4">
         <div
-          className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+          className={`flex items-center justify-between px-4 py-3 rounded-lg border ${
             currency?.change > 0
-              ? "bg-green-100 text-green-700"
+              ? "bg-success/5 text-success border-success/20"
               : currency?.change < 0
-              ? "bg-red-100 text-red-700"
-              : "bg-gray-100 text-gray-700"
+              ? "bg-destructive/5 text-destructive border-destructive/20"
+              : "bg-muted/30 text-muted-foreground border-border"
           }`}
         >
-          <Icon name={getRateChangeIcon(currency?.change)} size={12} />
-          <span>
+          <div className="flex items-center space-x-2">
+            <Icon name={getRateChangeIcon(currency?.change)} size={16} />
+            <span className="text-sm font-medium">
+              {currency?.change > 0
+                ? "Oshdi"
+                : currency?.change < 0
+                ? "Kamaydi"
+                : "O'zgarmadi"}
+            </span>
+          </div>
+          <span className="font-semibold text-base">
             {currency?.change > 0 ? "+" : ""}
-            {currency?.change?.toFixed(2)}%
+            {formatRate(currency?.change)} so'm
           </span>
         </div>
       </div>
 
-      {/* Main Rate Display */}
-      <div className="mb-4">
-        <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Kurs</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {formatRate(currency?.rate)}
-          </p>
-          <p className="text-sm text-gray-500">UZS</p>
-        </div>
-      </div>
-
-      {/* Buy/Sell Rates */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="text-center p-3 bg-green-50 rounded-xl">
-          <p className="text-xs text-gray-600 mb-1">
-            {t("currency.buy_rate") || "Sotib olish"}
-          </p>
-          <p className="text-lg font-bold text-green-600">
-            {formatRate(currency?.rate * 0.998)}
-          </p>
-        </div>
-        <div className="text-center p-3 bg-red-50 rounded-xl">
-          <p className="text-xs text-gray-600 mb-1">
-            {t("currency.sell_rate") || "Sotish"}
-          </p>
-          <p className="text-lg font-bold text-red-600">
-            {formatRate(currency?.rate * 1.002)}
-          </p>
-        </div>
-      </div>
-
       {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>{t("currency.last_updated") || "Yangilangan"}</span>
-          <span>{currency?.lastUpdated}</span>
+      <div className="pt-4 border-t border-border">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center space-x-1">
+            <Icon name="Clock" size={12} />
+            <span>Yangilangan:</span>
+          </div>
+          <span className="font-medium">{currency?.lastUpdated}</span>
         </div>
       </div>
     </div>

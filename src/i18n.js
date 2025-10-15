@@ -330,29 +330,39 @@ const resources = {
             "Test davom etmoqda! Sahifadan chiqsangiz, barcha javoblaringiz yo'qoladi!",
           violation_warning:
             "Ogohlantirish! Qoidabuzarlik {{count}}/5. {{remaining}} ta imkoniyat qoldi!",
-          blocked_title: "SIZ CHETLATILDINGIZ",
-          blocked_description: "Siz testda ko'p marta qoidabuzarlik qildingiz.",
+          blocked_title: "TESTDAN CHETLATISH",
+          blocked_subtitle: "O'zbekiston Respublikasi Markaziy Banki",
+          blocked_description:
+            "Siz test jarayonida ko'p marta qoidabuzarlik qildingiz. Test qoidalariga rioya qilmaslik sababli, sizning test natijalaringiz bekor qilingan va testga qayta kirish imkoniyati cheklangan.",
+          blocked_reason_title: "Chetlatish sababi",
           blocked_reason:
-            "5 marta qoidabuzarlik sabab bo'ldi. Bu test endi sizga yopiq.",
+            "Test qoidalarini 5 marta buzish sababli, sizning test sessiyangiz to'xtatildi va natijalar bekor qilindi.",
           blocked_message:
             "Siz testdan chetlatildingiz! 5 marta qoidabuzarlik qildingiz.",
           go_home: "Bosh sahifaga qaytish",
         },
         violation_modal: {
-          title: "QOIDABUZARLIK ANIQLANDI!",
-          screenshot_detected: "Skrinshot olish urinishi aniqlandi",
-          tab_switch_detected: "Boshqa varaqqa o'tish aniqlandi",
-          page_leave_detected: "Sahifadan chiqish urinishi aniqlandi",
-          current_violations: "Joriy qoidabuzarliklar",
+          title: "QOIDABUZARLIK ANIQLANDI",
+          official_warning: "Rasmiy ogohlantirish",
+          violation_type: "Qoidabuzarlik turi",
+          screenshot_detected: "Ekran rasmini olish urinishi aniqlandi",
+          tab_switch_detected: "Boshqa dastur yoki oynaga o'tish aniqlandi",
+          page_leave_detected: "Test sahifasidan chiqish urinishi aniqlandi",
+          current_violations: "Qoidabuzarliklar soni",
           remaining: "{{count}} ta imkoniyat qoldi",
           warning_message:
-            "5 marta qoidabuzarlik qilsangiz, testdan butunlay chetlatilasiz!",
+            "5 marta qoidabuzarlik qilsangiz, testdan butunlay chetlatilasiz va natijangiz bekor hisoblanadi.",
           understood: "Tushundim",
         },
         already_submitted: {
-          title: "SIZ ALLAQACHON TEST TOPSHIRGANSIZ",
-          description: "Bir xil testni ikkinchi marta topshirish mumkin emas.",
-          previous_result: "Avvalgi natijangiz",
+          title: "TEST ALLAQACHON TOPSHIRILGAN",
+          subtitle: "O'zbekiston Respublikasi Markaziy Banki",
+          description:
+            "Sizning test natijalaringiz allaqachon tizimda qayd etilgan. Bir xil testni takroriy topshirish qoidalarga ko'ra taqiqlanadi.",
+          previous_result: "Topshirilgan natijalar",
+          status: "Holat",
+          passed: "O'TKAZILDI",
+          failed: "O'TKAZILMADI",
         },
         result: {
           passed_title: "Tabriklaymiz! Testdan o'tdingiz",
@@ -765,29 +775,39 @@ const resources = {
             "Тест давом етмоқда! Саҳифадан чиқсангиз, барча жавобларингиз йўқолади!",
           violation_warning:
             "Огоҳлантириш! Қоидабузарлик {{count}}/5. {{remaining}} та имконият қолди!",
-          blocked_title: "СИЗ ЧЕТЛАТИЛДИНГИЗ",
-          blocked_description: "Сиз тестда кўп марта қоидабузарлик қилдингиз.",
+          blocked_title: "ТЕСТДАН ЧЕТЛАТИШ",
+          blocked_subtitle: "Ўзбекистон Республикаси Марказий Банки",
+          blocked_description:
+            "Сиз тест жараёнида кўп марта қоидабузарлик қилдингиз. Тест қоидаларига риоя қилмаслик сабабли, сизнинг тест натижаларингиз бекор қилинган ва тестга қайта кириш имконияти чекланган.",
+          blocked_reason_title: "Четлатиш сабаби",
           blocked_reason:
-            "5 марта қоидабузарлик сабаб бўлди. Бу тест енди сизга ёпиқ.",
+            "Тест қоидаларини 5 марта бузиш сабабли, сизнинг тест сессиянгиз тўхтатилди ва натижалар бекор қилинди.",
           blocked_message:
             "Сиз тестдан четлатилдингиз! 5 марта қоидабузарлик қилдингиз.",
           go_home: "Бош саҳифага қайтиш",
         },
         violation_modal: {
-          title: "ҚОИДАБУЗАРЛИК АНИҚЛАНДИ!",
-          screenshot_detected: "Скриншот олиш уриниши аниқланди",
-          tab_switch_detected: "Бошқа вараққа ўтиш аниқланди",
-          page_leave_detected: "Саҳифадан чиқиш уриниши аниқланди",
-          current_violations: "Жорий қоидабузарликлар",
+          title: "ҚОИДАБУЗАРЛИК АНИҚЛАНДИ",
+          official_warning: "Расмий огоҳлантириш",
+          violation_type: "Қоидабузарлик тури",
+          screenshot_detected: "Екран расмини олиш уриниши аниқланди",
+          tab_switch_detected: "Бошқа дастур ёки ойнага ўтиш аниқланди",
+          page_leave_detected: "Тест саҳифасидан чиқиш уриниши аниқланди",
+          current_violations: "Қоидабузарликлар сони",
           remaining: "{{count}} та имконият қолди",
           warning_message:
-            "5 марта қоидабузарлик қилсангиз, тестдан бутунлай четлатиласиз!",
+            "5 марта қоидабузарлик қилсангиз, тестдан бутунлай четлатиласиз ва натижангиз бекор ҳисобланади.",
           understood: "Тушундим",
         },
         already_submitted: {
-          title: "СИЗ АЛЛАҚАЧОН ТЕСТ ТОПШИРГАНСИЗ",
-          description: "Бир хил тестни иккинчи марта топшириш мумкин емас.",
-          previous_result: "Аввалги натижангиз",
+          title: "ТЕСТ АЛЛАҚАЧОН ТОПШИРИЛГАН",
+          subtitle: "Ўзбекистон Республикаси Марказий Банки",
+          description:
+            "Сизнинг тест натижаларингиз аллақачон тизимда қайд етилган. Бир хил тестни такрорий топшириш қоидаларга кўра тақиқланади.",
+          previous_result: "Топширилган натижалар",
+          status: "Ҳолат",
+          passed: "ЎТКАЗИЛДИ",
+          failed: "ЎТКАЗИЛМАДИ",
         },
         result: {
           passed_title: "Табриклаймиз! Тестдан ўтдингиз",
@@ -1202,29 +1222,38 @@ const resources = {
             "Тест продолжается! Если вы покинете страницу, все ответы будут потеряны!",
           violation_warning:
             "Предупреждение! Нарушение {{count}}/5. Осталось {{remaining}} попытки!",
-          blocked_title: "ВЫ ОТСТРАНЕНЫ",
+          blocked_title: "ОТСТРАНЕНИЕ ОТ ТЕСТА",
+          blocked_subtitle: "Центральный Банк Республики Узбекистан",
           blocked_description:
-            "Вы совершили множественные нарушения во время теста.",
+            "Вы совершили множественные нарушения во время прохождения теста. Из-за несоблюдения правил тестирования, ваши результаты аннулированы и возможность повторной сдачи ограничена.",
+          blocked_reason_title: "Причина отстранения",
           blocked_reason:
-            "5 нарушений привели к отстранению. Этот тест теперь закрыт для вас.",
+            "Из-за 5-кратного нарушения правил тестирования, ваша тестовая сессия была прекращена и результаты аннулированы.",
           blocked_message: "Вы отстранены от теста! Совершено 5 нарушений.",
           go_home: "Вернуться на главную",
         },
         violation_modal: {
-          title: "ОБНАРУЖЕНО НАРУШЕНИЕ!",
-          screenshot_detected: "Обнаружена попытка сделать скриншот",
-          tab_switch_detected: "Обнаружен переход на другую вкладку",
-          page_leave_detected: "Обнаружена попытка покинуть страницу",
-          current_violations: "Текущие нарушения",
+          title: "ОБНАРУЖЕНО НАРУШЕНИЕ",
+          official_warning: "Официальное предупреждение",
+          violation_type: "Тип нарушения",
+          screenshot_detected: "Обнаружена попытка сделать снимок экрана",
+          tab_switch_detected: "Обнаружен переход на другую программу или окно",
+          page_leave_detected: "Обнаружена попытка покинуть страницу теста",
+          current_violations: "Количество нарушений",
           remaining: "Осталось {{count}} попытки",
           warning_message:
-            "После 5 нарушений вы будете полностью отстранены от теста!",
+            "После 5 нарушений вы будете полностью отстранены от теста и результаты будут аннулированы.",
           understood: "Понятно",
         },
         already_submitted: {
-          title: "ВЫ УЖЕ СДАЛИ ЭТОТ ТЕСТ",
-          description: "Один и тот же тест можно сдать только один раз.",
-          previous_result: "Ваш предыдущий результат",
+          title: "ТЕСТ УЖЕ СДАН",
+          subtitle: "Центральный Банк Республики Узбекистан",
+          description:
+            "Ваши результаты теста уже зарегистрированы в системе. Повторная сдача одного и того же теста запрещена правилами.",
+          previous_result: "Зарегистрированные результаты",
+          status: "Статус",
+          passed: "ПРОЙДЕН",
+          failed: "НЕ ПРОЙДЕН",
         },
         result: {
           passed_title: "Поздравляем! Вы прошли тест",
@@ -1350,9 +1379,7 @@ i18n.use(initReactI18next).init({
 if (typeof window !== "undefined") {
   i18n
     .changeLanguage(initialLng)
-    .then(() => {
-      console.log("i18n initialized with language:", initialLng);
-    })
+    .then(() => {})
     .catch((error) => {
       console.error("i18n initialization error:", error);
     });

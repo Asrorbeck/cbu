@@ -5,6 +5,7 @@ import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
 import { departmentsAPI, vacanciesAPI } from "../../services/api";
+import { formatDate } from "../../utils/dateFormatter";
 
 const ApplicationDetail = () => {
   const navigate = useNavigate();
@@ -47,6 +48,11 @@ const ApplicationDetail = () => {
           foundApp = submissions.find((sub) => sub.id === id);
           if (foundApp) {
             foundApp = { ...foundApp, applicationType: "submission" };
+
+            // Fix old date format in localStorage
+            if (foundApp.submittedDate && !foundApp.submittedAt) {
+              foundApp.submittedAt = new Date().toISOString();
+            }
           }
         }
 
@@ -60,15 +66,6 @@ const ApplicationDetail = () => {
 
     loadApplication();
   }, [id]);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("uz-UZ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -244,8 +241,9 @@ const ApplicationDetail = () => {
                   Yuborilgan sana
                 </p>
                 <p className="text-sm font-semibold text-foreground">
-                  {application.submittedDate ||
-                    formatDate(application.submittedAt)}
+                  {formatDate(
+                    application.submittedAt || application.submittedDate
+                  )}
                 </p>
               </div>
               <div>
@@ -268,36 +266,55 @@ const ApplicationDetail = () => {
                 <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
                   Shaxsiy ma'lumotlar
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        F.I.SH
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {application.fullName || "Anonim"}
-                      </p>
+                {application.fullName ? (
+                  // Non-anonymous user - show all info
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          F.I.SH
+                        </p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {application.fullName}
+                        </p>
+                      </div>
+                      {application.phone && (
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            Telefon raqam
+                          </p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {application.phone}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Telefon raqam
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {application.phone || "-"}
-                      </p>
+                    {application.email && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Email
+                        </p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {application.email}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Anonymous user - show badge only
+                  <div className="flex items-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700/50 rounded-lg border border-gray-300 dark:border-gray-600">
+                      <Icon
+                        name="UserX"
+                        size={18}
+                        className="text-gray-500 dark:text-gray-400"
+                      />
+                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                        Anonim foydalanuvchi
+                      </span>
                     </div>
                   </div>
-                  {application.email && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Email
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {application.email}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Address (for corruption) */}

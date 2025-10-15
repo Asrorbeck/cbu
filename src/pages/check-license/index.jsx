@@ -1,20 +1,23 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
+import { organizationAPI } from "../../services/api";
+import { formatDate } from "../../utils/dateFormatter";
 
 const CheckLicense = () => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [licenseData, setLicenseData] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   const [formData, setFormData] = useState({
     inn: "",
-    mfo: "",
     licenseNumber: "",
   });
 
@@ -24,39 +27,48 @@ const CheckLicense = () => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const isFormValid = () => {
-    return (
-      formData.inn.trim() !== "" &&
-      formData.mfo.trim() !== "" &&
-      formData.licenseNumber.trim() !== ""
-    );
+    setNotFound(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.inn.trim() && !formData.licenseNumber.trim()) {
+      toast.error("Iltimos, kamida INN yoki litsenziya raqamini kiriting");
+      return;
+    }
+
     setIsChecking(true);
+    setNotFound(false);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const params = {};
+      if (formData.inn.trim()) params.inn = formData.inn.trim();
+      if (formData.licenseNumber.trim())
+        params.license_number = formData.licenseNumber.trim();
 
-      // Mock license data
-      setLicenseData({
-        organizationName: "Test Bank",
-        inn: formData.inn,
-        mfo: formData.mfo,
-        licenseNumber: formData.licenseNumber,
-        licenseStatus: "Faol",
-        issueDate: "01.01.2020",
-        expiryDate: "01.01.2025",
-        licenseType: "Bank litsenziyasi",
-      });
+      const response = await organizationAPI.checkLicense(params);
 
-      setShowResult(true);
+      if (response && response.length > 0) {
+        // Found organization
+        setLicenseData(response[0]);
+        setShowResult(true);
+        toast.success("Tashkilot topildi!");
+      } else {
+        // Not found
+        setNotFound(true);
+        toast.error(
+          "Tashkilot topilmadi. Iltimos, ma'lumotlarni qayta tekshiring."
+        );
+      }
     } catch (error) {
-      console.error("Error checking license:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Litsenziyani tekshirishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.";
+
+      toast.error(errorMessage);
+      setNotFound(true);
     } finally {
       setIsChecking(false);
     }
@@ -69,9 +81,9 @@ const CheckLicense = () => {
   const handleCheckAnother = () => {
     setShowResult(false);
     setLicenseData(null);
+    setNotFound(false);
     setFormData({
       inn: "",
-      mfo: "",
       licenseNumber: "",
     });
   };
@@ -107,35 +119,29 @@ const CheckLicense = () => {
                   />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Litsenziya topildi
+                  Tashkilot topildi
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Tashkilot litsenziyasi faol holda
+                  Tashkilot ma'lumotlari quyida keltirilgan
                 </p>
               </div>
 
               <div className="space-y-4">
+                {/* Organization Name - Full Width */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Tashkilot nomi
+                  </p>
+                  <p className="font-semibold text-foreground text-lg">
+                    {licenseData.name}
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Tashkilot nomi
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {licenseData.organizationName}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
                     <p className="text-xs text-muted-foreground mb-1">INN</p>
-                    <p className="font-semibold text-foreground">
+                    <p className="font-semibold text-foreground text-lg">
                       {licenseData.inn}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-1">MFO</p>
-                    <p className="font-semibold text-foreground">
-                      {licenseData.mfo}
                     </p>
                   </div>
 
@@ -143,45 +149,24 @@ const CheckLicense = () => {
                     <p className="text-xs text-muted-foreground mb-1">
                       Litsenziya raqami
                     </p>
-                    <p className="font-semibold text-foreground">
-                      {licenseData.licenseNumber}
+                    <p className="font-semibold text-foreground text-lg">
+                      {licenseData.license_number}
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4 md:col-span-2">
                     <p className="text-xs text-muted-foreground mb-1">
-                      Litsenziya turi
+                      Litsenziya berilgan sana
                     </p>
                     <p className="font-semibold text-foreground">
-                      {licenseData.licenseType}
+                      {formatDate(licenseData.issuance_license)}
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Holati</p>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <p className="font-semibold text-green-600 dark:text-green-400">
-                        {licenseData.licenseStatus}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Berilgan sana
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {licenseData.issueDate}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Amal qilish muddati
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {licenseData.expiryDate}
+                  <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4 md:col-span-2">
+                    <p className="text-xs text-muted-foreground mb-2">Manzil</p>
+                    <p className="font-medium text-foreground">
+                      {licenseData.address}
                     </p>
                   </div>
                 </div>
@@ -242,34 +227,28 @@ const CheckLicense = () => {
           {/* Form Card */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-slate-700">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <Input
-                label="INN raqamini kiriting"
-                name="inn"
-                value={formData.inn}
-                onChange={handleInputChange}
-                placeholder="123456789"
-                required
-                maxLength={9}
-              />
+              <div className="space-y-4">
+                <Input
+                  label="INN raqami"
+                  name="inn"
+                  value={formData.inn}
+                  onChange={handleInputChange}
+                  placeholder="INN raqamini kiriting"
+                  maxLength={9}
+                />
 
-              <Input
-                label="MFO raqamini kiriting"
-                name="mfo"
-                value={formData.mfo}
-                onChange={handleInputChange}
-                placeholder="01234"
-                required
-                maxLength={5}
-              />
+                <Input
+                  label="Litsenziya raqami"
+                  name="licenseNumber"
+                  value={formData.licenseNumber}
+                  onChange={handleInputChange}
+                  placeholder="Litsenziya raqamini kiriting"
+                />
 
-              <Input
-                label="Litsenziya raqamini kiriting"
-                name="licenseNumber"
-                value={formData.licenseNumber}
-                onChange={handleInputChange}
-                placeholder="LC-2024-001"
-                required
-              />
+                <p className="text-xs text-muted-foreground">
+                  * Kamida bitta maydonni to'ldiring
+                </p>
+              </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                 <div className="flex items-start space-x-3">
@@ -278,21 +257,47 @@ const CheckLicense = () => {
                     size={20}
                     className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Barcha maydonlar to'ldirilishi shart. Ma'lumotlar Markaziy
-                    bank bazasidan tekshiriladi.
-                  </p>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">
+                      Ma'lumotlar Markaziy bank bazasidan tekshiriladi. INN va
+                      litsenziya raqami asosida qidiruv amalga oshiriladi.
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              {notFound && (
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
+                  <div className="flex items-start space-x-3">
+                    <Icon
+                      name="AlertCircle"
+                      size={20}
+                      className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                        Tashkilot topilmadi
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Iltimos, kiritilgan ma'lumotlarni qayta tekshiring yoki
+                        boshqa qidiruv parametrlarini kiriting.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Button
                 type="submit"
-                disabled={isChecking || !isFormValid()}
+                disabled={
+                  isChecking ||
+                  (!formData.inn.trim() && !formData.licenseNumber.trim())
+                }
                 className="w-full"
                 iconName="Search"
                 iconPosition="left"
               >
-                {isChecking ? "Tekshirilmoqda..." : "Litsenziyani tekshirish"}
+                {isChecking ? "Tekshirilmoqda..." : "Tashkilotni tekshirish"}
               </Button>
             </form>
           </div>
