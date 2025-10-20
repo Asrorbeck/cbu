@@ -19,17 +19,6 @@ const ConsumerRightsSubmission = () => {
 
   const services = [
     {
-      id: "check-license",
-      title: "Litsenziyani tekshirish",
-      description: "Tashkilot yoki bank litsenziyasini tekshiring",
-      icon: "ShieldCheck",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
-      action: () => {
-        navigate("/check-license");
-      },
-    },
-    {
       id: "submit-complaint",
       title: "Murojaat yuborish",
       description:
@@ -39,6 +28,17 @@ const ConsumerRightsSubmission = () => {
       bgColor: "bg-green-100 dark:bg-green-900/30",
       action: () => {
         navigate("/submit-complaint");
+      },
+    },
+    {
+      id: "check-license",
+      title: "Litsenziyani tekshirish",
+      description: "Tashkilot yoki bank litsenziyasini tekshiring",
+      icon: "ShieldCheck",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+      action: () => {
+        navigate("/check-license");
       },
     },
   ];

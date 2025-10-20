@@ -13,40 +13,40 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
   const quickActions = [
     {
       id: 1,
-      title: "Litsenziya",
-      subtitle: "Tekshirish",
+      title: t("home.quick_actions.license.title"),
+      subtitle: t("home.quick_actions.license.subtitle"),
       icon: "Shield",
       color: "blue",
       route: "/check-license",
     },
     {
       id: 2,
-      title: "Ish o'rinlari",
-      subtitle: "Ko'rish",
+      title: t("home.quick_actions.vacancies.title"),
+      subtitle: t("home.quick_actions.vacancies.subtitle"),
       icon: "Briefcase",
       color: "emerald",
       route: "/job-vacancies-browser",
     },
     {
       id: 3,
-      title: "Ariza",
-      subtitle: "Topshirish",
+      title: t("home.quick_actions.application.title"),
+      subtitle: t("home.quick_actions.application.subtitle"),
       icon: "MessageSquare",
       color: "purple",
       route: "/feedback-submission",
     },
     {
       id: 4,
-      title: "Yangiliklar",
-      subtitle: "O'qish",
+      title: t("home.quick_actions.news.title"),
+      subtitle: t("home.quick_actions.news.subtitle"),
       icon: "Newspaper",
       color: "orange",
       route: "/news-articles-hub",
     },
     {
       id: 5,
-      title: "Valyuta",
-      subtitle: "Hisoblash",
+      title: t("home.quick_actions.currency.title"),
+      subtitle: t("home.quick_actions.currency.subtitle"),
       icon: "Calculator",
       color: "teal",
       route: "/currency-exchange-rates",
@@ -150,7 +150,7 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
               <div className="mt-8">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-white text-lg font-semibold">
-                    Valyuta kurslari
+                    {t("home.currency_section.title")}
                   </h3>
                   <Button
                     variant="ghost"
@@ -160,7 +160,7 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                     iconName="ArrowRight"
                     iconPosition="right"
                   >
-                    Barcha kurslar
+                    {t("home.currency_section.see_all_rates")}
                   </Button>
                 </div>
 
@@ -240,7 +240,7 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                 {/* Date Display */}
                 <div className="mt-3 text-center">
                   <span className="text-white/60 text-xs">
-                    {lastUpdateDate || "Yuklanmoqda..."}
+                    {lastUpdateDate || t("home.currency_section.loading")}
                   </span>
                 </div>
               </div>
@@ -266,10 +266,10 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    O'zbekiston Respublikasi
+                    {t("home.bank_info.country")}
                   </div>
                   <div className="text-lg font-bold text-gray-900 dark:text-white">
-                    Markaziy Bank
+                    {t("home.bank_info.bank_name")}
                   </div>
                 </div>
               </div>
@@ -350,10 +350,11 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Valyuta kurslari
+                  {t("home.currency_section.title")}
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Oxirgi yangilanish: {lastUpdateDate || "Yuklanmoqda..."}
+                  {t("home.currency_section.last_update")}{" "}
+                  {lastUpdateDate || t("home.currency_section.loading")}
                 </p>
               </div>
               <Button
@@ -363,7 +364,7 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                 iconName="ArrowRight"
                 iconPosition="right"
               >
-                Barcha kurslar
+                {t("home.currency_section.see_all_rates")}
               </Button>
             </div>
 
@@ -389,7 +390,7 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Valyuta kodi
+                          {t("home.currency_section.currency_code")}
                         </div>
                         <div className="text-lg font-bold text-gray-900 dark:text-white">
                           {c?.code}
@@ -400,12 +401,12 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                     {/* Middle: Rate */}
                     <div className="flex-1 text-center">
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Kurs qiymati
+                        {t("home.currency_section.rate_value")}
                       </div>
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatRate(c?.rate)}{" "}
                         <span className="text-sm font-normal text-gray-500">
-                          so'm
+                          {t("home.currency_section.currency_unit")}
                         </span>
                       </div>
                     </div>

@@ -37,6 +37,24 @@ const Select = React.forwardRef(
     const selectId =
       id || `select-${Math.random()?.toString(36)?.substr(2, 9)}`;
 
+    // Listen for close other selects event
+    React.useEffect(() => {
+      const handleCloseOtherSelects = (event) => {
+        if (event.detail.currentSelectId !== selectId && isOpen) {
+          setIsOpen(false);
+          onOpenChange?.(false);
+        }
+      };
+
+      window.addEventListener("closeOtherSelects", handleCloseOtherSelects);
+      return () => {
+        window.removeEventListener(
+          "closeOtherSelects",
+          handleCloseOtherSelects
+        );
+      };
+    }, [isOpen, selectId, onOpenChange]);
+
     // Filter options based on search
     const filteredOptions =
       searchable && searchTerm
@@ -77,6 +95,16 @@ const Select = React.forwardRef(
         onOpenChange?.(newIsOpen);
         if (!newIsOpen) {
           setSearchTerm("");
+        }
+
+        // Close other selects when this one opens
+        if (newIsOpen) {
+          // Dispatch custom event to close other selects
+          window.dispatchEvent(
+            new CustomEvent("closeOtherSelects", {
+              detail: { currentSelectId: selectId },
+            })
+          );
         }
       }
     };

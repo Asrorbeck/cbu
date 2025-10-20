@@ -70,17 +70,30 @@ const JobApplicationForm = () => {
     fetchVacancyData();
   }, [decodedVacancyId]);
 
-  // Helper function to parse JSON string arrays
-  const parseJsonArray = (jsonString) => {
-    try {
-      const parsed = JSON.parse(jsonString);
-      return Array.isArray(parsed)
-        ? parsed.map((item) => item.task || item)
-        : [];
-    } catch (error) {
-      console.error("Error parsing JSON array:", error);
-      return [];
+  // Helper function to parse JSON string arrays or plain text
+  const parseJsonArray = (data) => {
+    if (!data) return [];
+
+    // If it's already an array, return it
+    if (Array.isArray(data)) {
+      return data.map((item) => item.task || item);
     }
+
+    // If it's a string, try to parse as JSON first
+    if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed)
+          ? parsed.map((item) => item.task || item)
+          : [];
+      } catch (error) {
+        // If JSON parsing fails, treat as plain text and split by newlines
+        console.log("Treating as plain text:", data);
+        return data.split("\n").filter((line) => line.trim().length > 0);
+      }
+    }
+
+    return [];
   };
 
   // Get the specific vacancy based on API data
@@ -632,8 +645,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
 
                 {/* Education Section */}
                 <div className="px-4 sm:px-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    📚 {t("jobs.application.form.education")} 📚
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Icon
+                      name="GraduationCap"
+                      size={20}
+                      className="text-blue-600"
+                    />
+                    {t("jobs.application.form.education")}
                   </h2>
 
                   <div className="space-y-4">
@@ -692,27 +710,29 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 disabled={edu.isCurrent}
                                 required={!edu.isCurrent}
                               />
-                              <div className="flex items-center">
-                                <Checkbox
-                                  id={`edu-current-${index}`}
-                                  checked={edu.isCurrent}
-                                  onChange={(checked) =>
-                                    handleEducationChange(
-                                      index,
-                                      "isCurrent",
-                                      checked
-                                    )
-                                  }
-                                />
-                                <label
-                                  htmlFor={`edu-current-${index}`}
-                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                                >
-                                  {t(
-                                    "jobs.application.form.currently_studying"
-                                  )}
-                                </label>
-                              </div>
+                              {index > 0 && (
+                                <div className="flex items-center">
+                                  <Checkbox
+                                    id={`edu-current-${index}`}
+                                    checked={edu.isCurrent}
+                                    onChange={(checked) =>
+                                      handleEducationChange(
+                                        index,
+                                        "isCurrent",
+                                        checked
+                                      )
+                                    }
+                                  />
+                                  <label
+                                    htmlFor={`edu-current-${index}`}
+                                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                  >
+                                    {t(
+                                      "jobs.application.form.currently_studying"
+                                    )}
+                                  </label>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -791,8 +811,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
 
                 {/* Work Experience Section */}
                 <div className="px-4 sm:px-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    🔨 {t("jobs.application.form.work_experience")} 🔨
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Icon
+                      name="Briefcase"
+                      size={20}
+                      className="text-green-600"
+                    />
+                    {t("jobs.application.form.work_experience")}
                   </h2>
 
                   <div className="space-y-4">
@@ -860,25 +885,29 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 disabled={work.isCurrent}
                                 required={!work.isCurrent}
                               />
-                              <div className="flex items-center">
-                                <Checkbox
-                                  id={`work-current-${index}`}
-                                  checked={work.isCurrent}
-                                  onChange={(checked) =>
-                                    handleWorkExperienceChange(
-                                      index,
-                                      "isCurrent",
-                                      checked
-                                    )
-                                  }
-                                />
-                                <label
-                                  htmlFor={`work-current-${index}`}
-                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                                >
-                                  {t("jobs.application.form.currently_working")}
-                                </label>
-                              </div>
+                              {index > 0 && (
+                                <div className="flex items-center">
+                                  <Checkbox
+                                    id={`work-current-${index}`}
+                                    checked={work.isCurrent}
+                                    onChange={(checked) =>
+                                      handleWorkExperienceChange(
+                                        index,
+                                        "isCurrent",
+                                        checked
+                                      )
+                                    }
+                                  />
+                                  <label
+                                    htmlFor={`work-current-${index}`}
+                                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                  >
+                                    {t(
+                                      "jobs.application.form.currently_working"
+                                    )}
+                                  </label>
+                                </div>
+                              )}
                             </div>
                           </div>
 

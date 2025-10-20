@@ -1,9 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Icon from "../../../components/AppIcon";
 
 const ServiceCard = ({ service }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleCardClick = () => {
     navigate(service?.path);
@@ -36,7 +38,9 @@ const ServiceCard = ({ service }) => {
       {/* Simple Action */}
       <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
         <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
-          <span className="text-sm font-medium">Xizmatga kirish</span>
+          <span className="text-sm font-medium">
+            {t("home.services.access_service")}
+          </span>
           <Icon
             name="ArrowRight"
             size={16}

@@ -104,10 +104,10 @@ const VacancyDetailPage = () => {
                 className="text-red-500 mx-auto mb-4"
               />
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                Error Loading Vacancy
+                {t("jobs.vacancy_detail.error_loading_title")}
               </h1>
               <p className="text-muted-foreground mb-6">
-                {error || "Vacancy not found"}
+                {error || t("jobs.vacancy_detail.vacancy_not_found")}
               </p>
               <button
                 onClick={() => navigate("/departments")}
@@ -197,7 +197,9 @@ const VacancyDetailPage = () => {
                       : "bg-success/10 text-success"
                   }`}
                 >
-                  {isVacancyClosed ? "Muddat o'tgan" : t("jobs.open")}
+                  {isVacancyClosed
+                    ? t("jobs.vacancy_detail.deadline_passed")
+                    : t("jobs.open")}
                 </div>
               </div>
             </div>
@@ -319,7 +321,9 @@ const VacancyDetailPage = () => {
                       : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  {isVacancyClosed ? "Yopiq" : "Ariza topshirish"}
+                  {isVacancyClosed
+                    ? t("jobs.vacancy_detail.closed")
+                    : t("jobs.vacancy_detail.apply_now")}
                 </button>
               </div>
             </div>

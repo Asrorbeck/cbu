@@ -37,7 +37,7 @@ const TermsAndConditionsPage = () => {
         });
       } else {
         // Fallback if no vacancy info is available
-        alert("Вакансия маълумотлари топилмади. Бош саҳифага қайтинг.");
+        alert(t("jobs.terms_conditions.vacancy_info_missing"));
         navigate("/");
       }
     }
@@ -55,7 +55,7 @@ const TermsAndConditionsPage = () => {
               className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <Icon name="ArrowLeft" size={16} />
-              <span>Orqaga</span>
+              <span>{t("jobs.terms_conditions.back")}</span>
             </button>
           </div>
 
@@ -64,7 +64,7 @@ const TermsAndConditionsPage = () => {
             {/* Header Section */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-700 dark:to-slate-600 px-4 sm:px-6 py-6 sm:py-8">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white  leading-tight">
-                Shartnoma va Yo'riqnomalar
+                {t("jobs.terms_conditions.title")}
               </h1>
               {vacancyInfo?.title && (
                 <p className="text-blue-600 dark:text-blue-400 text-lg font-medium mt-2">
@@ -78,7 +78,7 @@ const TermsAndConditionsPage = () => {
               {/* Video Section */}
               <div className="px-4 sm:px-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Video Ko'rsatma
+                  {t("jobs.terms_conditions.video_instructions")}
                 </h2>
                 <div className="bg-gray-100 dark:bg-gray-700 rounded-lg pb-4 text-center">
                   <video
@@ -88,10 +88,10 @@ const TermsAndConditionsPage = () => {
                   >
                     <source src="/src/video/video.mp4" type="video/mp4" />
                     <source src="/src/video/video.webm" type="video/webm" />
-                    Sizning brauzeringiz video elementini qo'llab-quvvatlamaydi.
+                    {t("jobs.terms_conditions.video_not_supported")}
                   </video>
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-4 px-4">
-                    Ariza topshirish jarayoni haqida video ko'rsatma
+                    {t("jobs.terms_conditions.video_description")}
                   </p>
                 </div>
               </div>
@@ -99,176 +99,161 @@ const TermsAndConditionsPage = () => {
               {/* Contract Text */}
               <div className="px-4 sm:px-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Шахсга доир маълумотларга ишлов бериш бўйича шартнома
+                  {t("jobs.terms_conditions.contract_title")}
                 </h2>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-h-96 overflow-y-auto">
                   <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
                     <div>
-                      <h3 className="font-semibold mb-2">1. Атамалар</h3>
+                      <h3 className="font-semibold mb-2">
+                        {t("jobs.terms_conditions.section_1_title")}
+                      </h3>
                       <p className="mb-2">
-                        Шахсга доир маълумотларга ишлов бериш тўғрисидаги
-                        шартномада (кейинги ўринларда Шартнома) келтирилган
-                        атамалар қуйидаги таърифларга эга:
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_1_intro"
+                        )}
                       </p>
                       <ul className="list-disc list-inside space-y-1 ml-4">
                         <li>
-                          <strong>Телеграм бот</strong> (кейинги ўринларда Бот)
-                          – бу одамлар учун мўлжалланиб, интерфейслар орқали
-                          автоматик равишда махсус дастур ва / ёки белгиланган
-                          жадвалга мувофиқ, амалга ошириладиган ҳар қандай
-                          ҳаракатлар.
+                          <strong>
+                            {t(
+                              "jobs.terms_conditions.contract_content.telegram_bot"
+                            )}
+                          </strong>
                         </li>
                         <li>
-                          <strong>Оператор</strong> – мустақил равишда бошқа
-                          шахслар билан биргаликда шахсий маълумотларни қайта
-                          ишлашни ташкил этадиган, шунингдек шахсий
-                          маълумотларни қайта ишлаш мақсадларини аниқлайдиган,
-                          шахсий маълумотлар таркибига ишлов берадиган
-                          ҳаракатлар (операциялар)ни амалга оширувчи давлат ёки
-                          шаҳар идораси, юридик ёки жисмоний шахс.
+                          <strong>
+                            {t(
+                              "jobs.terms_conditions.contract_content.operator"
+                            )}
+                          </strong>
                         </li>
                         <li>
-                          <strong>Фойдаланувчи</strong> – Ботнинг маълумотлар
-                          киритиш майдонларини тўлдирган ҳар қандай шахс
-                          (рўйхатдан ўтган ёки бошқа ҳар қандай ҳаракатларни
-                          амалга оширган).
+                          <strong>
+                            {t("jobs.terms_conditions.contract_content.user")}
+                          </strong>
                         </li>
                         <li>
-                          <strong>Шахсий маълумотлар</strong> – Ботга
-                          фойдаланувчи (шахсий маълумотлар эгаси) томонидан
-                          киритилган ва унга бевосита ёки билвосита алоқадор
-                          бўлган маълумотлар.
+                          <strong>
+                            {t(
+                              "jobs.terms_conditions.contract_content.personal_data"
+                            )}
+                          </strong>
                         </li>
                         <li>
-                          <strong>Шартнома акцепти</strong> – Ботдаги
-                          майдонларни маълумотлар киритиб тўлдириш орқали барча
-                          шартларни тўлиқ ва сўзсиз қабул қилиш бўйича
-                          келишувлар.
+                          <strong>
+                            {t(
+                              "jobs.terms_conditions.contract_content.contract_acceptance"
+                            )}
+                          </strong>
                         </li>
                       </ul>
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-2">2. Умумий қоидалар</h3>
+                      <h3 className="font-semibold mb-2">
+                        {t("jobs.terms_conditions.section_2_title")}
+                      </h3>
                       <p className="mb-2">
-                        2.1. Ушбу Шартнома Ўзбекистон Республикасининг
-                        02.07.2019 йилдаги ЎРҚ-547-сонли "Шахсга доир
-                        маълумотлар тўғрисида" Қонуни талаблари асосида тузилган
-                        ва Оператор бажариши мумкин бўлган барча шахсий
-                        маълумотларга нисбатан қўлланилади Оператор Ботдан
-                        фойдаланишда фойдаланувчи ҳақида маълумотларни олиши
-                        мумкин.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_2_1"
+                        )}
                       </p>
                       <p className="mb-2">
-                        2.2. Ботга фойдаланувчи томонидан майдонларни тўлдириш
-                        орқали маълумотларни киритиш Шартнома акцептининг барча
-                        шартлари билан фойдаланувчининг сўзсиз розилигини
-                        англатади. Ушбу шартларга рози бўлмаган тақдирда
-                        Фойдаланувчи Ботдан фойдаланмаслиги лозим.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_2_2"
+                        )}
                       </p>
                       <p className="mb-2">
-                        2.3. Операторга шахсий маълумотларни тақдим этишга
-                        фойдаланувчининг розилиги уларни Оператор томонидан
-                        қайта ишлаш фаолияти тугатилгунига ёки Оператор ёки
-                        фойдаланувчи розилигини қайтариб олгунига қадар амал
-                        қилади. Шартномани қабул қилган фойдаланувчи Ботдан
-                        фойдаланиш ўз хоҳиши билан амалга оширганини, бу унинг
-                        манфаати учун ҳаракат қилишини ва шахсий маълумотларини
-                        қайта ишлашга рози бўлганини тасдиқлайди. Шахсий
-                        маълумотларни қайта ишлаш Ўзбекистон Республикасининг
-                        02.07.2019 йилдаги ЎРҚ-547-сон "Шахсий маълумотлар
-                        тўғрисида"ги қонуни асосида амалга оширилиши тўғрисида
-                        фойдаланувчи огоҳлантирилади.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_2_3"
+                        )}
                       </p>
                     </div>
 
                     <div>
                       <h3 className="font-semibold mb-2">
-                        3. Фойдаланувчи томонидан Операторга етказилиши керак
-                        бўлган шахсий ва бошқа маълумотлар рўйхати
+                        {t("jobs.terms_conditions.section_3_title")}
                       </h3>
                       <p className="mb-2">
-                        3.1. Фойдаланувчи томонидан Ботдан фойдаланилганда
-                        Операторга қуйидаги Шахсий маълумотлар тақдим этилади:
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_3_1"
+                        )}
                       </p>
                       <p className="mb-2">
-                        3.1.1. Фойдаланувчининг Ботдаги маълумотларни киритиш
-                        майдонларини тўлдиришда киритган ўзи ҳақида ишончли
-                        шахсий маълумотлари шу жумладан: фамилияси, исми,
-                        отасининг исми, электрон почта манзили, телефон рақами
-                        ва бошқалар.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_3_1_1"
+                        )}
                       </p>
                       <p className="mb-2">
-                        3.1.2. Жараён давомида қурилмада ўрнатилган дастурий
-                        таъминот орқали Бот хизматларига автоматик равишда
-                        узатиладиган маълумотлар, шу жумладан IP-манзил,
-                        cооkie-файллардан олинган маълумотлар, фойдаланувчи
-                        браузери (ёки у билан бирга бўлган бошқа дастур) ҳақида
-                        маълумот хизматлари.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_3_1_2"
+                        )}
                       </p>
                     </div>
 
                     <div>
                       <h3 className="font-semibold mb-2">
-                        4. Шахсий маълумотларни йиғиш ва улардан фойдаланиш
-                        мақсадлари, қоидалари
+                        {t("jobs.terms_conditions.section_4_title")}
                       </h3>
                       <p className="mb-2">
-                        4.1. Оператор Фойдаланувчига хизматлар кўрсатиш учун
-                        зарур бўлган шахсий маълумотларни қайта ишлайди.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_4_1"
+                        )}
                       </p>
                       <p className="mb-2">
-                        4.2. Фойдаланувчининг шахсий маълумотларидан Оператор
-                        қуйидаги мақсадларда фойдаланади:
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_4_2"
+                        )}
                       </p>
                       <ul className="list-disc list-inside space-y-1 ml-4">
-                        <li>4.2.1. Фойдаланувчининг идентификатори.</li>
                         <li>
-                          4.2.2. Фойдаланувчига Ботнинг шахсийлаштирилган
-                          хизматлар ва хизматларини тақдим этиш.
+                          {t(
+                            "jobs.terms_conditions.contract_content.section_4_2_1"
+                          )}
                         </li>
                         <li>
-                          4.2.3. Бот орқали фойдаланувчи билан алоқани сақлаш,
-                          шу жумладан фойдаланиш билан боғлиқ хабарномалар,
-                          сўровлар ва маълумотларни юбориш Бот хизматларни
-                          тақдим этиш, шунингдек сўров ва аризаларни кўриб
-                          чиқиш.
+                          {t(
+                            "jobs.terms_conditions.contract_content.section_4_2_2"
+                          )}
+                        </li>
+                        <li>
+                          {t(
+                            "jobs.terms_conditions.contract_content.section_4_2_3"
+                          )}
                         </li>
                       </ul>
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-2">5. Бошқа шартлар</h3>
+                      <h3 className="font-semibold mb-2">
+                        {t("jobs.terms_conditions.section_5_title")}
+                      </h3>
                       <p className="mb-2">
-                        5.1. Оператор фойда кўрмаслик, маълумот ёки тежашни
-                        йўқотиш, Ботдан фойдаланиш ёки уни ишлата олмаслик билан
-                        боғлиқ ҳар қандай зарар учун фойдаланувчи олдида
-                        жавобгар эмас.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_5_1"
+                        )}
                       </p>
                       <p className="mb-2">
-                        5.2. Ушбу Шартномадан келиб чиқадиган барча мумкин
-                        бўлган низолар Ўзбекистон Республикасининг амалдаги
-                        қонунчилигига мувофиқ кўриб чиқилади.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_5_2"
+                        )}
                       </p>
                       <p className="mb-2">
-                        5.3. Оператор ушбу Шартномага фойдаланувчига ҳеч қандай
-                        махсус хабарнома йўлламай ўзгартириш киритиш ҳуқуқига
-                        эга. Шартноманинг янги таҳрири эълон қилинган кундан
-                        эътиборан кучга киради.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_5_3"
+                        )}
                       </p>
                       <p className="mb-2">
-                        5.4. Шахсий маълумотларни қайта ишлашга розиликни бекор
-                        қилиш Операторга тегишли ёзма хабар (қўлда ёзилган ва
-                        Фойдаланувчи томонидан имзоланган) юбориш орқали амалга
-                        оширилиши мумкин.
+                        {t(
+                          "jobs.terms_conditions.contract_content.section_5_4"
+                        )}
                       </p>
                     </div>
 
                     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
                         <strong>
-                          Барча савол ва таклифларингизни info@cbu.uz манзилига
-                          юборишингиз мумкин.
+                          {t("jobs.terms_conditions.contact_info")}
                         </strong>
                       </p>
                     </div>
@@ -290,12 +275,8 @@ const TermsAndConditionsPage = () => {
                     htmlFor="agreement"
                     className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
                   >
-                    <strong>
-                      Мен юқорида келтирилган шартларни тўлиқ ўқиб чиқдим ва
-                      уларни қабул қиламан.
-                    </strong>
-                    Шахсий маълумотларимни қайта ишлашга рози бўлиб, ариза
-                    топшириш жараёнини давом эттиришни хоҳлайман.
+                    <strong>{t("jobs.terms_conditions.agreement_text")}</strong>
+                    {t("jobs.terms_conditions.agreement_consent")}
                   </label>
                 </div>
               </div>
@@ -306,7 +287,7 @@ const TermsAndConditionsPage = () => {
                   onClick={handleBack}
                   className="flex-1 py-3 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300"
                 >
-                  Orqaga
+                  {t("jobs.terms_conditions.back")}
                 </button>
                 <button
                   onClick={handleContinue}
@@ -317,7 +298,7 @@ const TermsAndConditionsPage = () => {
                       : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  Davom etish
+                  {t("jobs.terms_conditions.continue")}
                 </button>
               </div>
             </div>

@@ -11,14 +11,13 @@ const resources = {
       home: {
         title: "Markaziy Bank - Bosh Sahifa",
         description:
-          "Valyuta kurslari, ish o'rinlari, fikr-mulohazalar va so'nggi yangiliklar kabi muhim bank xizmatlariga kirish.",
+          "Valyuta kurslari, vakansiyalar, fikr-mulohazalar va so'nggi yangiliklar kabi muhim bank xizmatlariga kirish.",
         services_title: "Bank xizmatlari",
         services_description:
           "Moliyaviy ehtiyojlaringiz uchun mo'ljallangan raqamli xizmatlarimizdan foydalaning.",
         last_updated: "Oxirgi yangilanish",
         hero_title: "Markaziy bank rasmiy botiga xush kelibsiz",
-        hero_subtitle:
-          "Valyuta kurslari, ish o'rinlari va so'nggi yangiliklar.",
+        hero_subtitle: "Valyuta kurslari, vakansiyalar va so'nggi yangiliklar.",
         stats_active_customers: "Faol mijozlar",
         stats_branch_locations: "Filiallar",
         stats_online_services: "Onlayn xizmatlar",
@@ -30,8 +29,8 @@ const resources = {
               "Asosiy valyutalar bo'yicha real vaqt kurslari va tarixiy ma'lumotlar",
           },
           vacancies: {
-            title: "Ish o'rinlari",
-            description: "Bo'sh ish o'rinlarini ko'ring va ariza yuboring",
+            title: "Vakansiyalar",
+            description: "Bo'sh vakansiyalarni ko'ring va ariza yuboring",
           },
           applications: {
             title: "Murojaatlar",
@@ -42,6 +41,42 @@ const resources = {
             description:
               "Bank yangiliklari va siyosat yangilanishlari bilan tanishing",
           },
+          access_service: "Xizmatga kirish",
+        },
+        quick_actions: {
+          license: {
+            title: "Litsenziya",
+            subtitle: "Tekshirish",
+          },
+          vacancies: {
+            title: "Vakansiyalar",
+            subtitle: "Ko'rish",
+          },
+          application: {
+            title: "Ariza",
+            subtitle: "Topshirish",
+          },
+          news: {
+            title: "Yangiliklar",
+            subtitle: "O'qish",
+          },
+          currency: {
+            title: "Valyuta",
+            subtitle: "Hisoblash",
+          },
+        },
+        currency_section: {
+          title: "Valyuta kurslari",
+          see_all_rates: "Barcha kurslar",
+          loading: "Yuklanmoqda...",
+          last_update: "Oxirgi yangilanish:",
+          currency_code: "Valyuta kodi",
+          rate_value: "Kurs qiymati",
+          currency_unit: "so'm",
+        },
+        bank_info: {
+          country: "O'zbekiston Respublikasi",
+          bank_name: "Markaziy Bank",
         },
       },
       currency: {
@@ -127,7 +162,7 @@ const resources = {
         home: "Bosh sahifa",
         currency: "Valyuta kurslari",
         news: "Yangiliklar",
-        jobs: "Ish o'rinlari",
+        jobs: "Vakansiyalar",
         feedback: "Fikr-mulohaza",
         profile: "Profil",
       },
@@ -149,18 +184,18 @@ const resources = {
         },
       },
       jobs: {
-        title: "Ish o'rinlari",
+        title: "Vakansiyalar",
         subtitle: "Markaziy Bank departamentlari va bo'limlari",
         departments_title: "Bo'limlar",
         departments_subtitle: "Qaysi bo'limda ishlashni xohlaysiz?",
-        vacancies_title: "Bo'sh ish o'rinlari",
+        vacancies_title: "Bo'sh vakansiyalar",
         vacancies_subtitle: "Tanlangan bo'limdagi mavjud vakansiyalar",
         back_to_departments: "Bo'limlarga qaytish",
         view_details: "Tafsilotlarni ko'rish",
         apply_now: "Ariza berish",
         no_vacancies: "Hozircha vakansiyalar yo'q",
         no_vacancies_desc:
-          "Bu bo'limda hozircha bo'sh ish o'rinlari mavjud emas",
+          "Bu bo'limda hozircha bo'sh vakansiyalar mavjud emas",
         departments: {
           information_technology: {
             name: "Axborot Texnologiyalari Departamenti",
@@ -184,14 +219,14 @@ const resources = {
             "Markaziy bankning veb-saytini faol ishchi holatini ta'minlash",
           ],
         },
-        open_positions: "Bo'sh ish o'rinlari",
-        available_positions: "Mavjud ish o'rinlari",
+        open_positions: "Bo'sh vakansiyalar",
+        available_positions: "Mavjud vakansiyalar",
         department_not_found: "Bo'lim topilmadi",
         department_not_found_desc: "Qidirilayotgan bo'lim mavjud emas.",
         back_to_departments: "Bo'limlarga qaytish",
         no_vacancies_available: "Hozircha vakansiyalar yo'q",
         no_vacancies_available_desc:
-          "Bu bo'limda hozircha bo'sh ish o'rinlari mavjud emas.",
+          "Bu bo'limda hozircha bo'sh vakansiyalar mavjud emas.",
         days_left: "kun qoldi",
         deadline_passed: "Muddat tugagan",
         open: "Ochiq",
@@ -219,6 +254,81 @@ const resources = {
           contract: "Shartnoma",
           internship: "Stajirovka",
         },
+        vacancy_detail: {
+          error_loading_title: "Vakansiya yuklanmadi",
+          vacancy_not_found: "Vakansiya topilmadi",
+          deadline_passed: "Muddat o'tgan",
+          closed: "Yopiq",
+          apply_now: "Ariza topshirish",
+        },
+        terms_conditions: {
+          back: "Orqaga",
+          title: "Shartnoma va Yo'riqnomalar",
+          video_instructions: "Video Ko'rsatma",
+          video_description: "Ariza topshirish jarayoni haqida video ko'rsatma",
+          video_not_supported:
+            "Sizning brauzeringiz video elementini qo'llab-quvvatlamaydi",
+          continue: "Davom etish",
+          vacancy_info_missing:
+            "Vakansiya ma'lumotlari topilmadi. Bosh sahifaga qayting.",
+          agreement_text:
+            "Men yuqorida keltirilgan shartlarni to'liq o'qib chiqdim va ularni qabul qilaman.",
+          agreement_consent:
+            "Shaxsiy ma'lumotlarimni qayta ishlashga roziman va ariza topshirish jarayonini davom ettirishni xohlayman.",
+          contact_info:
+            "Barcha savol va takliflaringizni info@cbu.uz manziliga yuborishingiz mumkin.",
+          contract_title:
+            "Shaxsga doir ma'lumotlarga ishlov berish bo'yicha shartnoma",
+          section_1_title: "1. Atamalar",
+          section_2_title: "2. Umumiy qoidalar",
+          section_3_title:
+            "3. Foydalanuvchi tomonidan Operatorga yetkazilishi kerak bo'lgan shaxsiy va boshqa ma'lumotlar ro'yxati",
+          section_4_title:
+            "4. Shaxsiy ma'lumotlarni yig'ish va ulardan foydalanish maqsadlari, qoidalari",
+          section_5_title: "5. Boshqa shartlar",
+          contract_content: {
+            section_1_intro:
+              "Shaxsga doir ma'lumotlarga ishlov berish to'g'risidagi shartnomada (keyingi o'rinlarda Shartnoma) keltirilgan atamalar quyidagi ta'riflarga ega:",
+            telegram_bot:
+              "Telegram bot (keyingi o'rinlarda Bot) – bu odamlar uchun mo'ljallanib, interfeyslar orqali avtomatik ravishda maxsus dastur va / yoki belgilangan jadvalga muvofiq, amalga oshiriladigan har qanday harakatlar.",
+            operator:
+              "Operator – mustaqil ravishda boshqa shaxslar bilan birgalikda shaxsiy ma'lumotlarni qayta ishlashni tashkil etadigan, shuningdek shaxsiy ma'lumotlarni qayta ishlash maqsadlarini aniqlaadigan, shaxsiy ma'lumotlar tarkibiga ishlov beradigan harakatlar (operatsiyalar)ni amalga oshiruvchi davlat yoki shahar idorasi, yuridik yoki jismoniy shaxs.",
+            user: "Foydalanuvchi – Botning ma'lumotlar kiritish maydonlarini to'ldirgan har qanday shaxs (ro'yxatdan o'tgan yoki boshqa har qanday harakatlarni amalga oshirgan).",
+            personal_data:
+              "Shaxsiy ma'lumotlar – Botga foydalanuvchi (shaxsiy ma'lumotlar egasi) tomonidan kiritilgan va unga bevosita yoki bilvosita aloqador bo'lgan ma'lumotlar.",
+            contract_acceptance:
+              "Shartnoma aksepti – Botdagi maydonlarni ma'lumotlar kirib to'ldirish orqali barcha shartlarni to'liq va so'zsiz qabul qilish bo'yicha kelishuvlar.",
+            section_2_1:
+              "Ushbu Shartnoma O'zbekiston Respublikasining 02.07.2019 yildagi O'RK-547-sonli \"Shaxsga doir ma'lumotlar to'g'risida\" Qonuni talablari asosida tuzilgan va Operator bajarishi mumkin bo'lgan barcha shaxsiy ma'lumotlarga nisbatan qo'llaniladi Operator Botdan foydalanishda foydalanuvchi haqida ma'lumotlarni olishi mumkin.",
+            section_2_2:
+              "Botga foydalanuvchi tomonidan maydonlarni to'ldirish orqali ma'lumotlarni kirish Shartnoma akseptining barcha shartlari bilan foydalanuvchining so'zsiz roziligini anglatadi. Ushbu shartlarga rozi bo'lmagan taqdirda Foydalanuvchi Botdan foydalanmasligi lozim.",
+            section_2_3:
+              "Operatorga shaxsiy ma'lumotlarni taqdim etishga foydalanuvchining roziligi ularni Operator tomonidan qayta ishlash faoliyati tugatilguniga yoki Operator yoki foydalanuvchi roziligini qaytarib olguniga qadar amal qiladi. Shartnomani qabul qilgan foydalanuvchi Botdan foydalanish o'z xohishi bilan amalga oshirganini, bu uning manfaati uchun harakat qilishini va shaxsiy ma'lumotlarini qayta ishlashga rozi bo'lganini tasdiqlaydi. Shaxsiy ma'lumotlarni qayta ishlash O'zbekiston Respublikasining 02.07.2019 yildagi O'RK-547-son \"Shaxsiy ma'lumotlar to'g'risida\"gi qonuni asosida amalga oshirilishi to'g'risida foydalanuvchi ogohlantiriladi.",
+            section_3_1:
+              "Foydalanuvchi tomonidan Botdan foydalanilganda Operatorga quyidagi Shaxsiy ma'lumotlar taqdim etiladi:",
+            section_3_1_1:
+              "Foydalanuvchining Botdagi ma'lumotlar kiritish maydonlarini to'ldirishda kiritgan o'zi haqida ishonchli shaxsiy ma'lumotlari shu jumladan: familiyasi, ismi, otasining ismi, elektron pochta manzili, telefon raqami va boshqalar.",
+            section_3_1_2:
+              "Jarayon davomida qurilmada o'rnatilgan dasturiy ta'minot orqali Bot xizmatlariga avtomatik ravishda uzatiladigan ma'lumotlar, shu jumladan IP-manzil, cookie-fayllardan olingan ma'lumotlar, foydalanuvchi brauzeri (yoki u bilan birga bo'lgan boshqa dastur) haqida ma'lumot xizmatlari.",
+            section_4_1:
+              "Operator Foydalanuvchiga xizmatlar ko'rsatish uchun zarur bo'lgan shaxsiy ma'lumotlarni qayta ishlaydi.",
+            section_4_2:
+              "Foydalanuvchining shaxsiy ma'lumotlaridan Operator quyidagi maqsadlarda foydalanadi:",
+            section_4_2_1: "Foydalanuvchining identifikatori.",
+            section_4_2_2:
+              "Foydalanuvchiga Botning shaxsiylashtirilgan xizmatlar va xizmatlarini taqdim etish.",
+            section_4_2_3:
+              "Bot orqali foydalanuvchi bilan aloqani saqlash, shu jumladan foydalanish bilan bog'liq xabarnomalar, so'rovlar va ma'lumotlarni yuborish Bot xizmatlarni taqdim etish, shuningdek so'rov va arizalarni ko'rib chiqish.",
+            section_5_1:
+              "Operator foyda ko'rmaslik, ma'lumot yoki tejamni yo'qotish, Botdan foydalanish yoki uni ishlata olmaslik bilan bog'liq har qanday zarar uchun foydalanuvchi oldida javobgar emas.",
+            section_5_2:
+              "Ushbu Shartnomadan kelib chiqadigan barcha mumkin bo'lgan nizolar O'zbekiston Respublikasining amaldagi qonunchiligiga muvofiq ko'rib chiqiladi.",
+            section_5_3:
+              "Operator ushbu Shartnomaga foydalanuvchiga hech qanday maxsus xabarnoma yubormay o'zgartirish kiritish huquqiga ega. Shartnomaning yangi tahriri e'lon qilingan kundan e'tiboran kuchga kiradi.",
+            section_5_4:
+              "Shaxsiy ma'lumotlarni qayta ishlashga rozilikni bekor qilish Operatorga tegishli yozma xabar (qo'lda yozilgan va Foydalanuvchi tomonidan imzolangan) yuborish orqali amalga oshirilishi mumkin.",
+          },
+        },
         application: {
           title: "Ariza berish",
           personal_info: "Shaxsiy ma'lumotlar",
@@ -232,7 +342,7 @@ const resources = {
           success: "Ariza muvaffaqiyatli yuborildi",
           error: "Xatolik yuz berdi",
           form: {
-            title: "Ish o'rinlariga ariza",
+            title: "Vakansiyalarga ariza",
             personal_info: "Shaxsiy ma'lumotlar",
             full_name: "To'liq ismingizni kiriting",
             full_name_placeholder: "Masalan: Kalandarov Kalandar Kalandarovich",
@@ -465,13 +575,13 @@ const resources = {
       home: {
         title: "Марказий Банк - Бош Саҳифа",
         description:
-          "Валюта курслари, иш ўринлари, фикр-мулоҳазалар ва сўнгги янгиликлар каби муҳим банк хизматларига кириш.",
+          "Валюта курслари, вакансиялар, фикр-мулоҳазалар ва сўнгги янгиликлар каби муҳим банк хизматларига кириш.",
         services_title: "Банк хизматлари",
         services_description:
           "Молиявий эҳтиёжларингиз учун мўлжалланган рақамли хизматларимиздан фойдаланинг.",
         last_updated: "Сўнгги янгиланиш",
         hero_title: "Марказий банк расмий ботига хуш келибсиз",
-        hero_subtitle: "Валюта курслари, иш ўринлари ва сўнгги янгиликлар.",
+        hero_subtitle: "Валюта курслари, вакансиялар ва сўнгги янгиликлар.",
         stats_active_customers: "Фаол мижозлар",
         stats_branch_locations: "Филиаллар",
         stats_online_services: "Онлайн хизматлар",
@@ -483,8 +593,8 @@ const resources = {
               "Асосий валюталар бўйича реал вақт курслари ва тарихий маълумотлар",
           },
           vacancies: {
-            title: "Иш ўринлари",
-            description: "Бўш иш ўринларини кўринг ва ариза юборинг",
+            title: "Вакансиялар",
+            description: "Бўш вакансияларни кўринг ва ариза юборинг",
           },
           applications: {
             title: "Мурожаатлар",
@@ -495,6 +605,42 @@ const resources = {
             description:
               "Банк янгиликлари ва сиёсат янгиланишлари билан танишинг",
           },
+          access_service: "Хизматга кириш",
+        },
+        quick_actions: {
+          license: {
+            title: "Лицензия",
+            subtitle: "Текшириш",
+          },
+          vacancies: {
+            title: "Вакансиялар",
+            subtitle: "Кўриш",
+          },
+          application: {
+            title: "Ариза",
+            subtitle: "Топшириш",
+          },
+          news: {
+            title: "Янгиликлар",
+            subtitle: "Ўқиш",
+          },
+          currency: {
+            title: "Валюта",
+            subtitle: "Ҳисоблаш",
+          },
+        },
+        currency_section: {
+          title: "Валюта курслари",
+          see_all_rates: "Барча курслар",
+          loading: "Юкланмоқда...",
+          last_update: "Сўнгги янгиланиш:",
+          currency_code: "Валюта коди",
+          rate_value: "Курс қиймати",
+          currency_unit: "сўм",
+        },
+        bank_info: {
+          country: "Ўзбекистон Республикаси",
+          bank_name: "Марказий Банк",
         },
       },
       currency: {
@@ -580,7 +726,7 @@ const resources = {
         home: "Бош саҳифа",
         currency: "Валюта курслари",
         news: "Янгиликлар",
-        jobs: "Иш ўринлари",
+        jobs: "Вакансиялар",
         feedback: "Фикр-мулоҳаза",
         profile: "Профил",
       },
@@ -601,17 +747,17 @@ const resources = {
         },
       },
       jobs: {
-        title: "Иш ўринлари",
+        title: "Вакансиялар",
         subtitle: "Марказий Банк департаментлари ва бўлимлари",
         departments_title: "Бўлимлар",
         departments_subtitle: "Қайси бўлимда ишлашни хоҳлайсиз?",
-        vacancies_title: "Бўш иш ўринлари",
+        vacancies_title: "Бўш вакансиялар",
         vacancies_subtitle: "Танланган бўлимдаги мавжуд вакансиялар",
         back_to_departments: "Бўлимларга қайтиш",
         view_details: "Тафсилотларни кўриш",
         apply_now: "Ариза бериш",
         no_vacancies: "Ҳозирча вакансиялар йўқ",
-        no_vacancies_desc: "Бу бўлимда ҳозирча бўш иш ўринлари мавжуд эмас",
+        no_vacancies_desc: "Бу бўлимда ҳозирча бўш вакансиялар мавжуд эмас",
         departments: {
           information_technology: {
             name: "Ахборот Технологиялари Департаменти",
@@ -635,14 +781,14 @@ const resources = {
             "Марказий банкнинг веб-сайтини фаол ишчи ҳолатини таъминлаш",
           ],
         },
-        open_positions: "Бўш иш ўринлари",
-        available_positions: "Мавжуд иш ўринлари",
+        open_positions: "Бўш вакансиялар",
+        available_positions: "Мавжуд вакансиялар",
         department_not_found: "Бўлим топилмади",
         department_not_found_desc: "Қидирилаётган бўлим мавжуд эмас.",
         back_to_departments: "Бўлимларга қайтиш",
         no_vacancies_available: "Ҳозирча вакансиялар йўқ",
         no_vacancies_available_desc:
-          "Бу бўлимда ҳозирча бўш иш ўринлари мавжуд эмас.",
+          "Бу бўлимда ҳозирча бўш вакансиялар мавжуд эмас.",
         days_left: "кун қолди",
         deadline_passed: "Муддат тугаган",
         open: "Очиқ",
@@ -670,6 +816,81 @@ const resources = {
           contract: "Шартнома",
           internship: "Стажировка",
         },
+        vacancy_detail: {
+          error_loading_title: "Вакансия юкланмади",
+          vacancy_not_found: "Вакансия топилмади",
+          deadline_passed: "Муддат ўтган",
+          closed: "Ёпиқ",
+          apply_now: "Ариза топшириш",
+        },
+        terms_conditions: {
+          back: "Орқага",
+          title: "Шартнома ва Йўриқномалар",
+          video_instructions: "Видео Кўрсатма",
+          video_description: "Ариза топшириш жараёни ҳақида видео кўрсатма",
+          video_not_supported:
+            "Сизнинг браузерингиз видео элементни қўллаб-қувватламайди",
+          continue: "Давом этиш",
+          vacancy_info_missing:
+            "Вакансия маълумотлари топилмади. Бош саҳифага қайтинг.",
+          agreement_text:
+            "Мен юқорида келтирилган шартларни тўлиқ ўқиб чиқдим ва уларни қабул қиламан.",
+          agreement_consent:
+            "Шахсий маълумотларимни қайта ишлашга рози бўлиб, ариза топшириш жараёнини давом эттиришни хоҳлайман.",
+          contact_info:
+            "Барча савол ва таклифларингизни info@cbu.uz манзилига юборишингиз мумкин.",
+          contract_title:
+            "Шахсга доир маълумотларга ишлов бериш бўйича шартнома",
+          section_1_title: "1. Атамалар",
+          section_2_title: "2. Умумий қоидалар",
+          section_3_title:
+            "3. Фойдаланувчи томонидан Операторга етказилиши керак бўлган шахсий ва бошқа маълумотлар рўйхати",
+          section_4_title:
+            "4. Шахсий маълумотларни йиғиш ва улардан фойдаланиш мақсадлари, қоидалари",
+          section_5_title: "5. Бошқа шартлар",
+          contract_content: {
+            section_1_intro:
+              "Шахсга доир маълумотларга ишлов бериш тўғрисидаги шартномада (кейинги ўринларда Шартнома) келтирилган атамалар қуйидаги таърифларга эга:",
+            telegram_bot:
+              "Телеграм бот (кейинги ўринларда Бот) – бу одамлар учун мўлжалланиб, интерфейслар орқали автоматик равишда махсус дастур ва / ёки белгиланган жадвалга мувофиқ, амалга ошириладиган ҳар қандай ҳаракатлар.",
+            operator:
+              "Оператор – мустақил равишда бошқа шахслар билан биргаликда шахсий маълумотларни қайта ишлашни ташкил этадиган, шунингдек шахсий маълумотларни қайта ишлаш мақсадларини аниқлайдиган, шахсий маълумотлар таркибига ишлов берадиган ҳаракатлар (операциялар)ни амалга оширувчи давлат ёки шаҳар идораси, юридик ёки жисмоний шахс.",
+            user: "Фойдаланувчи – Ботнинг маълумотлар киритиш майдонларини тўлдирган ҳар қандай шахс (рўйхатдан ўтган ёки бошқа ҳар қандай ҳаракатларни амалга оширган).",
+            personal_data:
+              "Шахсий маълумотлар – Ботга фойдаланувчи (шахсий маълумотлар эгаси) томонидан киритилган ва унга бевосита ёки билвосита алоқадор бўлган маълумотлар.",
+            contract_acceptance:
+              "Шартнома акцепти – Ботдаги майдонларни маълумотлар киритиб тўлдириш орқали барча шартларни тўлиқ ва сўзсиз қабул қилиш бўйича келишувлар.",
+            section_2_1:
+              'Ушбу Шартнома Ўзбекистон Республикасининг 02.07.2019 йилдаги ЎРҚ-547-сонли "Шахсга доир маълумотлар тўғрисида" Қонуни талаблари асосида тузилган ва Оператор бажариши мумкин бўлган барча шахсий маълумотларга нисбатан қўлланилади Оператор Ботдан фойдаланишда фойдаланувчи ҳақида маълумотларни олиши мумкин.',
+            section_2_2:
+              "Ботга фойдаланувчи томонидан майдонларни тўлдириш орқали маълумотларни киритиш Шартнома акцептининг барча шартлари билан фойдаланувчининг сўзсиз розилигини англатади. Ушбу шартларга рози бўлмаган тақдирда Фойдаланувчи Ботдан фойдаланмаслиги лозим.",
+            section_2_3:
+              'Операторга шахсий маълумотларни тақдим этишга фойдаланувчининг розилиги уларни Оператор томонидан қайта ишлаш фаолияти тугатилгунига ёки Оператор ёки фойдаланувчи розилигини қайтариб олгунига қадар амал қилади. Шартномани қабул қилган фойдаланувчи Ботдан фойдаланиш ўз хоҳиши билан амалга оширганини, бу унинг манфаати учун ҳаракат қилишини ва шахсий маълумотларини қайта ишлашга рози бўлганини тасдиқлайди. Шахсий маълумотларни қайта ишлаш Ўзбекистон Республикасининг 02.07.2019 йилдаги ЎРҚ-547-сон "Шахсий маълумотлар тўғрисида"ги қонуни асосида амалга оширилиши тўғрисида фойдаланувчи огоҳлантирилади.',
+            section_3_1:
+              "Фойдаланувчи томонидан Ботдан фойдаланилганда Операторга қуйидаги Шахсий маълумотлар тақдим этилади:",
+            section_3_1_1:
+              "Фойдаланувчининг Ботдаги маълумотларни киритиш майдонларини тўлдиришда киритган ўзи ҳақида ишончли шахсий маълумотлари шу жумладан: фамилияси, исми, отасининг исми, электрон почта манзили, телефон рақами ва бошқалар.",
+            section_3_1_2:
+              "Жараён давомида қурилмада ўрнатилган дастурий таъминот орқали Бот хизматларига автоматик равишда узатиладиган маълумотлар, шу жумладан IP-манзил, cookie-файллардан олинган маълумотлар, фойдаланувчи браузери (ёки у билан бирга бўлган бошқа дастур) ҳақида маълумот хизматлари.",
+            section_4_1:
+              "Оператор Фойдаланувчига хизматлар кўрсатиш учун зарур бўлган шахсий маълумотларни қайта ишлайди.",
+            section_4_2:
+              "Фойдаланувчининг шахсий маълумотларидан Оператор қуйидаги мақсадларда фойдаланади:",
+            section_4_2_1: "Фойдаланувчининг идентификатори.",
+            section_4_2_2:
+              "Фойдаланувчига Ботнинг шахсийлаштирилган хизматлар ва хизматларини тақдим этиш.",
+            section_4_2_3:
+              "Бот орқали фойдаланувчи билан алоқани сақлаш, шу жумладан фойдаланиш билан боғлиқ хабарномалар, сўровлар ва маълумотларни юбориш Бот хизматларни тақдим этиш, шунингдек сўров ва аризаларни кўриб чиқиш.",
+            section_5_1:
+              "Оператор фойда кўрмаслик, маълумот ёки тежашни йўқотиш, Ботдан фойдаланиш ёки уни ишлата олмаслик билан боғлиқ ҳар қандай зарар учун фойдаланувчи олдида жавобгар эмас.",
+            section_5_2:
+              "Ушбу Шартномадан келиб чиқадиган барча мумкин бўлган низолар Ўзбекистон Республикасининг амалдаги қонунчилигига мувофиқ кўриб чиқилади.",
+            section_5_3:
+              "Оператор ушбу Шартномага фойдаланувчига ҳеч қандай махсус хабарнома юбормай ўзгартириш киритиш ҳуқуқига эга. Шартноманинг янги таҳрири эълон қилинган кундан эътиборан кучга киради.",
+            section_5_4:
+              "Шахсий маълумотларни қайта ишлашга розиликни бекор қилиш Операторга тегишли ёзма хабар (қўлда ёзилган ва Фойдаланувчи томонидан имзоланган) юбориш орқали амалга оширилиши мумкин.",
+          },
+        },
         application: {
           title: "Ариза бериш",
           personal_info: "Шахсий маълумотлар",
@@ -683,13 +904,17 @@ const resources = {
           success: "Ариза муваффақиятли юборилди",
           error: "Хатолик юз берди",
           form: {
-            title: "Иш ўринларига ариза",
+            title: "Вакансияларга ариза",
             personal_info: "Шахсий маълумотлар",
             full_name: "Тўлиқ исмингизни киритинг",
             full_name_placeholder: "Масалан: Каландаров Каландар Каландарович",
             birth_date: "Тугʻилган санангизни белгиланг",
             phone_number: "Телефон рақамингизни киритинг",
             education: "Маълумотингиз",
+            start_year: "Бошланиш йили",
+            end_year: "Тугаш йили",
+            select_year: "Йилни танланг",
+            currently_studying: "Ҳозирги кунда ўқияпман",
             education_period: "Тахсил олган давр",
             education_period_placeholder: "2015-2019",
             institution: "Муассаса номи",
@@ -703,6 +928,7 @@ const resources = {
             work_experience: "Меҳнат фаолиятингиз",
             work_period: "Иш даври",
             work_period_placeholder: "2019-2021",
+            currently_working: "Ҳозирги кунда ишлаяпман",
             company: "Муассаса номи",
             company_placeholder: "ЎзР Марказий банки",
             position: "Лавозими",
@@ -939,6 +1165,42 @@ const resources = {
             description:
               "Будьте в курсе последних новостей и обновлений политики",
           },
+          access_service: "Перейти к сервису",
+        },
+        quick_actions: {
+          license: {
+            title: "Лицензия",
+            subtitle: "Проверка",
+          },
+          vacancies: {
+            title: "Вакансии",
+            subtitle: "Просмотр",
+          },
+          application: {
+            title: "Заявка",
+            subtitle: "Подача",
+          },
+          news: {
+            title: "Новости",
+            subtitle: "Чтение",
+          },
+          currency: {
+            title: "Валюта",
+            subtitle: "Расчет",
+          },
+        },
+        currency_section: {
+          title: "Курсы валют",
+          see_all_rates: "Все курсы",
+          loading: "Загрузка...",
+          last_update: "Последнее обновление:",
+          currency_code: "Код валюты",
+          rate_value: "Курс",
+          currency_unit: "сум",
+        },
+        bank_info: {
+          country: "Республика Узбекистан",
+          bank_name: "Центральный Банк",
         },
       },
       currency: {
@@ -1112,6 +1374,79 @@ const resources = {
           contract: "Контракт",
           internship: "Стажировка",
         },
+        vacancy_detail: {
+          error_loading_title: "Ошибка загрузки вакансии",
+          vacancy_not_found: "Вакансия не найдена",
+          deadline_passed: "Срок истек",
+          closed: "Закрыто",
+          apply_now: "Подать заявку",
+        },
+        terms_conditions: {
+          back: "Назад",
+          title: "Условия и положения",
+          video_instructions: "Видео инструкция",
+          video_description: "Видео инструкция по процессу подачи заявки",
+          video_not_supported: "Ваш браузер не поддерживает видео элемент",
+          continue: "Продолжить",
+          vacancy_info_missing:
+            "Информация о вакансии не найдена. Вернитесь на главную страницу.",
+          agreement_text:
+            "Я полностью прочитал и принимаю условия, указанные выше.",
+          agreement_consent:
+            "Согласен на обработку моих персональных данных и хочу продолжить процесс подачи заявки.",
+          contact_info:
+            "Все ваши вопросы и предложения можно отправить на адрес info@cbu.uz.",
+          contract_title: "Соглашение об обработке персональных данных",
+          section_1_title: "1. Термины",
+          section_2_title: "2. Общие положения",
+          section_3_title:
+            "3. Перечень персональных и иных данных, которые должны быть переданы Оператору Пользователем",
+          section_4_title:
+            "4. Цели и правила сбора и использования персональных данных",
+          section_5_title: "5. Иные условия",
+          contract_content: {
+            section_1_intro:
+              "В соглашении об обработке персональных данных (далее Соглашение) приведенные термины имеют следующие определения:",
+            telegram_bot:
+              "Телеграм бот (далее Бот) – это любая программа, предназначенная для людей, которая автоматически выполняет специальные действия через интерфейсы и/или в соответствии с установленным расписанием.",
+            operator:
+              "Оператор – государственный или городской орган, юридическое или физическое лицо, которое самостоятельно организует обработку персональных данных совместно с другими лицами, а также определяет цели обработки персональных данных и выполняет действия (операции) по обработке персональных данных.",
+            user: "Пользователь – любое лицо, заполнившее поля ввода данных Бота (зарегистрированное или выполнившее любые другие действия).",
+            personal_data:
+              "Персональные данные – данные, введенные пользователем (субъектом персональных данных) в Бот и связанные с ним прямо или косвенно.",
+            contract_acceptance:
+              "Акцепт Соглашения – договоренности о полном и безоговорочном принятии всех условий путем заполнения полей данными в Боте.",
+            section_2_1:
+              'Настоящее Соглашение составлено на основе требований Закона Республики Узбекистан от 02.07.2019 года ОРК-547 "О персональных данных" и применяется ко всем персональным данным, которые может обрабатывать Оператор Оператор может получать информацию о пользователе при использовании Бота.',
+            section_2_2:
+              "Ввод данных пользователем в Бот путем заполнения полей означает безоговорочное согласие пользователя со всеми условиями акцепта Соглашения. В случае несогласия с данными условиями Пользователь не должен использовать Бот.",
+            section_2_3:
+              'Согласие пользователя на предоставление персональных данных Оператору действует до прекращения деятельности по обработке персональных данных Оператором или до отзыва согласия Оператором или пользователем. Пользователь, принявший Соглашение, подтверждает, что использование Бота осуществляется по его собственной воле, что он действует в своих интересах и согласен на обработку своих персональных данных. Пользователь уведомляется о том, что обработка персональных данных осуществляется на основе Закона Республики Узбекистан от 02.07.2019 года ОРК-547 "О персональных данных".',
+            section_3_1:
+              "При использовании Бота пользователем Оператору предоставляются следующие Персональные данные:",
+            section_3_1_1:
+              "Достоверные персональные данные пользователя о себе, введенные при заполнении полей ввода данных в Боте, включая: фамилию, имя, отчество, адрес электронной почты, номер телефона и другие.",
+            section_3_1_2:
+              "Данные, автоматически передаваемые в службы Бота программным обеспечением, установленным на устройстве в процессе работы, включая IP-адрес, данные, полученные из cookie-файлов, информацию о браузере пользователя (или другой программе, работающей с ним).",
+            section_4_1:
+              "Оператор обрабатывает персональные данные, необходимые для предоставления услуг Пользователю.",
+            section_4_2:
+              "Оператор использует персональные данные Пользователя в следующих целях:",
+            section_4_2_1: "Идентификация пользователя.",
+            section_4_2_2:
+              "Предоставление пользователю персонализированных услуг и сервисов Бота.",
+            section_4_2_3:
+              "Поддержание связи с пользователем через Бот, включая отправку уведомлений, запросов и информации, связанных с использованием, предоставление услуг Бота, а также рассмотрение запросов и заявок.",
+            section_5_1:
+              "Оператор не несет ответственности перед пользователем за любой ущерб, связанный с отсутствием прибыли, потерей данных или экономии, невозможностью использования Бота или его работы.",
+            section_5_2:
+              "Все возможные споры, вытекающие из настоящего Соглашения, рассматриваются в соответствии с действующим законодательством Республики Узбекистан.",
+            section_5_3:
+              "Оператор имеет право вносить изменения в настоящее Соглашение без отправки специального уведомления пользователю. Новая редакция Соглашения вступает в силу с момента объявления.",
+            section_5_4:
+              "Отзыв согласия на обработку персональных данных может быть осуществлен путем отправки письменного уведомления (написанного от руки и подписанного Пользователем) Оператору.",
+          },
+        },
         application: {
           title: "Подача заявки",
           personal_info: "Личная информация",
@@ -1132,6 +1467,10 @@ const resources = {
             birth_date: "Укажите дату рождения",
             phone_number: "Введите номер телефона",
             education: "Образование",
+            start_year: "Год начала",
+            end_year: "Год окончания",
+            select_year: "Выберите год",
+            currently_studying: "В настоящее время учусь",
             education_period: "Период обучения",
             education_period_placeholder: "2015-2019",
             institution: "Название учреждения",
@@ -1146,6 +1485,7 @@ const resources = {
             work_experience: "Трудовая деятельность",
             work_period: "Период работы",
             work_period_placeholder: "2019-2021",
+            currently_working: "В настоящее время работаю",
             company: "Название учреждения",
             company_placeholder: "Центральный банк РУз",
             position: "Должность",
