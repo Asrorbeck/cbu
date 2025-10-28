@@ -127,4 +127,17 @@ export const organizationAPI = {
   },
 };
 
+export const chatsAPI = {
+  // Register user chat data
+  registerUser: async (userData) => {
+    try {
+      const response = await apiClient.post("/chats/", userData);
+      return response.data;
+    } catch (error) {
+      console.error("Error registering user chat:", error);
+      throw error;
+    }
+  },
+};
+
 export default apiClient;

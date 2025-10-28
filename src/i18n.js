@@ -164,6 +164,7 @@ const resources = {
         news: "Yangiliklar",
         jobs: "Vakansiyalar",
         feedback: "Fikr-mulohaza",
+        submissions: "Murojaatlar",
         profile: "Profil",
       },
       profile: {
@@ -564,6 +565,13 @@ const resources = {
           },
         },
       },
+      not_found: {
+        title: "Sahifa topilmadi",
+        description:
+          "Qidirilayotgan sahifa mavjud emas. Keling, sizni orqaga qaytaramiz!",
+        go_back: "Orqaga qaytish",
+        back_to_home: "Bosh sahifaga qaytish",
+      },
     },
   },
   "uz-Cyrl": {
@@ -728,6 +736,7 @@ const resources = {
         news: "Янгиликлар",
         jobs: "Вакансиялар",
         feedback: "Фикр-мулоҳаза",
+        submissions: "Мурожаатлар",
         profile: "Профил",
       },
       profile: {
@@ -1125,6 +1134,13 @@ const resources = {
           },
         },
       },
+      not_found: {
+        title: "Саҳифа топилмади",
+        description:
+          "Қидирилаётган саҳифа мавжуд эмас. Келинг, сизни орқага қайтарамиз!",
+        go_back: "Орқага қайтиш",
+        back_to_home: "Бош саҳифага қайтиш",
+      },
     },
   },
   ru: {
@@ -1286,6 +1302,7 @@ const resources = {
         news: "Новости",
         jobs: "Вакансии",
         feedback: "Обратная связь",
+        submissions: "Обращения",
         profile: "Профиль",
       },
       profile: {
@@ -1684,6 +1701,13 @@ const resources = {
             d: "Говорить громко",
           },
         },
+      },
+      not_found: {
+        title: "Страница не найдена",
+        description:
+          "Страница, которую вы ищете, не существует. Давайте вернем вас обратно!",
+        go_back: "Вернуться назад",
+        back_to_home: "На главную",
       },
     },
   },

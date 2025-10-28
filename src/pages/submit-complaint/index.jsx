@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import toast from "react-hot-toast";
@@ -13,6 +13,7 @@ const SubmitComplaint = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [telegramUserId, setTelegramUserId] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -25,6 +26,55 @@ const SubmitComplaint = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    // Telegram Web App dan user ma'lumotlarini olish
+    const getTelegramUserData = () => {
+      try {
+        // Telegram Web App mavjudligini tekshirish
+        if (window.Telegram && window.Telegram.WebApp) {
+          console.log("Telegram WebApp found:", window.Telegram.WebApp);
+
+          // Telegram Web App ni ishga tushirish
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+
+          // initDataUnsafe ni tekshirish
+          if (
+            window.Telegram.WebApp.initDataUnsafe &&
+            window.Telegram.WebApp.initDataUnsafe.user
+          ) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            console.log("Telegram user data:", user);
+
+            setTelegramUserId(user.id);
+            return;
+          }
+
+          // initData ni tekshirish (agar initDataUnsafe ishlamasa)
+          if (window.Telegram.WebApp.initData) {
+            console.log(
+              "Telegram initData found:",
+              window.Telegram.WebApp.initData
+            );
+            // Bu yerda initData ni parse qilish kerak
+          }
+        }
+
+        // Agar Telegram Web App mavjud bo'lmasa yoki ma'lumot olinmasa
+        console.log("Telegram WebApp not available, using default user ID");
+        setTelegramUserId(905770018);
+      } catch (error) {
+        console.error("Error getting Telegram user data:", error);
+        setTelegramUserId(905770018);
+      }
+    };
+
+    // Kichik kechikish bilan ishga tushirish
+    const timer = setTimeout(getTelegramUserData, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatPhoneNumber = (value) => {
     // Remove all non-digits
@@ -117,6 +167,9 @@ const SubmitComplaint = () => {
         payload.append("subject", formData.subject);
         payload.append("message", formData.description);
         payload.append("attachment", selectedFile); // Add the file
+
+        // Add Telegram user ID (always include default if not available)
+        payload.append("user_id", telegramUserId || 905770018);
       } else {
         payload = {
           is_anonymous: formData.isAnonymous,
@@ -128,6 +181,9 @@ const SubmitComplaint = () => {
           subject: formData.subject,
           message: formData.description,
         };
+
+        // Add Telegram user ID (always include default if not available)
+        payload.user_id = telegramUserId || 905770018;
       }
 
       // Submit to backend API

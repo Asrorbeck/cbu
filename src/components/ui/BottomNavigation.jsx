@@ -19,7 +19,7 @@ const BottomNavigation = () => {
       id: "submissions",
       path: "/submissions",
       icon: "FileText",
-      label: "Murojaatlar",
+      label: t("bottom_nav.submissions"),
     },
     {
       id: "jobs",

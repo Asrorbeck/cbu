@@ -136,6 +136,35 @@ const JobApplicationForm = () => {
     additionalInfo: "",
   });
 
+  // Get user ID from Telegram Web App or use default
+  const getUserId = () => {
+    try {
+      // Check if Telegram Web App is available
+      if (window.Telegram && window.Telegram.WebApp) {
+        // Initialize Telegram Web App
+        window.Telegram.WebApp.ready();
+
+        // Try to get user data from initDataUnsafe
+        if (
+          window.Telegram.WebApp.initDataUnsafe &&
+          window.Telegram.WebApp.initDataUnsafe.user
+        ) {
+          const user = window.Telegram.WebApp.initDataUnsafe.user;
+          console.log("Telegram user ID found:", user.id);
+          return user.id;
+        }
+      }
+
+      // If Telegram Web App is not available or user data not found, use default ID
+      console.log("Using default user ID: 905770018");
+      return 905770018;
+    } catch (error) {
+      console.error("Error getting user ID:", error);
+      console.log("Using default user ID due to error: 905770018");
+      return 905770018;
+    }
+  };
+
   // Generate year options (from 1950 to current year)
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
@@ -282,6 +311,7 @@ const JobApplicationForm = () => {
     // Transform form data to match API format
     const formDataToSend = {
       job: parseInt(decodedVacancyId), // Convert to integer
+      user_id: getUserId(), // Add user ID from Telegram Web App or default
       full_name: formData.fullName,
       data_of_birth: formData.birthDate,
       phone: formData.phone,
@@ -415,6 +445,8 @@ ${formData.additionalInfo || "Kiritilmagan"}
 • Departament ID: ${departmentId}
 • Vakansiya ID: ${decodedVacancyId}
 • Vakansiya nomi: ${currentVacancy?.title || "Noma'lum"}
+
+👤 *Foydalanuvchi ID:* ${getUserId()}
 
 ⏰ *Yuborilgan vaqt:* ${new Date().toLocaleString("uz-UZ")}`;
 

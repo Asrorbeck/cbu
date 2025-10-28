@@ -1,13 +1,15 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from 'components/ui/Button';
-import Icon from 'components/AppIcon';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import Button from "components/ui/Button";
+import Icon from "components/AppIcon";
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleGoHome = () => {
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -19,9 +21,11 @@ const NotFound = () => {
           </div>
         </div>
 
-        <h2 className="text-2xl font-medium text-onBackground mb-2">Page Not Found</h2>
+        <h2 className="text-2xl font-medium text-onBackground mb-2">
+          {t("not_found.title")}
+        </h2>
         <p className="text-onBackground/70 mb-8">
-          The page you're looking for doesn't exist. Let's get you back!
+          {t("not_found.description")}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -31,7 +35,7 @@ const NotFound = () => {
             iconPosition="left"
             onClick={() => window.history?.back()}
           >
-            Go Back
+            {t("not_found.go_back")}
           </Button>
 
           <Button
@@ -40,7 +44,7 @@ const NotFound = () => {
             iconPosition="left"
             onClick={handleGoHome}
           >
-            Back to Home
+            {t("not_found.back_to_home")}
           </Button>
         </div>
       </div>
