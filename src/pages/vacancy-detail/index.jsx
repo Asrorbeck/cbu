@@ -63,17 +63,34 @@ const VacancyDetailPage = () => {
     fetchVacancyData();
   }, [decodedVacancyId]);
 
-  // Helper function to parse JSON string arrays
-  const parseJsonArray = (jsonString) => {
-    try {
-      const parsed = JSON.parse(jsonString);
-      return Array.isArray(parsed)
-        ? parsed.map((item) => item.task || item)
-        : [];
-    } catch (error) {
-      console.error("Error parsing JSON array:", error);
-      return [];
+  // Helper function to parse JSON string arrays or plain text
+  const parseJsonArray = (data) => {
+    if (!data) return [];
+
+    // If it's already an array, return it
+    if (Array.isArray(data)) {
+      return data.map((item) => item.task || item);
     }
+
+    // If it's a string, try to parse as JSON first
+    if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed)
+          ? parsed.map((item) => item.task || item)
+          : [];
+      } catch (error) {
+        // If JSON parsing fails, treat as plain text
+        // If it contains newlines, split by them; otherwise treat as single item
+        if (data.includes("\n")) {
+          return data.split("\n").filter((line) => line.trim().length > 0);
+        }
+        // If it's a single string without newlines, return it as a single item array
+        return [data.trim()].filter((item) => item.length > 0);
+      }
+    }
+
+    return [];
   };
 
   // Show loading state

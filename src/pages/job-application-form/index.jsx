@@ -21,6 +21,7 @@ const JobApplicationForm = () => {
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Decode the vacancy ID from URL
   const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
@@ -131,8 +132,6 @@ const JobApplicationForm = () => {
       russian: "",
       english: "",
     },
-    salaryRange: "",
-    hasCriminalRecord: false,
     additionalInfo: "",
   });
 
@@ -166,16 +165,23 @@ const JobApplicationForm = () => {
   };
 
   // Generate year options (from 1950 to current year)
-  const generateYearOptions = () => {
+  const generateYearOptions = (minYear = 1950) => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let year = currentYear; year >= 1950; year--) {
+    for (let year = currentYear; year >= minYear; year--) {
       years.push({ value: year.toString(), label: year.toString() });
     }
     return years;
   };
 
   const yearOptions = generateYearOptions();
+
+  // Generate filtered year options for end year based on start year
+  const getEndYearOptions = (startYear) => {
+    if (!startYear) return yearOptions;
+    const start = parseInt(startYear);
+    return generateYearOptions(start);
+  };
 
   // Degree options
   const degreeOptions = [
@@ -192,32 +198,55 @@ const JobApplicationForm = () => {
     { value: "excellent", label: t("jobs.application.form.excellent") },
   ];
 
-  // Salary range options
-  const salaryRanges = [
-    { value: "5-6", label: t("jobs.application.form.salary_5_6") },
-    { value: "6-7", label: t("jobs.application.form.salary_6_7") },
-    { value: "7-8", label: t("jobs.application.form.salary_7_8") },
-    { value: "8-9", label: t("jobs.application.form.salary_8_9") },
-    { value: "9-10", label: t("jobs.application.form.salary_9_10") },
-    { value: "10+", label: t("jobs.application.form.salary_10_plus") },
-  ];
-
   // Handle input changes
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   // Handle education changes
   const handleEducationChange = (index, field, value) => {
     const updatedEducation = [...formData.education];
     updatedEducation[index][field] = value;
+
+    // If start year changes and end year is before start year, clear end year
+    if (field === "startYear" && updatedEducation[index].endYear) {
+      const startYear = parseInt(value);
+      const endYear = parseInt(updatedEducation[index].endYear);
+      if (endYear < startYear) {
+        updatedEducation[index].endYear = "";
+      }
+    }
+
+    // If isCurrent is checked, clear end year
+    if (field === "isCurrent" && value === true) {
+      updatedEducation[index].endYear = "";
+    }
+
     setFormData((prev) => ({
       ...prev,
       education: updatedEducation,
     }));
+
+    // Clear error when user starts typing
+    const errorKey = `education_${index}_${field}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[errorKey];
+        return newErrors;
+      });
+    }
   };
 
   // Add new education entry
@@ -226,7 +255,14 @@ const JobApplicationForm = () => {
       ...prev,
       education: [
         ...prev.education,
-        { period: "", institution: "", degree: "", specialty: "" },
+        {
+          startYear: "",
+          endYear: "",
+          isCurrent: false,
+          institution: "",
+          degree: "",
+          specialty: "",
+        },
       ],
     }));
   };
@@ -246,10 +282,35 @@ const JobApplicationForm = () => {
   const handleWorkExperienceChange = (index, field, value) => {
     const updatedWorkExperience = [...formData.workExperience];
     updatedWorkExperience[index][field] = value;
+
+    // If start year changes and end year is before start year, clear end year
+    if (field === "startYear" && updatedWorkExperience[index].endYear) {
+      const startYear = parseInt(value);
+      const endYear = parseInt(updatedWorkExperience[index].endYear);
+      if (endYear < startYear) {
+        updatedWorkExperience[index].endYear = "";
+      }
+    }
+
+    // If isCurrent is checked, clear end year
+    if (field === "isCurrent" && value === true) {
+      updatedWorkExperience[index].endYear = "";
+    }
+
     setFormData((prev) => ({
       ...prev,
       workExperience: updatedWorkExperience,
     }));
+
+    // Clear error when user starts typing
+    const errorKey = `workExperience_${index}_${field}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[errorKey];
+        return newErrors;
+      });
+    }
   };
 
   // Add new work experience entry
@@ -258,7 +319,13 @@ const JobApplicationForm = () => {
       ...prev,
       workExperience: [
         ...prev.workExperience,
-        { period: "", company: "", position: "" },
+        {
+          startYear: "",
+          endYear: "",
+          isCurrent: false,
+          company: "",
+          position: "",
+        },
       ],
     }));
   };
@@ -285,6 +352,15 @@ const JobApplicationForm = () => {
         [language]: level,
       },
     }));
+    // Clear error when user starts typing
+    const errorKey = `languages_${language}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[errorKey];
+        return newErrors;
+      });
+    }
   };
 
   // Handle form submission
@@ -384,10 +460,128 @@ const JobApplicationForm = () => {
       }, 1500);
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error(t("jobs.application.form.error_message"), {
-        duration: 5000,
-        position: "top-center",
-      });
+
+      // Parse backend errors
+      const errors = {};
+
+      if (error.response?.data) {
+        const backendErrors = error.response.data;
+
+        // Translate error messages to Uzbek
+        const translateError = (message) => {
+          const translations = {
+            "This field may not be blank.":
+              "Ushbu maydon bo'sh bo'lishi mumkin emas.",
+            "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.":
+              "Sana noto'g'ri formatda yokida kiritilmagan",
+            '"" is not a valid choice.':
+              "Noto'g'ri tanlov. Iltimos, boshqa variantni tanlang.",
+          };
+
+          // Try exact match first
+          if (translations[message]) {
+            return translations[message];
+          }
+
+          // Try partial match
+          for (const [key, value] of Object.entries(translations)) {
+            if (message.includes(key)) {
+              return value;
+            }
+          }
+
+          return message;
+        };
+
+        // Map backend field names to frontend field names
+        if (backendErrors.full_name) {
+          errors.fullName = translateError(backendErrors.full_name[0]);
+        }
+
+        if (backendErrors.data_of_birth) {
+          errors.birthDate = translateError(backendErrors.data_of_birth[0]);
+        }
+
+        if (backendErrors.phone) {
+          errors.phone = translateError(backendErrors.phone[0]);
+        }
+
+        if (backendErrors.additional_information) {
+          errors.additionalInfo = translateError(
+            backendErrors.additional_information[0]
+          );
+        }
+
+        // Handle graduations errors
+        if (
+          backendErrors.graduations &&
+          Array.isArray(backendErrors.graduations)
+        ) {
+          backendErrors.graduations.forEach((gradError, index) => {
+            if (gradError.university) {
+              errors[`education_${index}_institution`] = translateError(
+                gradError.university[0]
+              );
+            }
+            if (gradError.specialization) {
+              errors[`education_${index}_specialty`] = translateError(
+                gradError.specialization[0]
+              );
+            }
+          });
+        }
+
+        // Handle employments errors
+        if (
+          backendErrors.employments &&
+          Array.isArray(backendErrors.employments)
+        ) {
+          backendErrors.employments.forEach((empError, index) => {
+            if (empError.organization_name) {
+              errors[`workExperience_${index}_company`] = translateError(
+                empError.organization_name[0]
+              );
+            }
+            if (empError.position) {
+              errors[`workExperience_${index}_position`] = translateError(
+                empError.position[0]
+              );
+            }
+          });
+        }
+
+        // Handle languages errors
+        if (backendErrors.languages && Array.isArray(backendErrors.languages)) {
+          const languageKeys = ["uzbek", "russian", "english"];
+          backendErrors.languages.forEach((langError, index) => {
+            if (langError.degree && index < languageKeys.length) {
+              const langKey = languageKeys[index];
+              errors[`languages_${langKey}`] = translateError(
+                langError.degree[0]
+              );
+            }
+          });
+        }
+      }
+
+      // Set field errors
+      setFieldErrors(errors);
+
+      // Show toast only if there are no specific field errors
+      if (Object.keys(errors).length === 0) {
+        toast.error(t("jobs.application.form.error_message"), {
+          duration: 5000,
+          position: "top-center",
+        });
+      } else {
+        toast.error(
+          "Formani to'ldirishda xatolar topildi. Iltimos, quyidagi maydonlarni tekshiring.",
+          {
+            duration: 5000,
+            position: "top-center",
+          }
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -433,10 +627,6 @@ ${index + 1}. Davr: ${work.period}
 • O'zbek tili: ${formData.languages.uzbek}
 • Rus tili: ${formData.languages.russian}
 • Ingliz tili: ${formData.languages.english}
-
-💰 *Maosh diapazoni:* ${formData.salaryRange}
-
-⚖️ *Jinoiy javobgarlik:* ${formData.hasCriminalRecord ? "Ha" : "Yo'q"}
 
 📝 *Qo'shimcha ma'lumot:*
 ${formData.additionalInfo || "Kiritilmagan"}
@@ -508,10 +698,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
         russian: "",
         english: "",
       },
-      salaryRange: "",
-      hasCriminalRecord: false,
       additionalInfo: "",
     });
+    setFieldErrors({});
   };
 
   // Show loading state
@@ -619,6 +808,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         }
                         required
                       />
+                      {fieldErrors.fullName && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.fullName}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -633,6 +828,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         }
                         required
                       />
+                      {fieldErrors.birthDate && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.birthDate}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -671,6 +872,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         }}
                         required
                       />
+                      {fieldErrors.phone && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -735,7 +942,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 onChange={(value) =>
                                   handleEducationChange(index, "endYear", value)
                                 }
-                                options={yearOptions}
+                                options={getEndYearOptions(edu.startYear)}
                                 placeholder={t(
                                   "jobs.application.form.select_year"
                                 )}
@@ -787,6 +994,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               }
                               required
                             />
+                            {fieldErrors[`education_${index}_institution`] && (
+                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                <Icon name="AlertCircle" size={16} />
+                                {fieldErrors[`education_${index}_institution`]}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -825,6 +1038,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               }
                               required
                             />
+                            {fieldErrors[`education_${index}_specialty`] && (
+                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                <Icon name="AlertCircle" size={16} />
+                                {fieldErrors[`education_${index}_specialty`]}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -910,36 +1129,32 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     value
                                   )
                                 }
-                                options={yearOptions}
+                                options={getEndYearOptions(work.startYear)}
                                 placeholder={t(
                                   "jobs.application.form.select_year"
                                 )}
                                 disabled={work.isCurrent}
                                 required={!work.isCurrent}
                               />
-                              {index > 0 && (
-                                <div className="flex items-center">
-                                  <Checkbox
-                                    id={`work-current-${index}`}
-                                    checked={work.isCurrent}
-                                    onChange={(checked) =>
-                                      handleWorkExperienceChange(
-                                        index,
-                                        "isCurrent",
-                                        checked
-                                      )
-                                    }
-                                  />
-                                  <label
-                                    htmlFor={`work-current-${index}`}
-                                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                                  >
-                                    {t(
-                                      "jobs.application.form.currently_working"
-                                    )}
-                                  </label>
-                                </div>
-                              )}
+                              <div className="flex items-center">
+                                <Checkbox
+                                  id={`work-current-${index}`}
+                                  checked={work.isCurrent}
+                                  onChange={(checked) =>
+                                    handleWorkExperienceChange(
+                                      index,
+                                      "isCurrent",
+                                      checked
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`work-current-${index}`}
+                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                >
+                                  {t("jobs.application.form.currently_working")}
+                                </label>
+                              </div>
                             </div>
                           </div>
 
@@ -962,6 +1177,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               }
                               required
                             />
+                            {fieldErrors[`workExperience_${index}_company`] && (
+                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                <Icon name="AlertCircle" size={16} />
+                                {fieldErrors[`workExperience_${index}_company`]}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -983,6 +1204,18 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               }
                               required
                             />
+                            {fieldErrors[
+                              `workExperience_${index}_position`
+                            ] && (
+                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                <Icon name="AlertCircle" size={16} />
+                                {
+                                  fieldErrors[
+                                    `workExperience_${index}_position`
+                                  ]
+                                }
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1032,6 +1265,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           </label>
                         ))}
                       </div>
+                      {fieldErrors.languages_uzbek && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.languages_uzbek}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1062,6 +1301,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           </label>
                         ))}
                       </div>
+                      {fieldErrors.languages_russian && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.languages_russian}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1092,55 +1337,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           </label>
                         ))}
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Salary Range */}
-                <div className="px-4 sm:px-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    {t("jobs.application.form.salary_range")}
-                  </h2>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("jobs.application.form.salary_range_select")}
-                    </label>
-                    <Select
-                      value={formData.salaryRange}
-                      onChange={(value) =>
-                        handleInputChange("salaryRange", value)
-                      }
-                      options={salaryRanges}
-                      placeholder={t(
-                        "jobs.application.form.salary_range_placeholder"
+                      {fieldErrors.languages_english && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.languages_english}
+                        </p>
                       )}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Criminal Record */}
-                <div className="px-4 sm:px-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    {t("jobs.application.form.criminal_record")}
-                  </h2>
-
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <Checkbox
-                        checked={formData.hasCriminalRecord}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "hasCriminalRecord",
-                            e.target.checked
-                          )
-                        }
-                      />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t("jobs.application.form.criminal_record_question")}
-                      </span>
-                    </label>
+                    </div>
                   </div>
                 </div>
 
@@ -1165,6 +1368,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         handleInputChange("additionalInfo", e.target.value)
                       }
                     />
+                    {fieldErrors.additionalInfo && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                        <Icon name="AlertCircle" size={16} />
+                        {fieldErrors.additionalInfo}
+                      </p>
+                    )}
                   </div>
                 </div>
 
