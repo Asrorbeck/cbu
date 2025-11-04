@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://jonibekdaminov.pythonanywhere.com/api/v1";
+  "https://bd242f6369a3.ngrok-free.app/api/v1";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
