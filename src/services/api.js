@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://bd242f6369a3.ngrok-free.app/api/v1";
+  "https://4a8a7d4f11a3.ngrok-free.app/api/v1";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -83,6 +83,28 @@ export const vacanciesAPI = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching vacancy ${id}:`, error);
+      throw error;
+    }
+  },
+};
+
+export const testsAPI = {
+  // Start a test session
+  startTest: async ({ testId, token }) => {
+    try {
+      const response = await apiClient.post(
+        `/tests/${testId}/start/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Error starting test ${testId}:`, error);
       throw error;
     }
   },

@@ -6,11 +6,60 @@ import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
-import { vacanciesAPI } from "../../services/api";
+import { vacanciesAPI, testsAPI } from "../../services/api";
 import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
 
+const decodeBase64Url = (value) => {
+  try {
+    const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "="
+    );
+    const decoded = atob(padded);
+    try {
+      return decodeURIComponent(
+        decoded
+          .split("")
+          .map((char) => "%" + char.charCodeAt(0).toString(16).padStart(2, "0"))
+          .join("")
+      );
+    } catch (uriError) {
+      return decoded;
+    }
+  } catch (error) {
+    console.error("Failed to decode base64 url string", error);
+    return null;
+  }
+};
+
+const decodeJwtPayload = (token) => {
+  if (!token) {
+    return null;
+  }
+
+  const tokenParts = token.split(".");
+  if (tokenParts.length < 2) {
+    return null;
+  }
+
+  const payload = decodeBase64Url(tokenParts[1]);
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(payload);
+  } catch (error) {
+    console.error("Failed to parse JWT payload", error);
+    return null;
+  }
+};
+
+const SECURITY_ENABLED = false;
+
 const VacancyTest = () => {
-  const { testId } = useParams();
+  const { token } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,8 +77,45 @@ const VacancyTest = () => {
   const [violationType, setViolationType] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
-  // Decode the test ID from URL
-  const decodedTestId = testId ? atob(testId) : null;
+  const tokenPayload = useMemo(() => decodeJwtPayload(token), [token]);
+
+  // Extract the test ID from the access token
+  const decodedTestId = tokenPayload?.test_id
+    ? String(tokenPayload.test_id)
+    : null;
+
+  useEffect(() => {
+    if (!token) {
+      setError("Invalid or missing test access token");
+      setLoading(false);
+      return;
+    }
+
+    if (!decodedTestId) {
+      setError("Failed to read test access token");
+      setLoading(false);
+    }
+  }, [token, decodedTestId]);
+
+  useEffect(() => {
+    if (!decodedTestId || !token) {
+      return;
+    }
+
+    const startTest = async () => {
+      try {
+        const response = await testsAPI.startTest({
+          testId: decodedTestId,
+          token,
+        });
+        console.log("Test start response:", response);
+      } catch (apiError) {
+        console.error("Error starting test session:", apiError);
+      }
+    };
+
+    startTest();
+  }, [decodedTestId, token]);
 
   // To'g'ri javoblar (Correct answers)
   const correctAnswers = {
@@ -116,6 +202,10 @@ const VacancyTest = () => {
 
   // Handle violations
   const handleViolation = (type) => {
+    if (!SECURITY_ENABLED) {
+      return;
+    }
+
     const newViolations = violations + 1;
     setViolations(newViolations);
     setViolationType(type);
@@ -138,7 +228,7 @@ const VacancyTest = () => {
 
   // Prevent page refresh/close
   useEffect(() => {
-    if (isBlocked) return;
+    if (!SECURITY_ENABLED || isBlocked) return;
 
     const handleBeforeUnload = (e) => {
       // Just show warning, don't count as violation
@@ -266,7 +356,7 @@ const VacancyTest = () => {
   useEffect(() => {
     const fetchVacancyData = async () => {
       if (!decodedTestId) {
-        setError("Invalid test ID");
+        setError("Invalid test access token");
         setLoading(false);
         return;
       }
@@ -308,7 +398,7 @@ const VacancyTest = () => {
 
   // Security: Prevent cheating
   useEffect(() => {
-    if (isBlocked) return;
+    if (!SECURITY_ENABLED || isBlocked) return;
 
     // Disable right-click
     const handleContextMenu = (e) => {
