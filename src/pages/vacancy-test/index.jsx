@@ -56,8 +56,6 @@ const decodeJwtPayload = (token) => {
   }
 };
 
-const SECURITY_ENABLED = false;
-
 const VacancyTest = () => {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -83,19 +81,18 @@ const VacancyTest = () => {
   const decodedTestId = tokenPayload?.test_id
     ? String(tokenPayload.test_id)
     : null;
+  const fallbackTestId = "demo";
+  const activeTestId = decodedTestId || fallbackTestId;
+  const isFallbackTest = !decodedTestId;
 
   useEffect(() => {
-    if (!token) {
-      setError("Invalid or missing test access token");
-      setLoading(false);
-      return;
+    if (!token || isFallbackTest) {
+      console.warn(
+        "VacancyTest: using fallback test flow due to missing or invalid token."
+      );
+      setError(null);
     }
-
-    if (!decodedTestId) {
-      setError("Failed to read test access token");
-      setLoading(false);
-    }
-  }, [token, decodedTestId]);
+  }, [token, isFallbackTest]);
 
   useEffect(() => {
     if (!decodedTestId || !token) {
@@ -133,20 +130,20 @@ const VacancyTest = () => {
 
   // Check if test is blocked or already submitted
   useEffect(() => {
-    if (!decodedTestId) return;
+    if (!activeTestId) return;
 
     // Check if blocked
     const blockedTests = JSON.parse(
       localStorage.getItem("blockedTests") || "[]"
     );
-    if (blockedTests.includes(decodedTestId)) {
+    if (blockedTests.includes(activeTestId)) {
       setIsBlocked(true);
       setLoading(false);
       return;
     }
 
     // Check if already submitted
-    const previousResult = localStorage.getItem(`test_result_${decodedTestId}`);
+    const previousResult = localStorage.getItem(`test_result_${activeTestId}`);
     if (previousResult) {
       try {
         const result = JSON.parse(previousResult);
@@ -157,13 +154,13 @@ const VacancyTest = () => {
         console.error("Error loading previous result:", error);
       }
     }
-  }, [decodedTestId]);
+  }, [activeTestId]);
 
   // Load saved test state from localStorage
   useEffect(() => {
-    if (!decodedTestId || isBlocked) return;
+    if (!activeTestId || isBlocked) return;
 
-    const savedState = localStorage.getItem(`test_state_${decodedTestId}`);
+    const savedState = localStorage.getItem(`test_state_${activeTestId}`);
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
@@ -176,11 +173,11 @@ const VacancyTest = () => {
         console.error("Error loading test state:", error);
       }
     }
-  }, [decodedTestId, isBlocked]);
+  }, [activeTestId, isBlocked]);
 
   // Save test state to localStorage
   useEffect(() => {
-    if (!decodedTestId || isBlocked) return;
+    if (!activeTestId || isBlocked) return;
 
     const state = {
       answers,
@@ -190,22 +187,18 @@ const VacancyTest = () => {
       lastSaved: new Date().toISOString(),
     };
 
-    localStorage.setItem(`test_state_${decodedTestId}`, JSON.stringify(state));
+    localStorage.setItem(`test_state_${activeTestId}`, JSON.stringify(state));
   }, [
     answers,
     timeRemaining,
     currentQuestion,
     violations,
-    decodedTestId,
+    activeTestId,
     isBlocked,
   ]);
 
   // Handle violations
   const handleViolation = (type) => {
-    if (!SECURITY_ENABLED) {
-      return;
-    }
-
     const newViolations = violations + 1;
     setViolations(newViolations);
     setViolationType(type);
@@ -215,8 +208,8 @@ const VacancyTest = () => {
       const blockedTests = JSON.parse(
         localStorage.getItem("blockedTests") || "[]"
       );
-      if (!blockedTests.includes(decodedTestId)) {
-        blockedTests.push(decodedTestId);
+      if (!blockedTests.includes(activeTestId)) {
+        blockedTests.push(activeTestId);
         localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
       }
       setIsBlocked(true);
@@ -228,7 +221,7 @@ const VacancyTest = () => {
 
   // Prevent page refresh/close
   useEffect(() => {
-    if (!SECURITY_ENABLED || isBlocked) return;
+    if (isBlocked) return;
 
     const handleBeforeUnload = (e) => {
       // Just show warning, don't count as violation
@@ -356,7 +349,12 @@ const VacancyTest = () => {
   useEffect(() => {
     const fetchVacancyData = async () => {
       if (!decodedTestId) {
-        setError("Invalid test access token");
+        setVacancy({
+          id: activeTestId,
+          title: "Umumiy bilim testi",
+          description:
+            "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
+        });
         setLoading(false);
         return;
       }
@@ -373,7 +371,7 @@ const VacancyTest = () => {
           // If API fails, use default test data
           console.log("Using default test data");
           setVacancy({
-            id: decodedTestId,
+            id: activeTestId,
             title: "Umumiy bilim testi",
             description:
               "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
@@ -383,7 +381,7 @@ const VacancyTest = () => {
         console.error("Error fetching vacancy:", error);
         // Use default data even on error
         setVacancy({
-          id: decodedTestId,
+          id: activeTestId,
           title: "Umumiy bilim testi",
           description:
             "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
@@ -394,11 +392,11 @@ const VacancyTest = () => {
     };
 
     fetchVacancyData();
-  }, [decodedTestId]);
+  }, [decodedTestId, activeTestId]);
 
   // Security: Prevent cheating
   useEffect(() => {
-    if (!SECURITY_ENABLED || isBlocked) return;
+    if (isBlocked) return;
 
     // Disable right-click
     const handleContextMenu = (e) => {
@@ -621,7 +619,7 @@ const VacancyTest = () => {
       const isPassed = percentage >= 50;
 
       const testResults = {
-        testId: decodedTestId,
+        testId: activeTestId,
         answers: answers,
         correctAnswers: correctAnswers,
         correctCount: correctCount,
@@ -636,12 +634,12 @@ const VacancyTest = () => {
 
       // Save to localStorage
       localStorage.setItem(
-        `test_result_${decodedTestId}`,
+        `test_result_${activeTestId}`,
         JSON.stringify(testResults)
       );
 
       // Clear test state from localStorage
-      localStorage.removeItem(`test_state_${decodedTestId}`);
+      localStorage.removeItem(`test_state_${activeTestId}`);
 
       // Show result modal
       setTestResult(testResults);
@@ -876,7 +874,8 @@ const VacancyTest = () => {
   // Developer functions (for testing)
   const handleClearBlockedTests = () => {
     localStorage.removeItem("blockedTests");
-    localStorage.removeItem(`test_state_${decodedTestId}`);
+    localStorage.removeItem(`test_state_${activeTestId}`);
+    localStorage.removeItem(`test_result_${activeTestId}`);
     setIsBlocked(false);
     setViolations(0);
     toast.success("Blocked tests cleared!", {

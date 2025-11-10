@@ -62,6 +62,7 @@ const Routes = () => {
             path="/departments/:departmentId/:vacancyId/form"
             element={<JobApplicationForm />}
           />
+          <Route path="/test" element={<VacancyTest />} />
           <Route path="/test/:token" element={<VacancyTest />} />
           <Route
             path="/departments/:departmentId/:vacancyId/terms-and-conditions"
