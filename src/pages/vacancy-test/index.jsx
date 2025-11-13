@@ -57,7 +57,7 @@ const decodeJwtPayload = (token) => {
 };
 
 const VacancyTest = () => {
-  const { token } = useParams();
+  const { test_id, test_token } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,45 +74,81 @@ const VacancyTest = () => {
   const [showViolationModal, setShowViolationModal] = useState(false);
   const [violationType, setViolationType] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  // Test data from backend API
+  const [testData, setTestData] = useState(null);
+  const [attemptId, setAttemptId] = useState(null);
+  const [isDisqualified, setIsDisqualified] = useState(false);
+  const [disqualificationMessage, setDisqualificationMessage] = useState("");
 
-  const tokenPayload = useMemo(() => decodeJwtPayload(token), [token]);
-
-  // Extract the test ID from the access token
+  // Use test_id from URL params, fallback to decoded token if available
+  const tokenPayload = useMemo(
+    () => decodeJwtPayload(test_token),
+    [test_token]
+  );
   const decodedTestId = tokenPayload?.test_id
     ? String(tokenPayload.test_id)
     : null;
-  const fallbackTestId = "demo";
-  const activeTestId = decodedTestId || fallbackTestId;
-  const isFallbackTest = !decodedTestId;
+
+  // Use test_id from URL as primary source
+  const activeTestId = test_id || decodedTestId || "demo";
+  const isFallbackTest = !test_id && !decodedTestId;
 
   useEffect(() => {
-    if (!token || isFallbackTest) {
+    if (!test_token || isFallbackTest) {
       console.warn(
         "VacancyTest: using fallback test flow due to missing or invalid token."
       );
       setError(null);
     }
-  }, [token, isFallbackTest]);
+  }, [test_token, isFallbackTest]);
 
+  // Call backend API when component loads
   useEffect(() => {
-    if (!decodedTestId || !token) {
+    if (!test_id || !test_token) {
+      console.warn("VacancyTest: Missing test_id or test_token in URL");
+      setLoading(false);
       return;
     }
 
     const startTest = async () => {
       try {
+        setLoading(true);
         const response = await testsAPI.startTest({
-          testId: decodedTestId,
-          token,
+          testId: test_id,
+          token: test_token,
         });
         console.log("Test start response:", response);
+
+        // Store test data from API
+        setTestData(response);
+        setAttemptId(response.attempt_id);
+
+        // Set time remaining from API
+        if (response.remaining_seconds) {
+          setTimeRemaining(response.remaining_seconds);
+        }
+
+        // Set vacancy/title from API
+        setVacancy({
+          id: response.id,
+          title: response.title,
+          description: `Test: ${response.title}`,
+        });
+
+        setLoading(false);
       } catch (apiError) {
         console.error("Error starting test session:", apiError);
+        console.error(
+          "API Error Details:",
+          apiError.response?.data || apiError.message
+        );
+        setError(apiError.response?.data?.message || "Failed to load test");
+        setLoading(false);
       }
     };
 
     startTest();
-  }, [decodedTestId, token]);
+  }, [test_id, test_token]);
 
   // To'g'ri javoblar (Correct answers)
   const correctAnswers = {
@@ -197,24 +233,64 @@ const VacancyTest = () => {
     isBlocked,
   ]);
 
-  // Handle violations
-  const handleViolation = (type) => {
-    const newViolations = violations + 1;
-    setViolations(newViolations);
-    setViolationType(type);
+  // Get max violations from API or default to 5
+  const maxViolations = testData?.max_violations || 5;
 
-    if (newViolations >= 5) {
-      // Block the test
-      const blockedTests = JSON.parse(
-        localStorage.getItem("blockedTests") || "[]"
-      );
-      if (!blockedTests.includes(activeTestId)) {
-        blockedTests.push(activeTestId);
-        localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
+  // Handle violations - Connected to backend
+  const handleViolation = async (type) => {
+    if (!test_token || !attemptId) {
+      console.warn("Cannot report violation: missing token or attempt_id");
+      return;
+    }
+
+    try {
+      const response = await testsAPI.reportViolation({
+        token: test_token,
+        attemptId: attemptId,
+        violationType: type,
+      });
+
+      // Check if disqualified (403 response)
+      if (response.disqualified) {
+        console.error("TESTDAN CHETLASHTIRILDI:", response);
+        setIsDisqualified(true);
+        setDisqualificationMessage(
+          response.message || "Siz testdan chetlashtirildingiz"
+        );
+        setIsBlocked(true);
+
+        // Block the test in localStorage
+        const blockedTests = JSON.parse(
+          localStorage.getItem("blockedTests") || "[]"
+        );
+        if (!blockedTests.includes(activeTestId)) {
+          blockedTests.push(activeTestId);
+          localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
+        }
+        return;
       }
-      setIsBlocked(true);
-    } else {
-      // Show violation modal
+
+      // Normal warning response
+      if (response.warning) {
+        // Update violations from backend
+        setViolations(response.violations || 0);
+        setViolationType(type);
+
+        // Update max_violations if provided in response
+        if (response.max_violations && testData) {
+          setTestData({
+            ...testData,
+            max_violations: response.max_violations,
+          });
+        }
+
+        // Show violation modal
+        setShowViolationModal(true);
+      }
+    } catch (error) {
+      console.error("Error reporting violation to backend:", error);
+      // Fallback: still show violation modal even if API fails
+      setViolationType(type);
       setShowViolationModal(true);
     }
   };
@@ -238,9 +314,24 @@ const VacancyTest = () => {
     };
   }, [isBlocked, t]);
 
-  // Test savollar - Test questions (10 ta) - Memoized
-  const testQuestions = useMemo(
-    () => [
+  // Transform backend questions to component format
+  const testQuestions = useMemo(() => {
+    // If we have test data from API, use it
+    if (testData && testData.questions && testData.questions.length > 0) {
+      return testData.questions.map((q) => ({
+        id: q.id,
+        question: q.text,
+        options: q.choices.map((choice, index) => ({
+          id: String(choice.id), // Use choice ID as string
+          text: choice.text,
+          // Add letter label for display (a, b, c, d...)
+          label: String.fromCharCode(97 + index), // 97 is 'a' in ASCII
+        })),
+      }));
+    }
+
+    // Fallback to hardcoded questions if API data not available
+    return [
       {
         id: 1,
         question: t("test.questions.q1.question"),
@@ -341,9 +432,8 @@ const VacancyTest = () => {
           { id: "d", text: t("test.questions.q10.d") },
         ],
       },
-    ],
-    [t]
-  );
+    ];
+  }, [testData, t]);
 
   // Fetch vacancy data
   useEffect(() => {
@@ -410,23 +500,23 @@ const VacancyTest = () => {
 
     // Disable keyboard shortcuts for DevTools, PrintScreen, Copy, etc.
     const handleKeyDown = (e) => {
-      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (DevTools)
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey &&
-          e.shiftKey &&
-          (e.key === "I" || e.key === "J" || e.key === "C")) ||
-        (e.ctrlKey && e.key === "U")
-      ) {
-        e.preventDefault();
-        toast.error(t("test.security.no_devtools"), {
-          duration: 2000,
-          position: "top-center",
-        });
-        return false;
-      }
+      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (DevTools) - DISABLED
+      // if (
+      //   e.key === "F12" ||
+      //   (e.ctrlKey &&
+      //     e.shiftKey &&
+      //     (e.key === "I" || e.key === "J" || e.key === "C")) ||
+      //   (e.ctrlKey && e.key === "U")
+      // ) {
+      //   e.preventDefault();
+      //   toast.error(t("test.security.no_devtools"), {
+      //     duration: 2000,
+      //     position: "top-center",
+      //   });
+      //   return false;
+      // }
 
-      // PrintScreen - COUNT AS VIOLATION
+      // PrintScreen - Report to backend
       if (e.key === "PrintScreen") {
         e.preventDefault();
         handleViolation("screenshot");
@@ -488,7 +578,7 @@ const VacancyTest = () => {
       return false;
     };
 
-    // Detect tab switch / window blur - COUNT AS VIOLATION
+    // Detect tab switch / window blur - Report to backend
     const handleBlur = () => {
       handleViolation("tab_switch");
     };
@@ -503,23 +593,23 @@ const VacancyTest = () => {
       }
     };
 
-    // Detect DevTools opening (basic detection)
-    const detectDevTools = () => {
-      const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold =
-        window.outerHeight - window.innerHeight > threshold;
+    // Detect DevTools opening (basic detection) - DISABLED
+    // const detectDevTools = () => {
+    //   const threshold = 160;
+    //   const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+    //   const heightThreshold =
+    //     window.outerHeight - window.innerHeight > threshold;
 
-      if (widthThreshold || heightThreshold) {
-        toast.error(t("test.security.devtools_detected"), {
-          duration: 3000,
-          position: "top-center",
-        });
-      }
-    };
+    //   if (widthThreshold || heightThreshold) {
+    //     toast.error(t("test.security.devtools_detected"), {
+    //       duration: 3000,
+    //       position: "top-center",
+    //     });
+    //   }
+    // };
 
-    // Check DevTools every 1 second
-    const devToolsInterval = setInterval(detectDevTools, 1000);
+    // Check DevTools every 1 second - DISABLED
+    // const devToolsInterval = setInterval(detectDevTools, 1000);
 
     // Add event listeners
     document.addEventListener("contextmenu", handleContextMenu);
@@ -541,7 +631,7 @@ const VacancyTest = () => {
       document.removeEventListener("dragstart", handleDragStart);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       window.removeEventListener("blur", handleBlur);
-      clearInterval(devToolsInterval);
+      // clearInterval(devToolsInterval); // DISABLED
     };
   }, [t, isBlocked, violations]);
 
@@ -770,7 +860,7 @@ const VacancyTest = () => {
     );
   }
 
-  // Show blocked state
+  // Show blocked state (including disqualification)
   if (isBlocked) {
     return (
       <div className="min-h-screen bg-background">
@@ -786,10 +876,14 @@ const VacancyTest = () => {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
-                      {t("test.security.blocked_title")}
+                      {isDisqualified
+                        ? "Testdan chetlashtirildi"
+                        : t("test.security.blocked_title")}
                     </h1>
                     <p className="text-red-100 text-sm mt-1">
-                      {t("test.security.blocked_subtitle")}
+                      {isDisqualified
+                        ? "Siz testdan chetlashtirildingiz"
+                        : t("test.security.blocked_subtitle")}
                     </p>
                   </div>
                 </div>
@@ -799,7 +893,10 @@ const VacancyTest = () => {
               <div className="px-8 py-8 space-y-6">
                 <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-600 p-5">
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                    {t("test.security.blocked_description")}
+                    {isDisqualified
+                      ? disqualificationMessage ||
+                        "Siz testdan chetlashtirildingiz"
+                      : t("test.security.blocked_description")}
                   </p>
                 </div>
 
@@ -812,10 +909,14 @@ const VacancyTest = () => {
                     />
                     <div>
                       <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
-                        {t("test.security.blocked_reason_title")}
+                        {isDisqualified
+                          ? "Chetlashtirish sababi"
+                          : t("test.security.blocked_reason_title")}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {t("test.security.blocked_reason")}
+                        {isDisqualified
+                          ? `Qoidabuzarliklar soni: ${violations}/${maxViolations}`
+                          : t("test.security.blocked_reason")}
                       </p>
                     </div>
                   </div>
@@ -954,20 +1055,20 @@ const VacancyTest = () => {
                   className={`text-lg font-bold ${
                     violations === 0
                       ? "text-green-600 dark:text-green-400"
-                      : violations <= 2
+                      : violations <= Math.floor(maxViolations * 0.4)
                       ? "text-yellow-600 dark:text-yellow-400"
-                      : violations <= 3
+                      : violations <= Math.floor(maxViolations * 0.6)
                       ? "text-orange-600 dark:text-orange-400"
                       : "text-red-600 dark:text-red-400"
                   }`}
                 >
-                  {violations}/5
+                  {violations}/{maxViolations}
                 </div>
               </div>
             </div>
             {violations > 0 && (
               <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                {5 - violations} ta imkoniyat qoldi
+                {maxViolations - violations} ta imkoniyat qoldi
               </div>
             )}
           </div>
@@ -1067,7 +1168,7 @@ const VacancyTest = () => {
                     />
                     <span className="ml-3 flex-1 text-gray-900 dark:text-white">
                       <span className="font-medium mr-2">
-                        {option.id.toUpperCase()})
+                        {(option.label || option.id).toUpperCase()})
                       </span>
                       {option.text}
                     </span>
@@ -1179,26 +1280,26 @@ const VacancyTest = () => {
                 </p>
               </div>
 
-              {/* Violation Count */}
+              {/* Violation Count - Updated from backend */}
               <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                     {t("test.violation_modal.current_violations")}
                   </span>
                   <span className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                    {violations}/5
+                    {violations}/{maxViolations}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <div
                     className="bg-gray-600 dark:bg-gray-400 h-2 rounded-full transition-all"
-                    style={{ width: `${(violations / 5) * 100}%` }}
+                    style={{ width: `${(violations / maxViolations) * 100}%` }}
                   ></div>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  {t("test.violation_modal.remaining", {
-                    count: 5 - violations,
-                  })}
+                  {maxViolations - violations > 0
+                    ? `${maxViolations - violations} ta imkoniyat qoldi`
+                    : "Qoidabuzarliklar limitiga yetdingiz"}
                 </p>
               </div>
 

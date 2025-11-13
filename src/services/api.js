@@ -108,6 +108,45 @@ export const testsAPI = {
       throw error;
     }
   },
+
+  // Report violation
+  reportViolation: async ({ token, attemptId, violationType }) => {
+    try {
+      const response = await apiClient.post(
+        `/tests/report_violation/`,
+        {
+          token: token,
+          attempt_id: attemptId,
+          violation_type: violationType,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          validateStatus: (status) => {
+            // Accept 200, 201, and 403 as valid responses
+            return status === 200 || status === 201 || status === 403;
+          },
+        }
+      );
+
+      // Handle 403 - Disqualification
+      if (response.status === 403) {
+        const data = response.data;
+        console.error("TESTDAN CHETLASHTIRILDI:", data);
+        return {
+          disqualified: true,
+          ...data,
+        };
+      }
+
+      // Normal response with warning
+      return response.data;
+    } catch (error) {
+      console.error("Error reporting violation:", error);
+      throw error;
+    }
+  },
 };
 
 export const appealsAPI = {
