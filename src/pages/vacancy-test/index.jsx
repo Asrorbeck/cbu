@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
@@ -79,6 +79,7 @@ const VacancyTest = () => {
   const [attemptId, setAttemptId] = useState(null);
   const [isDisqualified, setIsDisqualified] = useState(false);
   const [disqualificationMessage, setDisqualificationMessage] = useState("");
+  const [testAlreadyCompleted, setTestAlreadyCompleted] = useState(false);
 
   // Use test_id from URL params, fallback to decoded token if available
   const tokenPayload = useMemo(
@@ -142,7 +143,28 @@ const VacancyTest = () => {
           "API Error Details:",
           apiError.response?.data || apiError.message
         );
-        setError(apiError.response?.data?.message || "Failed to load test");
+
+        // Check if test is already completed (400 error)
+        if (apiError.response?.status === 400) {
+          const errorData = apiError.response?.data;
+          const errorMessage = errorData?.error || errorData?.message || "";
+
+          if (
+            errorMessage.includes("allaqachon yakunlagansiz") ||
+            errorMessage.includes("already completed") ||
+            errorMessage.includes("yakunlagan")
+          ) {
+            setTestAlreadyCompleted(true);
+            setLoading(false);
+            return;
+          }
+        }
+
+        setError(
+          apiError.response?.data?.error ||
+            apiError.response?.data?.message ||
+            "Failed to load test"
+        );
         setLoading(false);
       }
     };
@@ -236,64 +258,71 @@ const VacancyTest = () => {
   // Get max violations from API or default to 5
   const maxViolations = testData?.max_violations || 5;
 
-  // Handle violations - Connected to backend
-  const handleViolation = async (type) => {
-    if (!test_token || !attemptId) {
-      console.warn("Cannot report violation: missing token or attempt_id");
-      return;
-    }
-
-    try {
-      const response = await testsAPI.reportViolation({
-        token: test_token,
-        attemptId: attemptId,
-        violationType: type,
-      });
-
-      // Check if disqualified (403 response)
-      if (response.disqualified) {
-        console.error("TESTDAN CHETLASHTIRILDI:", response);
-        setIsDisqualified(true);
-        setDisqualificationMessage(
-          response.message || "Siz testdan chetlashtirildingiz"
-        );
-        setIsBlocked(true);
-
-        // Block the test in localStorage
-        const blockedTests = JSON.parse(
-          localStorage.getItem("blockedTests") || "[]"
-        );
-        if (!blockedTests.includes(activeTestId)) {
-          blockedTests.push(activeTestId);
-          localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
-        }
+  // Handle violations - Connected to backend (useCallback to avoid closure issues)
+  const handleViolation = useCallback(
+    async (type) => {
+      if (!test_token || !attemptId) {
+        console.warn("Cannot report violation: missing token or attempt_id");
         return;
       }
 
-      // Normal warning response
-      if (response.warning) {
-        // Update violations from backend
-        setViolations(response.violations || 0);
-        setViolationType(type);
+      console.log("Violation detected:", type, "Sending to backend...");
 
-        // Update max_violations if provided in response
-        if (response.max_violations && testData) {
-          setTestData({
-            ...testData,
-            max_violations: response.max_violations,
-          });
+      try {
+        const response = await testsAPI.reportViolation({
+          token: test_token,
+          attemptId: attemptId,
+          violationType: type,
+        });
+
+        console.log("Violation response:", response);
+
+        // Check if disqualified (403 response)
+        if (response.disqualified) {
+          console.error("TESTDAN CHETLASHTIRILDI:", response);
+          setIsDisqualified(true);
+          setDisqualificationMessage(
+            response.message || "Siz testdan chetlashtirildingiz"
+          );
+          setIsBlocked(true);
+
+          // Block the test in localStorage
+          const blockedTests = JSON.parse(
+            localStorage.getItem("blockedTests") || "[]"
+          );
+          if (!blockedTests.includes(activeTestId)) {
+            blockedTests.push(activeTestId);
+            localStorage.setItem("blockedTests", JSON.stringify(blockedTests));
+          }
+          return;
         }
 
-        // Show violation modal
+        // Normal warning response
+        if (response.warning) {
+          // Update violations from backend
+          setViolations(response.violations || 0);
+          setViolationType(type);
+
+          // Update max_violations if provided in response
+          if (response.max_violations && testData) {
+            setTestData({
+              ...testData,
+              max_violations: response.max_violations,
+            });
+          }
+
+          // Show violation modal
+          setShowViolationModal(true);
+        }
+      } catch (error) {
+        console.error("Error reporting violation to backend:", error);
+        // Fallback: still show violation modal even if API fails
+        setViolationType(type);
         setShowViolationModal(true);
       }
-    } catch (error) {
-      console.error("Error reporting violation to backend:", error);
-      // Fallback: still show violation modal even if API fails
-      setViolationType(type);
-      setShowViolationModal(true);
-    }
-  };
+    },
+    [test_token, attemptId, activeTestId, testData]
+  );
 
   // Prevent page refresh/close
   useEffect(() => {
@@ -580,7 +609,16 @@ const VacancyTest = () => {
 
     // Detect tab switch / window blur - Report to backend
     const handleBlur = () => {
+      console.log("Window blur detected - reporting violation");
       handleViolation("tab_switch");
+    };
+
+    // Detect page visibility change (more reliable than blur)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("Page hidden (tab switched) - reporting violation");
+        handleViolation("tab_switch");
+      }
     };
 
     // Detect fullscreen exit
@@ -620,6 +658,7 @@ const VacancyTest = () => {
     document.addEventListener("dragstart", handleDragStart);
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Cleanup
     return () => {
@@ -631,9 +670,10 @@ const VacancyTest = () => {
       document.removeEventListener("dragstart", handleDragStart);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       // clearInterval(devToolsInterval); // DISABLED
     };
-  }, [t, isBlocked, violations]);
+  }, [t, isBlocked, violations, handleViolation]);
 
   // Timer countdown
   useEffect(() => {
@@ -927,6 +967,74 @@ const VacancyTest = () => {
                   className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-gray-800 hover:bg-gray-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white transition-colors uppercase tracking-wide"
                 >
                   {t("test.security.go_home")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show test already completed state
+  if (testAlreadyCompleted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border-t-4 border-orange-600 dark:border-orange-700 overflow-hidden">
+              {/* Official Header */}
+              <div className="bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-700 dark:to-orange-800 px-8 py-8">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <Icon name="FileCheck" size={40} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
+                      Test allaqachon yakunlangan
+                    </h1>
+                    <p className="text-orange-100 text-sm mt-1">
+                      Siz bu testni allaqachon yakunlagansiz
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="px-8 py-8 space-y-6">
+                <div className="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-600 p-5">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Siz bu testni allaqachon yakunlagansiz. Har bir test faqat
+                    bir marta topshirilishi mumkin.
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-slate-900 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
+                  <div className="flex items-start space-x-3">
+                    <Icon
+                      name="AlertCircle"
+                      size={24}
+                      className="text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        Ma'lumot
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Agar siz test natijalaringizni ko'rmoqchi bo'lsangiz,
+                        iltimos boshqa testni tanlang yoki bosh sahifaga
+                        qayting.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate("/")}
+                  className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white transition-colors uppercase tracking-wide"
+                >
+                  Bosh sahifaga qaytish
                 </button>
               </div>
             </div>
