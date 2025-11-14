@@ -147,6 +147,46 @@ export const testsAPI = {
       throw error;
     }
   },
+
+  // Submit answers
+  submitAnswers: async ({ token, answers }) => {
+    try {
+      const response = await apiClient.post(
+        `/tests/submit_answer/`,
+        answers, // Object with attempt_id and responses array
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting answers:", error);
+      throw error;
+    }
+  },
+
+  // Finish test
+  finishTest: async ({ testId, token }) => {
+    try {
+      const response = await apiClient.post(
+        `/tests/${testId}/finish/`,
+        {}, // Empty body
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Error finishing test ${testId}:`, error);
+      throw error;
+    }
+  },
 };
 
 export const appealsAPI = {

@@ -733,34 +733,60 @@ const VacancyTest = () => {
       if (!confirmSubmit) return;
     }
 
+    if (!test_token || !attemptId || !test_id) {
+      toast.error("Test ma'lumotlari to'liq emas", {
+        duration: 5000,
+        position: "top-center",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Calculate results
-      let correctCount = 0;
-      testQuestions.forEach((q) => {
-        if (answers[q.id] === correctAnswers[q.id]) {
-          correctCount++;
-        }
+      // Step 1: Submit all answers to backend
+      const responses = testQuestions
+        .filter((q) => answers[q.id]) // Only include questions with answers
+        .map((q) => ({
+          question_id: q.id,
+          selected_choice_id: parseInt(answers[q.id]), // Convert to integer
+        }));
+
+      const submitPayload = {
+        attempt_id: attemptId,
+        responses: responses,
+      };
+
+      console.log("Submitting answers:", submitPayload);
+
+      // Submit answers
+      await testsAPI.submitAnswers({
+        token: test_token,
+        answers: submitPayload,
       });
 
-      const totalQuestions = testQuestions.length;
-      const percentage = (correctCount / totalQuestions) * 100;
-      const isPassed = percentage >= 50;
+      console.log("Answers submitted successfully");
 
+      // Step 2: Finish the test
+      const finishResponse = await testsAPI.finishTest({
+        testId: test_id,
+        token: test_token,
+      });
+
+      console.log("Test finished, response:", finishResponse);
+
+      // Step 3: Show results from backend
       const testResults = {
         testId: activeTestId,
         answers: answers,
-        correctAnswers: correctAnswers,
-        correctCount: correctCount,
-        totalQuestions: totalQuestions,
-        percentage: percentage.toFixed(1),
-        isPassed: isPassed,
+        correctCount: finishResponse.correct_answers || 0,
+        totalQuestions: testQuestions.length,
+        percentage: finishResponse.score || 0,
+        isPassed: finishResponse.passed || false,
         submittedAt: new Date().toISOString(),
         timeSpent: 30 * 60 - timeRemaining,
+        success: finishResponse.success,
       };
-
-      console.log("Test Results:", testResults);
 
       // Save to localStorage
       localStorage.setItem(
@@ -774,12 +800,25 @@ const VacancyTest = () => {
       // Show result modal
       setTestResult(testResults);
       setShowResultModal(true);
+
+      toast.success(
+        finishResponse.success || "Test muvaffaqiyatli yakunlandi",
+        {
+          duration: 3000,
+          position: "top-center",
+        }
+      );
     } catch (error) {
       console.error("Test submission error:", error);
-      toast.error(t("test.error_message"), {
-        duration: 5000,
-        position: "top-center",
-      });
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          t("test.error_message"),
+        {
+          duration: 5000,
+          position: "top-center",
+        }
+      );
     } finally {
       setIsSubmitting(false);
     }
