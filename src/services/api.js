@@ -241,4 +241,21 @@ export const chatsAPI = {
   },
 };
 
+export const reportsAPI = {
+  // Submit a corruption report
+  submitReport: async (reportData) => {
+    try {
+      const response = await apiClient.post("/report/", reportData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      throw error;
+    }
+  },
+};
+
 export default apiClient;

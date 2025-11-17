@@ -36,6 +36,17 @@ const FeedbackSubmission = () => {
       bgColor: "bg-orange-100 dark:bg-orange-900/30",
       action: () => navigate("/submissions/corruption"),
     },
+    {
+      id: "language-error",
+      type: "language-error",
+      title: "O'zbek tilidagi xatoliklar",
+      description:
+        "Tashkilot saytlarida, xabarlarida yoki harakatlarida topilgan o'zbek tilidagi xatoliklarni yuboring",
+      icon: "FileText",
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-100 dark:bg-purple-900/30",
+      action: () => navigate("/submissions/language-error"),
+    },
   ];
 
   return (

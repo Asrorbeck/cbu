@@ -34,6 +34,7 @@ import ConsumerRightsSubmission from "./pages/consumer-rights-submission";
 import CorruptionSubmission from "./pages/corruption-submission";
 import CheckLicense from "./pages/check-license";
 import SubmitComplaint from "./pages/submit-complaint";
+import LanguageErrorSubmission from "./pages/language-error-submission";
 import ApplicationDetail from "./pages/application-detail";
 import EditCorruption from "./pages/edit-corruption";
 import VacancyTest from "./pages/vacancy-test";
@@ -90,6 +91,10 @@ const Routes = () => {
           />
           <Route path="/check-license" element={<CheckLicense />} />
           <Route path="/submit-complaint" element={<SubmitComplaint />} />
+          <Route
+            path="/submissions/language-error"
+            element={<LanguageErrorSubmission />}
+          />
           <Route path="/edit-corruption/:id" element={<EditCorruption />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>

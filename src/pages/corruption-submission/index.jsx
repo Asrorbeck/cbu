@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
+import { reportsAPI } from "../../services/api";
 
 const CorruptionSubmission = () => {
   const navigate = useNavigate();
@@ -13,23 +15,49 @@ const CorruptionSubmission = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [telegramUserId, setTelegramUserId] = useState(null);
 
   const [formData, setFormData] = useState({
     // Step 1: Personal Info
     fullName: "",
     phone: "+998 ",
     email: "",
-    // Step 2: Address
-    region: "",
-    district: "",
-    neighborhood: "",
-    street: "",
-    house: "",
-    apartment: "",
-    // Step 3: Complaint
+    // Step 2: Complaint
     subject: "",
     description: "",
   });
+
+  // Get Telegram user ID
+  useEffect(() => {
+    const getTelegramUserId = () => {
+      try {
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+
+          if (
+            window.Telegram.WebApp.initDataUnsafe &&
+            window.Telegram.WebApp.initDataUnsafe.user
+          ) {
+            const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+            console.log("Telegram user ID:", userId);
+            setTelegramUserId(userId);
+            return;
+          }
+        }
+
+        // Fallback if Telegram WebApp is not available
+        console.log("Telegram WebApp not available");
+        setTelegramUserId(null);
+      } catch (error) {
+        console.error("Error getting Telegram user ID:", error);
+        setTelegramUserId(null);
+      }
+    };
+
+    const timer = setTimeout(getTelegramUserId, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatPhoneNumber = (value) => {
     // Remove all non-digits
@@ -81,6 +109,33 @@ const CorruptionSubmission = () => {
     }
   };
 
+  // Encode backend ID to reference number format
+  // This creates a secure-looking reference number from the backend ID
+  const encodeReferenceNumber = (backendId) => {
+    if (!backendId) return null;
+
+    // Convert ID to string and ensure it's a number
+    const id =
+      typeof backendId === "number" ? backendId : parseInt(backendId, 10);
+    if (isNaN(id)) return null;
+
+    // Simple encoding: multiply by a prime number and convert to base36
+    const salt = 1234567; // Salt for encoding
+    const encoded = (id * salt).toString(36).toUpperCase();
+
+    // Take first 8 characters and pad if needed
+    const padded = encoded.substring(0, 8).padStart(8, "0");
+
+    // Generate checksum from ID (last 2 digits + offset)
+    const checksum = ((id % 100) + 36)
+      .toString(36)
+      .toUpperCase()
+      .padStart(2, "0");
+
+    // Format: AC + encoded ID (8 chars) + checksum (2 chars) = 12 chars total
+    return `AC${padded}${checksum}`;
+  };
+
   const generateReferenceNumber = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -99,17 +154,6 @@ const CorruptionSubmission = () => {
 
   const isStep2Valid = () => {
     return (
-      formData.region.trim() !== "" &&
-      formData.district.trim() !== "" &&
-      formData.neighborhood.trim() !== "" &&
-      formData.street.trim() !== "" &&
-      formData.house.trim() !== "" &&
-      formData.apartment.trim() !== ""
-    );
-  };
-
-  const isStep3Valid = () => {
-    return (
       formData.subject.trim() !== "" && formData.description.trim().length >= 50
     );
   };
@@ -117,8 +161,6 @@ const CorruptionSubmission = () => {
   const handleNext = () => {
     if (currentStep === 1 && isStep1Valid()) {
       setCurrentStep(2);
-    } else if (currentStep === 2 && isStep2Valid()) {
-      setCurrentStep(3);
     }
   };
 
@@ -130,16 +172,52 @@ const CorruptionSubmission = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isStep3Valid()) return;
+    if (!isStep2Valid()) return;
 
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const refNumber = generateReferenceNumber();
+      // Clean phone number (remove spaces and keep only digits with +)
+      const cleanPhone = formData.phone.replace(/\s/g, "");
+
+      // Prepare payload for backend
+      const payload = {
+        full_name: formData.fullName.trim(),
+        phone_number: cleanPhone,
+        email: formData.email.trim(),
+        summary: formData.subject.trim(),
+        message_text: formData.description.trim(),
+        language: "O'zbekcha",
+        is_archived: false,
+        user_id: telegramUserId || 905770018,
+      };
+
+      console.log("Submitting report to backend:", payload);
+
+      // Submit to backend
+      const response = await reportsAPI.submitReport(payload);
+      console.log("Backend response:", response);
+
+      // Generate reference number from backend ID (encode it)
+      let refNumber;
+      if (response.id) {
+        // Encode the backend ID to a reference number
+        refNumber = encodeReferenceNumber(response.id);
+        console.log(
+          "Encoded reference number from backend ID:",
+          response.id,
+          "->",
+          refNumber
+        );
+      } else if (response.reference_number) {
+        refNumber = response.reference_number;
+      } else {
+        // Fallback: generate a random reference number
+        refNumber = generateReferenceNumber();
+      }
       setReferenceNumber(refNumber);
 
-      // Create submission object
+      // Also save to localStorage for local tracking
       const submission = {
         id: refNumber,
         type: "corruption",
@@ -147,20 +225,29 @@ const CorruptionSubmission = () => {
         ...formData,
         status: "Ko'rib chiqilmoqda",
         submittedAt: new Date().toISOString(),
+        backendId: response.id,
       };
 
-      // Save to localStorage
       const existingSubmissions = JSON.parse(
         localStorage.getItem("submissions") || "[]"
       );
       existingSubmissions.push(submission);
       localStorage.setItem("submissions", JSON.stringify(existingSubmissions));
 
+      // Show success message
+      toast.success("Xabar muvaffaqiyatli yuborildi!");
       setShowSuccess(true);
-
-      console.log("Corruption report submitted:", submission);
     } catch (error) {
-      console.error("Error submitting:", error);
+      console.error("Error submitting report:", error);
+
+      // Show error message to user
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        error.message ||
+        "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -274,15 +361,14 @@ const CorruptionSubmission = () => {
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-5 md:mx-8">
                 <div
                   className="h-full bg-blue-600 transition-all duration-300"
-                  style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+                  style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
                 />
               </div>
 
               {/* Steps */}
               {[
                 { num: 1, label: "Shaxsiy ma'lumotlar", short: "Shaxsiy" },
-                { num: 2, label: "Manzil", short: "Manzil" },
-                { num: 3, label: "Murojaat", short: "Murojaat" },
+                { num: 2, label: "Murojaat", short: "Murojaat" },
               ].map((step) => (
                 <div
                   key={step.num}
@@ -379,78 +465,8 @@ const CorruptionSubmission = () => {
                 </div>
               )}
 
-              {/* Step 2: Address */}
+              {/* Step 2: Complaint Details */}
               {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                      Yashash manzili
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Viloyat"
-                          name="region"
-                          value={formData.region}
-                          onChange={handleInputChange}
-                          placeholder="Masalan: Toshkent"
-                          required
-                        />
-
-                        <Input
-                          label="Shahar/Tuman"
-                          name="district"
-                          value={formData.district}
-                          onChange={handleInputChange}
-                          placeholder="Masalan: Chilonzor tumani"
-                          required
-                        />
-                      </div>
-
-                      <Input
-                        label="MFY (Mahalla fuqarolar yig'ini)"
-                        name="neighborhood"
-                        value={formData.neighborhood}
-                        onChange={handleInputChange}
-                        placeholder="Masalan: Qatortol MFY"
-                        required
-                      />
-
-                      <Input
-                        label="Ko'cha"
-                        name="street"
-                        value={formData.street}
-                        onChange={handleInputChange}
-                        placeholder="Masalan: Amir Temur ko'chasi"
-                        required
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Uy"
-                          name="house"
-                          value={formData.house}
-                          onChange={handleInputChange}
-                          placeholder="Uy raqami"
-                          required
-                        />
-
-                        <Input
-                          label="Xonadon"
-                          name="apartment"
-                          value={formData.apartment}
-                          onChange={handleInputChange}
-                          placeholder="Kvartira raqami"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Complaint Details */}
-              {currentStep === 3 && (
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">
@@ -533,14 +549,11 @@ const CorruptionSubmission = () => {
                   </Button>
                 )}
 
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <Button
                     type="button"
                     onClick={handleNext}
-                    disabled={
-                      (currentStep === 1 && !isStep1Valid()) ||
-                      (currentStep === 2 && !isStep2Valid())
-                    }
+                    disabled={currentStep === 1 && !isStep1Valid()}
                     iconName="ArrowRight"
                     iconPosition="right"
                     className="flex-1"
@@ -550,7 +563,7 @@ const CorruptionSubmission = () => {
                 ) : (
                   <Button
                     type="submit"
-                    disabled={isSubmitting || !isStep3Valid()}
+                    disabled={isSubmitting || !isStep2Valid()}
                     iconName="Send"
                     iconPosition="left"
                     className="flex-1"
