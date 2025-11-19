@@ -39,8 +39,14 @@ const FeedbackSubmission = () => {
     {
       id: "language-error",
       type: "language-error",
+<<<<<<< HEAD
       title: t("submissions.types.language_error.title"),
       description: t("submissions.types.language_error.description"),
+=======
+      title: "O'zbek tilidagi xatoliklar",
+      description:
+        "Tashkilot saytlarida, xabarlarida yoki harakatlarida topilgan o'zbek tilidagi xatoliklarni yuboring",
+>>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
       icon: "FileText",
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-100 dark:bg-purple-900/30",

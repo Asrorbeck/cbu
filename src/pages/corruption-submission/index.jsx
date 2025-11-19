@@ -635,6 +635,7 @@ const CorruptionSubmission = () => {
                         openFaqIndex === index ? "ChevronUp" : "ChevronDown"
                       }
                       size={20}
+<<<<<<< HEAD
                       className={`text-muted-foreground flex-shrink-0 transition-transform duration-300 ${
                         openFaqIndex === index ? "rotate-180" : ""
                       }`}
@@ -655,6 +656,18 @@ const CorruptionSubmission = () => {
                       </div>
                     </div>
                   </div>
+=======
+                      className="text-muted-foreground flex-shrink-0"
+                    />
+                  </button>
+                  {openFaqIndex === index && (
+                    <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  )}
+>>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
                 </div>
               ))}
             </div>
