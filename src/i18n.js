@@ -131,14 +131,13 @@ const resources = {
             title: "Korrupsiya bo'yicha",
             description: "Korrupsiya holatlari haqida xabar bering",
           },
-<<<<<<< HEAD
+
           language_error: {
             title: "Imloviy xatoliklar bo'yicha",
             description:
               "Tashkilot saytlarida, xabarlarida yoki harakatlarida topilgan o'zbek tilidagi xatoliklarni yuboring",
           },
-=======
->>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
+
         },
         form: {
           personal_info: "Shaxsiy ma'lumotlar",
@@ -711,14 +710,13 @@ const resources = {
             title: "Коррупция бўйича",
             description: "Коррупция ҳолатлари ҳақида хабар беринг",
           },
-<<<<<<< HEAD
+
           language_error: {
             title: "Имловий хатоликлар бўйича",
             description:
               "Ташкилот сайтларида, хабарларида ёки ҳаракатларида топилган ўзбек тилидаги хатоликларни юборинг",
           },
-=======
->>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
+
         },
         form: {
           personal_info: "Шахсий маълумотлар",
@@ -1286,14 +1284,12 @@ const resources = {
             title: "По коррупции",
             description: "Сообщите о случаях коррупции",
           },
-<<<<<<< HEAD
           language_error: {
             title: "По орфографическим ошибкам",
             description:
               "Отправьте орфографические ошибки узбекского языка, обнаруженные на сайтах, в сообщениях или действиях организации",
           },
-=======
->>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
+
         },
         form: {
           personal_info: "Личная информация",

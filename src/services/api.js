@@ -258,7 +258,6 @@ export const reportsAPI = {
   },
 };
 
-<<<<<<< HEAD
 export const faqAPI = {
   // Get FAQ categories
   getFaqCategories: async () => {
@@ -272,6 +271,4 @@ export const faqAPI = {
   },
 };
 
-=======
->>>>>>> edc2530ef9d153759ec519d635b94c7b38b008b5
 export default apiClient;
