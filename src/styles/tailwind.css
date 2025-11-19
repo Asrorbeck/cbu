@@ -1,0 +1,222 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background Colors */
+    --color-background: #ffffff; /* white */
+    --color-foreground: #1f2937; /* gray-800 */
+    --color-surface: #f8fafc; /* slate-50 */
+
+    /* Border and Input Colors */
+    --color-border: #e5e7eb; /* gray-200 */
+    --color-input: #ffffff; /* white */
+    --color-ring: #3b82f6; /* blue-500 */
+
+    /* Card Colors */
+    --color-card: #ffffff; /* white */
+    --color-card-foreground: #1f2937; /* gray-800 */
+
+    /* Popover Colors */
+    --color-popover: #ffffff; /* white */
+    --color-popover-foreground: #1f2937; /* gray-800 */
+
+    /* Muted Colors */
+    --color-muted: #f8fafc; /* slate-50 */
+    --color-muted-foreground: #6b7280; /* gray-500 */
+
+    /* Primary Colors */
+    --color-primary: #1e40af; /* blue-800 */
+    --color-primary-foreground: #ffffff; /* white */
+
+    /* Secondary Colors */
+    --color-secondary: #f6f5e7; /* unified secondary */
+    --color-secondary-foreground: #1f2937; /* gray-800 for contrast */
+
+    /* Accent Colors */
+    --color-accent: #3b82f6; /* blue-500 */
+    --color-accent-foreground: #ffffff; /* white */
+
+    /* Destructive Colors */
+    --color-destructive: #ef4444; /* red-500 */
+    --color-destructive-foreground: #ffffff; /* white */
+
+    /* Success Colors */
+    --color-success: #10b981; /* emerald-500 */
+    --color-success-foreground: #ffffff; /* white */
+
+    /* Warning Colors */
+    --color-warning: #f59e0b; /* amber-500 */
+    --color-warning-foreground: #ffffff; /* white */
+
+    /* Error Colors */
+    --color-error: #ef4444; /* red-500 */
+    --color-error-foreground: #ffffff; /* white */
+
+    /* Icon Color */
+    --color-icon: var(--color-primary);
+
+    /* Hero Background */
+    --color-hero-bg: #f6f5e7;
+  }
+
+  .dark {
+    /* Background Colors */
+    --color-background: #0f172a; /* slate-900 */
+    --color-foreground: #f1f5f9; /* slate-100 */
+    --color-surface: #1e293b; /* slate-800 */
+
+    /* Border and Input Colors */
+    --color-border: #334155; /* slate-700 */
+    --color-input: #1e293b; /* slate-800 */
+    --color-ring: #3b82f6; /* blue-500 */
+
+    /* Card Colors */
+    --color-card: #1e293b; /* slate-800 */
+    --color-card-foreground: #f1f5f9; /* slate-100 */
+
+    /* Popover Colors */
+    --color-popover: #1e293b; /* slate-800 */
+    --color-popover-foreground: #f1f5f9; /* slate-100 */
+
+    /* Muted Colors */
+    --color-muted: #334155; /* slate-700 */
+    --color-muted-foreground: #94a3b8; /* slate-400 */
+
+    /* Primary Colors */
+    --color-primary: #3b82f6; /* blue-500 */
+    --color-primary-foreground: #ffffff; /* white */
+
+    /* Secondary Colors */
+    --color-secondary: #f6f5e7; /* unified secondary */
+    --color-secondary-foreground: #1e293b; /* slate-800 for contrast */
+
+    /* Accent Colors */
+    --color-accent: #60a5fa; /* blue-400 */
+    --color-accent-foreground: #1e293b; /* slate-800 */
+
+    /* Destructive Colors */
+    --color-destructive: #ef4444; /* red-500 */
+    --color-destructive-foreground: #ffffff; /* white */
+
+    /* Success Colors */
+    --color-success: #10b981; /* emerald-500 */
+    --color-success-foreground: #ffffff; /* white */
+
+    /* Warning Colors */
+    --color-warning: #f59e0b; /* amber-500 */
+    --color-warning-foreground: #ffffff; /* white */
+
+    /* Error Colors */
+    --color-error: #ef4444; /* red-500 */
+    --color-error-foreground: #ffffff; /* white */
+    /* Icon Color */
+    --color-icon: var(--color-primary);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Inter", sans-serif;
+  }
+
+  body,
+  p,
+  span,
+  div {
+    font-family: "Inter", sans-serif;
+  }
+
+  .font-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@layer components {
+  .text-icon {
+    color: var(--color-icon);
+  }
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg;
+  }
+
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+
+  .floating-label {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .loading-skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  /* Enhanced currency rate styles for better visibility */
+  .currency-positive {
+    @apply bg-green-500/25 text-green-200 border border-green-400/40 shadow-lg shadow-green-500/10;
+  }
+
+  .currency-negative {
+    @apply bg-red-500/25 text-red-200 border border-red-400/40 shadow-lg shadow-red-500/10;
+  }
+
+  .currency-neutral {
+    @apply bg-white/15 text-white/90 border border-white/30 shadow-lg shadow-white/5;
+  }
+
+  .currency-card {
+    @apply bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:shadow-lg hover:shadow-white/10;
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Date input calendar icon - dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.8;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+}
