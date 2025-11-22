@@ -1,0 +1,13 @@
+[33m76d502d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to 76d502d0bc3e0bbf0ab1e61abaeacfc3e952c5cc
+[33medc2530[m HEAD@{1}: reset: moving to edc2530ef9d153759ec519d635b94c7b38b008b5
+[33medc2530[m HEAD@{2}: reset: moving to edc2530ef9d153759ec519d635b94c7b38b008b5
+[33mf2ba3b4[m HEAD@{3}: reset: moving to f2ba3b48998428a9b5700142ec11fdbbeb0de38a
+[33mf2ba3b4[m HEAD@{4}: commit: changed
+[33m0f97389[m HEAD@{5}: commit: changes
+[33m27929cb[m HEAD@{6}: pull: Fast-forward
+[33medc2530[m HEAD@{7}: reset: moving to edc2530ef9d153759ec519d635b94c7b38b008b5
+[33m27929cb[m HEAD@{8}: pull origin main: Fast-forward
+[33medc2530[m HEAD@{9}: reset: moving to edc2530ef9d153759ec519d635b94c7b38b008b5
+[33m27929cb[m HEAD@{10}: commit (merge): Clean up merge markers
+[33m7dcf121[m HEAD@{11}: Branch: renamed refs/heads/master to refs/heads/main
+[33m7dcf121[m HEAD@{13}: commit (initial): changes

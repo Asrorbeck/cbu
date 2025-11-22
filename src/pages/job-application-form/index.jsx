@@ -198,14 +198,115 @@ const JobApplicationForm = () => {
     { value: "excellent", label: t("jobs.application.form.excellent") },
   ];
 
+  // Validate full name format: Familya Ism Otchestvo
+  const validateFullName = (name) => {
+    if (!name || name.trim().length === 0) {
+      return "To'liq ism-familiya kiritilishi shart";
+    }
+
+    const trimmedName = name.trim();
+    const words = trimmedName.split(/\s+/).filter((word) => word.length > 0);
+
+    // Minimum 3 so'z bo'lishi kerak (Familya, Ism, Otchestvo)
+    if (words.length < 3) {
+      return "Iltimos, to'liq ism-familiyani kiriting: Familya Ism Otchestvo";
+    }
+
+    // Familya birinchi so'z bo'lishi kerak
+    const familya = words[0];
+    if (familya.length < 2) {
+      return "Familya to'g'ri kiritilmagan";
+    }
+
+    // Otchestvo validatsiyasi - oxirgi so'z(lar) tekshiriladi
+    // Barcha "ogli" variantlari: ogli, o'g'li, o'gli, og'li (apostrof bilan yoki apostrofsiz)
+    const validOgliVariants = ["ogli", "o'g'li", "o'gli", "og'li"];
+    // Barcha "qizi" variantlari
+    const validQiziVariants = ["qizi", "qizzi"];
+    // Barcha "vich/vna" variantlari
+    const validOtchestvoEndings = ["vich", "vna", "ovich", "ovna", "evich", "evna"];
+    
+    const lastWord = words[words.length - 1].toLowerCase();
+    const secondLastWord = words.length > 3 ? words[words.length - 2].toLowerCase() : "";
+
+    // Apostrofni olib tashlab tekshirish funksiyasi
+    const normalizeForComparison = (word) => {
+      return word.replace(/[''`]/g, ""); // Barcha apostrof variantlarini olib tashlash
+    };
+
+    // Otchestvo 2 so'z bo'lishi mumkin: "Bahodir ogli" yoki "Bahodir qizi" (barcha variantlar bilan)
+    const normalizedLastWord = normalizeForComparison(lastWord);
+    const isOgliVariant = validOgliVariants.some(variant => {
+      const normalizedVariant = normalizeForComparison(variant);
+      return lastWord === variant || normalizedLastWord === normalizedVariant;
+    });
+    const isQiziVariant = validQiziVariants.some(variant => {
+      const normalizedVariant = normalizeForComparison(variant);
+      return lastWord === variant || normalizedLastWord === normalizedVariant;
+    });
+
+    if (isOgliVariant || isQiziVariant) {
+      // Agar oxirgi so'z "ogli" yoki "qizi" variantlaridan biri bo'lsa
+      if (words.length < 4) {
+        return "Otchestvo to'liq kiritilmagan (masalan: Abdullayev Abdulaziz Abdullayevich)";
+      }
+      // Bu holat qabul qilinadi (masalan: Abdullayev Abdulaziz Abdullayevich)
+    } 
+    // Otchestvo 1 so'z bo'lishi mumkin: "Bahodirovich", "Bahodirovna" va h.k.
+    else {
+      const hasValidEnding = validOtchestvoEndings.some(ending => 
+        lastWord.endsWith(ending) && lastWord.length > ending.length
+      );
+      
+      if (!hasValidEnding) {
+        return "Otchestvo 'ogli', 'o'g'li', 'qizi', 'vich' yoki 'vna' bilan tugashi kerak (masalan: Abdullayev Abdulaziz Abdullayevich)";
+      }
+    }
+
+    // Ism 1 yoki 2 so'z bo'lishi mumkin
+    // Minimum 3 so'z: Familya Ism Otchestvo
+    // Maximum 5 so'z: Familya Ism1 Ism2 Otchestvo1 Otchestvo2
+    if (words.length > 5) {
+      return "Ism-familiya juda uzun. Iltimos, to'g'ri formatda kiriting: Familya Ism Otchestvo";
+    }
+
+    // Har bir so'z kamida 2 ta harfdan iborat bo'lishi kerak
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].length < 2) {
+        return "Har bir so'z kamida 2 ta harfdan iborat bo'lishi kerak";
+      }
+    }
+
+    return null; // Validation passed
+  };
+
   // Handle input changes
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
-    if (fieldErrors[field]) {
+    
+    // Validate fullName on change (but don't show error until blur)
+    if (field === "fullName" && value.trim().length > 0) {
+      const error = validateFullName(value);
+      if (error) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          [field]: error,
+        }));
+      } else {
+        // Clear error if validation passes
+        if (fieldErrors[field]) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors[field];
+            return newErrors;
+          });
+        }
+      }
+    } else if (fieldErrors[field]) {
+      // Clear error when user starts typing other fields
       setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
@@ -366,6 +467,21 @@ const JobApplicationForm = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate fullName before submission
+    const fullNameError = validateFullName(formData.fullName);
+    if (fullNameError) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        fullName: fullNameError,
+      }));
+      toast.error("Iltimos, to'liq ism-familiyani to'g'ri formatda kiriting", {
+        duration: 4000,
+        position: "top-center",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -796,16 +912,30 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.full_name")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <Input
                         type="text"
-                        placeholder={t(
-                          "jobs.application.form.full_name_placeholder"
-                        )}
+                        placeholder="Masalan: Abdullayev Abdulaziz Abdullayevich"
                         value={formData.fullName}
                         onChange={(e) =>
                           handleInputChange("fullName", e.target.value)
                         }
+                        onBlur={(e) => {
+                          const error = validateFullName(e.target.value);
+                          if (error) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              fullName: error,
+                            }));
+                          } else {
+                            setFieldErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.fullName;
+                              return newErrors;
+                            });
+                          }
+                        }}
                         required
                       />
                       {fieldErrors.fullName && (
@@ -814,6 +944,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           {fieldErrors.fullName}
                         </p>
                       )}
+                      
                     </div>
 
                     <div>
@@ -1382,14 +1513,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex-1 py-3 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300"
+                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"
                   >
                     {t("jobs.application.form.back_button")}
                   </button>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 py-3 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
