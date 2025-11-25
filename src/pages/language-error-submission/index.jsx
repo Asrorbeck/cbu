@@ -6,6 +6,7 @@ import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
+import { spellingReportsAPI } from "../../services/api";
 
 const LanguageErrorSubmission = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const LanguageErrorSubmission = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "+998 ",
+    textSnippet: "",
+    sourceUrl: "",
     description: "",
   });
 
@@ -111,7 +114,9 @@ const LanguageErrorSubmission = () => {
     return (
       formData.fullName.trim() !== "" &&
       phoneDigits.length === 9 &&
-      formData.description.trim().length >= 20
+      formData.description.trim().length >= 20 &&
+      formData.textSnippet.trim().length >= 5 &&
+      formData.sourceUrl.trim() !== ""
     );
   };
 
@@ -130,10 +135,13 @@ const LanguageErrorSubmission = () => {
 
       // Prepare payload
       const payload = new FormData();
+      payload.append("chat_user_id", telegramUserId || 905770018);
       payload.append("full_name", formData.fullName.trim());
       payload.append("phone_number", cleanPhone);
-      payload.append("message", formData.description.trim());
-      payload.append("user_id", telegramUserId || 905770018);
+      payload.append("error_type", "spelling");
+      payload.append("text_snippet", formData.textSnippet.trim());
+      payload.append("source_url", formData.sourceUrl.trim());
+      payload.append("description", formData.description.trim());
 
       if (selectedFile) {
         payload.append("attachment", selectedFile);
@@ -141,11 +149,10 @@ const LanguageErrorSubmission = () => {
 
       console.log("Submitting language error report:", payload);
 
-      // TODO: Replace with actual API endpoint when available
-      // For now, simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await spellingReportsAPI.submitReport(payload);
 
-      const refNumber = generateReferenceNumber();
+      const refNumber =
+        response?.reference_number || generateReferenceNumber();
       setReferenceNumber(refNumber);
 
       // Save to localStorage
@@ -166,6 +173,15 @@ const LanguageErrorSubmission = () => {
 
       toast.success("Murojaat muvaffaqiyatli yuborildi!");
       setShowSuccess(true);
+
+      setFormData({
+        fullName: "",
+        phone: "+998 ",
+        textSnippet: "",
+        sourceUrl: "",
+        description: "",
+      });
+      setSelectedFile(null);
     } catch (error) {
       console.error("Error submitting:", error);
       toast.error(
@@ -337,6 +353,34 @@ const LanguageErrorSubmission = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Text snippet */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Xatolik aniqlangan matn parchasini kiriting{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="textSnippet"
+                  value={formData.textSnippet}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200"
+                  placeholder="Xatolik uchragan matnni shu yerga kiriting..."
+                  required
+                />
+              </div>
+
+              {/* Source URL */}
+              <Input
+                label="Manba havolasi (URL)"
+                name="sourceUrl"
+                type="url"
+                value={formData.sourceUrl}
+                onChange={handleInputChange}
+                placeholder="https://..."
+                required
+              />
 
               {/* File Upload */}
               <div>

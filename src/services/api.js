@@ -5,8 +5,18 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "https://b21b5a398785.ngrok-free.app/api/v1";
 
+const API_BASE_URL_NO_VERSION = API_BASE_URL.replace(/\/v1\/?$/, "");
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const apiClientNoVersion = axios.create({
+  baseURL: API_BASE_URL_NO_VERSION,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -20,6 +30,26 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     console.error("Request error:", error);
+    return Promise.reject(error);
+  }
+);
+
+apiClientNoVersion.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => {
+    console.error("Request error:", error);
+    return Promise.reject(error);
+  }
+);
+
+apiClientNoVersion.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
@@ -253,6 +283,27 @@ export const reportsAPI = {
       return response.data;
     } catch (error) {
       console.error("Error submitting report:", error);
+      throw error;
+    }
+  },
+};
+
+export const spellingReportsAPI = {
+  // Submit a spelling/language error report
+  submitReport: async (reportData) => {
+    try {
+      const response = await apiClientNoVersion.post(
+        "/spelling/reports/",
+        reportData,
+        {
+        headers: reportData instanceof FormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting spelling report:", error);
       throw error;
     }
   },
