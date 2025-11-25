@@ -38,6 +38,7 @@ import LanguageErrorSubmission from "./pages/language-error-submission";
 import ApplicationDetail from "./pages/application-detail";
 import EditCorruption from "./pages/edit-corruption";
 import VacancyTest from "./pages/vacancy-test";
+import Surveys from "./pages/surveys";
 
 const Routes = () => {
   return (
@@ -96,6 +97,7 @@ const Routes = () => {
             element={<LanguageErrorSubmission />}
           />
           <Route path="/edit-corruption/:id" element={<EditCorruption />} />
+          <Route path="/surveys" element={<Surveys />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
         <ConditionalBottomNavigation />

@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://4a8a7d4f11a3.ngrok-free.app/api/v1";
+  "https://b21b5a398785.ngrok-free.app/api/v1";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -266,6 +266,46 @@ export const faqAPI = {
       return response.data;
     } catch (error) {
       console.error("Error fetching FAQ categories:", error);
+      throw error;
+    }
+  },
+};
+
+export const surveyAPI = {
+  // Start survey or continue existing survey
+  startSurvey: async (surveyData) => {
+    try {
+      const response = await apiClient.post(
+        "/survey-user/survey-process/start/",
+        surveyData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error starting survey:", error);
+      throw error;
+    }
+  },
+
+  // Submit answer to a question
+  submitAnswer: async (answerData) => {
+    try {
+      const response = await apiClient.post(
+        "/survey-user/survey-process/submit_answer/",
+        answerData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting answer:", error);
       throw error;
     }
   },

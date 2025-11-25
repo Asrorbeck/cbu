@@ -163,7 +163,7 @@ const Select = React.forwardRef(
             id={selectId}
             type="button"
             className={cn(
-              "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-foreground px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
               error && "border-destructive focus:ring-destructive",
               !hasValue && "text-muted-foreground"
             )}
@@ -235,7 +235,7 @@ const Select = React.forwardRef(
 
           {/* Dropdown */}
           {isOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-background text-foreground border border-border rounded-md shadow-md">
+            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 text-foreground border border-gray-300 dark:border-slate-600 rounded-md shadow-md">
               {searchable && (
                 <div className="p-2 border-b">
                   <div className="relative">
@@ -260,9 +260,9 @@ const Select = React.forwardRef(
                     <div
                       key={option?.value}
                       className={cn(
-                        "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                        "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:bg-accent hover:text-accent-foreground mx-1 my-0.5",
                         isSelected(option?.value) &&
-                          "bg-primary text-primary-foreground",
+                          "bg-primary text-primary-foreground border-primary outline-none",
                         option?.disabled && "pointer-events-none opacity-50"
                       )}
                       onClick={() =>
