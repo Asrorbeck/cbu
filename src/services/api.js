@@ -362,4 +362,19 @@ export const surveyAPI = {
   },
 };
 
+export const myApplicationsAPI = {
+  // Get all user applications (jobs, reports, appeals, spelling reports)
+  getMyApplications: async (userId = 905770018) => {
+    try {
+      const response = await apiClient.get(
+        `/my-applications/my_applications/?user_id=${userId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user applications:", error);
+      throw error;
+    }
+  },
+};
+
 export default apiClient;

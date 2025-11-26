@@ -1,98 +1,160 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
-import { departmentsAPI, vacanciesAPI } from "../../services/api";
+import { departmentsAPI, vacanciesAPI, myApplicationsAPI } from "../../services/api";
 
 const Applications = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get("type"); // "jobs", "reports", "appeals", "spelling"
+  
+  const [applicationsData, setApplicationsData] = useState({
+    apply_jobs: [],
+    reports: [],
+    appeals: [],
+    spelling_reports: [],
+  });
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadApplications = async () => {
       try {
-        // Load job applications from localStorage
-        const savedApplications = JSON.parse(
-          localStorage.getItem("jobApplications") || "[]"
-        );
+        // Get Telegram user ID
+        let userId = 905770018; // Default
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          if (
+            window.Telegram.WebApp.initDataUnsafe &&
+            window.Telegram.WebApp.initDataUnsafe.user
+          ) {
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+          }
+        }
 
-        // Load submissions (corruption & consumer rights) from localStorage
-        const savedSubmissions = JSON.parse(
-          localStorage.getItem("submissions") || "[]"
-        );
+        // Fetch all applications from API
+        const data = await myApplicationsAPI.getMyApplications(userId);
 
-        // Fetch department and vacancy details for job applications
-        const applicationsWithDetails = await Promise.all(
-          savedApplications.map(async (app) => {
+        // Transform job applications
+        const jobApplications = await Promise.all(
+          (data.apply_jobs || []).map(async (app) => {
             try {
-              // Get vacancy details
-              const vacancyDetails = await vacanciesAPI.getVacancyById(app.job);
-
-              // Get department details
-              const departmentDetails = await departmentsAPI.getDepartmentById(
-                vacancyDetails.management.department
-              );
-
+              // Get vacancy details if job ID exists
+              if (app.job) {
+                const vacancyDetails = await vacanciesAPI.getVacancyById(app.job);
+                const departmentDetails = await departmentsAPI.getDepartmentById(
+                  vacancyDetails.management.department
+                );
+                return {
+                  ...app,
+                  applicationType: "job",
+                  vacancyTitle: vacancyDetails.title,
+                  departmentName: departmentDetails.name,
+                  submittedAt: app.created_at || app.submittedAt,
+                  status: app.status || "pending",
+                };
+              }
               return {
                 ...app,
                 applicationType: "job",
-                vacancyTitle: vacancyDetails.title,
-                departmentName: departmentDetails.name,
+                submittedAt: app.created_at || app.submittedAt,
+                status: app.status || "pending",
               };
             } catch (error) {
-              console.error(
-                `Error fetching details for application ${app.id}:`,
-                error
-              );
-              // Return original app if API fails
+              console.error(`Error fetching details for job application ${app.id}:`, error);
               return {
                 ...app,
                 applicationType: "job",
+                submittedAt: app.created_at || app.submittedAt,
+                status: app.status || "pending",
               };
             }
           })
         );
 
-        // Combine job applications and submissions
-        const allApplications = [
-          ...applicationsWithDetails,
-          ...savedSubmissions.map((sub) => ({
-            ...sub,
-            applicationType: "submission",
-          })),
-        ].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+        // Transform reports (corruption & consumer rights)
+        const reports = (data.reports || []).map((report) => ({
+          ...report,
+          applicationType: "submission",
+          type: report.summary?.toLowerCase().includes("korruptsiya") || 
+                report.summary?.toLowerCase().includes("коррупция") ||
+                report.summary?.toLowerCase().includes("коррупция")
+            ? "corruption"
+            : "consumer_rights",
+          typeLabel: report.summary?.toLowerCase().includes("korruptsiya") || 
+                     report.summary?.toLowerCase().includes("коррупция")
+            ? "Korruptsiya"
+            : "Iste'molchilar huquqlari",
+          subject: report.summary || "Murojaat",
+          submittedAt: report.created_at,
+          status: report.is_archived ? "archived" : "pending",
+        }));
 
-        setApplications(allApplications);
+        // Transform appeals
+        const appeals = (data.appeals || []).map((appeal) => ({
+          ...appeal,
+          applicationType: "submission",
+          type: "appeal",
+          typeLabel: "Murojaat",
+          subject: appeal.subject || "Murojaat",
+          submittedAt: appeal.created_at,
+          status: appeal.status || "pending",
+        }));
+
+        // Transform spelling reports
+        const spellingReports = (data.spelling_reports || []).map((report) => ({
+          ...report,
+          applicationType: "submission",
+          type: "spelling",
+          typeLabel: "Orfografik xatolar",
+          subject: report.description || "Orfografik xato haqida murojaat",
+          submittedAt: report.created_at,
+          status: report.status === "new" ? "pending" : report.status || "pending",
+        }));
+
+        // Store all data
+        setApplicationsData({
+          apply_jobs: jobApplications,
+          reports: reports,
+          appeals: appeals,
+          spelling_reports: spellingReports,
+        });
+
+        // Show specific type if selected, otherwise show empty (only cards will be shown)
+        let appsToShow = [];
+        if (type === "jobs") {
+          appsToShow = jobApplications;
+        } else if (type === "reports") {
+          appsToShow = reports;
+        } else if (type === "appeals") {
+          appsToShow = appeals;
+        } else if (type === "spelling") {
+          appsToShow = spellingReports;
+        }
+        // If no type selected, don't show any applications (only cards)
+
+        // Sort by date
+        appsToShow.sort((a, b) => {
+          const dateA = new Date(a.submittedAt || a.created_at || 0);
+          const dateB = new Date(b.submittedAt || b.created_at || 0);
+          return dateB - dateA;
+        });
+
+        setApplications(appsToShow);
       } catch (error) {
         console.error("Error loading applications:", error);
-        // Fallback to localStorage data only
-        const savedApplications = JSON.parse(
-          localStorage.getItem("jobApplications") || "[]"
-        );
-        const savedSubmissions = JSON.parse(
-          localStorage.getItem("submissions") || "[]"
-        );
-        setApplications([
-          ...savedApplications.map((app) => ({
-            ...app,
-            applicationType: "job",
-          })),
-          ...savedSubmissions.map((sub) => ({
-            ...sub,
-            applicationType: "submission",
-          })),
-        ]);
+        setApplications([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadApplications();
-  }, []);
+  }, [type]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -125,6 +187,55 @@ const Applications = () => {
 
   const handleCardClick = (applicationId) => {
     navigate(`/applications/${applicationId}`);
+  };
+
+  const handleTypeCardClick = (typeName) => {
+    navigate(`/applications?type=${typeName}`);
+  };
+
+  const getTypeTitle = (typeName) => {
+    switch (typeName) {
+      case "jobs":
+        return "Ish arizalari";
+      case "reports":
+        return "Shikoyatlar";
+      case "appeals":
+        return "Murojaatlar";
+      case "spelling":
+        return "Orfografik xatolar";
+      default:
+        return "";
+    }
+  };
+
+  const getTypeIcon = (typeName) => {
+    switch (typeName) {
+      case "jobs":
+        return "Briefcase";
+      case "reports":
+        return "AlertTriangle";
+      case "appeals":
+        return "FileText";
+      case "spelling":
+        return "SpellCheck";
+      default:
+        return "FileText";
+    }
+  };
+
+  const getTypeColor = (typeName) => {
+    switch (typeName) {
+      case "jobs":
+        return "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
+      case "reports":
+        return "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400";
+      case "appeals":
+        return "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400";
+      case "spelling":
+        return "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400";
+      default:
+        return "bg-gray-50 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400";
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -189,76 +300,194 @@ const Applications = () => {
 
             <div className="text-center">
               <h1 className="text-3xl font-bold text-foreground mb-3">
-                Mening arizalarim
+                {type ? getTypeTitle(type) : "Mening arizalarim"}
               </h1>
               <p className="text-muted-foreground">
-                Barcha yuborilgan ariza va murojaatlaringizni ko'ring
+                {type
+                  ? `${getTypeTitle(type)} ro'yxati`
+                  : "Barcha yuborilgan ariza va murojaatlaringizni ko'ring"}
               </p>
             </div>
           </div>
 
-          {/* Applications List */}
-          {applications.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
-                <Icon
-                  name="FileText"
-                  size={64}
-                  className="text-muted-foreground mx-auto mb-4"
-                />
-                <h3 className="text-xl font-semibold text-card-foreground mb-2">
-                  Hozircha arizalar yo'q
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Siz hali hech qanday ariza yoki murojaat yubormagansiz
-                </p>
-                <Button
-                  onClick={() => navigate("/departments")}
-                  className="inline-flex items-center space-x-2"
-                >
-                  <Icon name="Plus" size={16} />
-                  <span>Ish qidirish</span>
-                </Button>
+          {/* Type Cards - Show only when no specific type is selected */}
+          {!type && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {/* Jobs Card */}
+              <div
+                onClick={() => handleTypeCardClick("jobs")}
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${getTypeColor("jobs")}`}>
+                      <Icon name={getTypeIcon("jobs")} size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground mb-1">
+                        Ish arizalari
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {applicationsData.apply_jobs.length} ta ariza
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                </div>
+              </div>
+
+              {/* Reports Card */}
+              <div
+                onClick={() => handleTypeCardClick("reports")}
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-orange-300 dark:hover:border-orange-500 transition-all duration-300 cursor-pointer p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${getTypeColor("reports")}`}>
+                      <Icon name={getTypeIcon("reports")} size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground mb-1">
+                        Shikoyatlar
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {applicationsData.reports.length} ta shikoyat
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                </div>
+              </div>
+
+              {/* Appeals Card */}
+              <div
+                onClick={() => handleTypeCardClick("appeals")}
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-purple-300 dark:hover:border-purple-500 transition-all duration-300 cursor-pointer p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${getTypeColor("appeals")}`}>
+                      <Icon name={getTypeIcon("appeals")} size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground mb-1">
+                        Murojaatlar
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {applicationsData.appeals.length} ta murojaat
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                </div>
+              </div>
+
+              {/* Spelling Reports Card */}
+              <div
+                onClick={() => handleTypeCardClick("spelling")}
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-green-300 dark:hover:border-green-500 transition-all duration-300 cursor-pointer p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${getTypeColor("spelling")}`}>
+                      <Icon name={getTypeIcon("spelling")} size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground mb-1">
+                        Orfografik xatolar
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {applicationsData.spelling_reports.length} ta xato
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-card border border-border rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-foreground mb-1">
-                    {applications.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Jami arizalar
-                  </div>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-600 mb-1">
-                    {
-                      applications.filter(
-                        (app) =>
-                          app.status === "pending" ||
-                          app.status === "Ko'rib chiqilmoqda"
-                      ).length
-                    }
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Kutilmoqda
-                  </div>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600 mb-1">
-                    {
-                      applications.filter((app) => app.status === "approved")
-                        .length
-                    }
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Qabul qilingan
-                  </div>
+          )}
+
+          {/* Back button when viewing specific type */}
+          {type && (
+            <div className="mb-6">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/applications")}
+                iconName="ArrowLeft"
+                iconPosition="left"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Barcha arizalarga qaytish
+              </Button>
+            </div>
+          )}
+
+          {/* Applications List - Only show when type is selected */}
+          {type ? (
+            applications.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+                  <Icon
+                    name="FileText"
+                    size={64}
+                    className="text-muted-foreground mx-auto mb-4"
+                  />
+                  <h3 className="text-xl font-semibold text-card-foreground mb-2">
+                    {getTypeTitle(type)} topilmadi
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Siz hali hech qanday {getTypeTitle(type).toLowerCase()} yubormagansiz
+                  </p>
+                  <Button
+                    onClick={() => navigate("/departments")}
+                    className="inline-flex items-center space-x-2"
+                  >
+                    <Icon name="Plus" size={16} />
+                    <span>Ish qidirish</span>
+                  </Button>
                 </div>
               </div>
+            ) : (
+            <div className="space-y-6">
+              {/* Stats - Show only when viewing specific type */}
+              {type && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="bg-card border border-border rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      {applications.length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Jami arizalar
+                    </div>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-600 mb-1">
+                      {
+                        applications.filter(
+                          (app) =>
+                            app.status === "pending" ||
+                            app.status === "Ko'rib chiqilmoqda" ||
+                            app.status === "new"
+                        ).length
+                      }
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Kutilmoqda
+                    </div>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600 mb-1">
+                      {
+                        applications.filter((app) => app.status === "approved")
+                          .length
+                      }
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Qabul qilingan
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Applications Cards */}
               <div className="space-y-4">
@@ -337,7 +566,8 @@ const Applications = () => {
                 })}
               </div>
             </div>
-          )}
+            )
+          ) : null}
         </div>
       </main>
       {/* Bottom navigation spacing */}

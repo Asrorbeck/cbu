@@ -26,9 +26,10 @@ const Surveys = () => {
   // Form data for starting survey
   const [formData, setFormData] = useState({
     telegram_id: 905770018, // Default Telegram user ID
-    language: "uz",
-    respondent_type: "individual",
+    language: "uz_latin",
+    respondent_type: "population",
     region: "",
+    isBusinessEngaged: null, // null, true (Business), false (population)
   });
 
   // Get Telegram user ID
@@ -67,27 +68,78 @@ const Surveys = () => {
 
   // Set language based on i18n
   useEffect(() => {
-    const currentLang = i18n.language || localStorage.getItem("language") || "uz-latn";
-    const langCode = currentLang.startsWith("uz") ? "uz" : "ru";
+    const currentLang = i18n.language || localStorage.getItem("language") || "uz-Latn";
+    let langCode;
+    if (currentLang === "uz-Latn") {
+      langCode = "uz_latin";
+    } else if (currentLang === "uz-Cyrl") {
+      langCode = "uz_cyrl";
+    } else if (currentLang === "ru") {
+      langCode = "ru";
+    } else {
+      langCode = "uz_latin"; // default
+    }
     setFormData((prev) => ({ ...prev, language: langCode }));
   }, [i18n.language]);
 
-  // Regions list (you can expand this)
-  const regions = [
-    { value: "Toshkent", label: "Toshkent" },
-    { value: "Andijon", label: "Andijon" },
-    { value: "Buxoro", label: "Buxoro" },
-    { value: "Farg'ona", label: "Farg'ona" },
-    { value: "Jizzax", label: "Jizzax" },
-    { value: "Qashqadaryo", label: "Qashqadaryo" },
-    { value: "Navoiy", label: "Navoiy" },
-    { value: "Namangan", label: "Namangan" },
-    { value: "Samarqand", label: "Samarqand" },
-    { value: "Sirdaryo", label: "Sirdaryo" },
-    { value: "Surxondaryo", label: "Surxondaryo" },
-    { value: "Xorazm", label: "Xorazm" },
-    { value: "Qoraqalpog'iston", label: "Qoraqalpog'iston" },
-  ];
+  // Get regions list based on current language
+  const getRegions = () => {
+    const currentLang = i18n.language || localStorage.getItem("language") || "uz-Latn";
+    
+    if (currentLang === "ru") {
+      return [
+        { value: "QORAQALPOGISTON_RES", label: "Рес. Каракалпакстан" },
+        { value: "ANDIJON_VIL", label: "Андижанская обл." },
+        { value: "BUXORO_VIL", label: "Бухарская обл." },
+        { value: "JIZZAX_VIL", label: "Джизакская обл." },
+        { value: "QASHQADARYO_VIL", label: "Кашкадарьинская обл." },
+        { value: "NAVOIY_VIL", label: "Навоийская обл." },
+        { value: "NAMANGAN_VIL", label: "Наманганская обл." },
+        { value: "SAMARQAND_VIL", label: "Самаркандская обл." },
+        { value: "SURXONDARYO_VIL", label: "Сурхандарьинская обл." },
+        { value: "SIRDARYO_VIL", label: "Сырдарьинская обл." },
+        { value: "TOSHKENT_VIL", label: "Ташкентская обл." },
+        { value: "FARGONA_VIL", label: "Ферганская обл." },
+        { value: "XORAZM_VIL", label: "Хорезмская обл." },
+        { value: "TOSHKENT_SH", label: "г. Ташкент" },
+      ];
+    } else if (currentLang === "uz-Cyrl") {
+      return [
+        { value: "QORAQALPOGISTON_RES", label: "Қорақалпоғистон Рес." },
+        { value: "ANDIJON_VIL", label: "Андижон вил." },
+        { value: "BUXORO_VIL", label: "Бухоро вил." },
+        { value: "JIZZAX_VIL", label: "Жиззах вил." },
+        { value: "QASHQADARYO_VIL", label: "Қашқадарё вил." },
+        { value: "NAVOIY_VIL", label: "Навоий вил." },
+        { value: "NAMANGAN_VIL", label: "Наманган вил." },
+        { value: "SAMARQAND_VIL", label: "Самарқанд вил." },
+        { value: "SURXONDARYO_VIL", label: "Сурхондарё вил." },
+        { value: "SIRDARYO_VIL", label: "Сирдарё вил." },
+        { value: "TOSHKENT_VIL", label: "Тошкент вил." },
+        { value: "FARGONA_VIL", label: "Фарғона вил." },
+        { value: "XORAZM_VIL", label: "Хоразм вил." },
+        { value: "TOSHKENT_SH", label: "Тошкент ш." },
+      ];
+    } else {
+      // uz-Latn (default)
+      return [
+        { value: "QORAQALPOGISTON_RES", label: "Qoraqalpog'iston Res." },
+        { value: "ANDIJON_VIL", label: "Andijon vil." },
+        { value: "BUXORO_VIL", label: "Buxoro vil." },
+        { value: "JIZZAX_VIL", label: "Jizzax vil." },
+        { value: "QASHQADARYO_VIL", label: "Qashqadaryo vil." },
+        { value: "NAVOIY_VIL", label: "Navoiy vil." },
+        { value: "NAMANGAN_VIL", label: "Namangan vil." },
+        { value: "SAMARQAND_VIL", label: "Samarqand vil." },
+        { value: "SURXONDARYO_VIL", label: "Surxondaryo vil." },
+        { value: "SIRDARYO_VIL", label: "Sirdaryo vil." },
+        { value: "TOSHKENT_VIL", label: "Toshkent vil." },
+        { value: "FARGONA_VIL", label: "Farg'ona vil." },
+        { value: "XORAZM_VIL", label: "Xorazm vil." },
+        { value: "TOSHKENT_SH", label: "Toshkent sh." },
+      ];
+    }
+  };
 
   const handleStartSurvey = async () => {
     if (!formData.region) {
@@ -95,10 +147,15 @@ const Surveys = () => {
       return;
     }
 
+    if (formData.isBusinessEngaged === null) {
+      toast.error(t("surveys.select_business_error"));
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await surveyAPI.startSurvey({
-        telegram_id: formData.telegram_id || 905770018, // Default Telegram user ID
+        telegram_id: String(formData.telegram_id || 905770018), // Default Telegram user ID
         language: formData.language,
         respondent_type: formData.respondent_type,
         region: formData.region,
@@ -206,6 +263,17 @@ const Surveys = () => {
     setFormData((prev) => ({
       ...prev,
       region: "",
+      isBusinessEngaged: null,
+      respondent_type: "population",
+    }));
+  };
+
+  const handleBusinessEngagementChange = (value) => {
+    const isBusiness = value === "yes";
+    setFormData((prev) => ({
+      ...prev,
+      isBusinessEngaged: isBusiness,
+      respondent_type: isBusiness ? "Business" : "population",
     }));
   };
 
@@ -267,7 +335,7 @@ const Surveys = () => {
                 <Select
                   label={t("surveys.region")}
                   placeholder={t("surveys.region_placeholder")}
-                  options={regions}
+                  options={getRegions()}
                   value={formData.region}
                   onChange={(value) =>
                     setFormData((prev) => ({ ...prev, region: value }))
@@ -275,19 +343,63 @@ const Surveys = () => {
                   required
                 />
 
-                <Select
-                  label={t("surveys.respondent_type")}
-                  placeholder={t("surveys.respondent_type_placeholder")}
-                  options={[
-                    { value: "individual", label: t("surveys.individual") },
-                    { value: "organization", label: t("surveys.organization") },
-                  ]}
-                  value={formData.respondent_type}
-                  onChange={(value) =>
-                    setFormData((prev) => ({ ...prev, respondent_type: value }))
-                  }
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t("surveys.business_question")}
+                  </label>
+                  <div className="space-y-3">
+                    <div
+                      onClick={() => handleBusinessEngagementChange("yes")}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        formData.isBusinessEngaged === true
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                            formData.isBusinessEngaged === true
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300 dark:border-slate-600"
+                          }`}
+                        >
+                          {formData.isBusinessEngaged === true && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-foreground">
+                          {t("surveys.business_yes")}
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      onClick={() => handleBusinessEngagementChange("no")}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        formData.isBusinessEngaged === false
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                            formData.isBusinessEngaged === false
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300 dark:border-slate-600"
+                          }`}
+                        >
+                          {formData.isBusinessEngaged === false && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-foreground">
+                          {t("surveys.business_no")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="pt-4">
                   <Button

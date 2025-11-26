@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
-import { departmentsAPI, vacanciesAPI } from "../../services/api";
+import { departmentsAPI, vacanciesAPI, myApplicationsAPI } from "../../services/api";
 import { formatDate } from "../../utils/dateFormatter";
 
 const ApplicationDetail = () => {
@@ -16,42 +16,116 @@ const ApplicationDetail = () => {
   useEffect(() => {
     const loadApplication = async () => {
       try {
+        // Get Telegram user ID
+        let userId = 905770018; // Default
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          if (
+            window.Telegram.WebApp.initDataUnsafe &&
+            window.Telegram.WebApp.initDataUnsafe.user
+          ) {
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+          }
+        }
+
+        // Fetch all applications from API
+        const data = await myApplicationsAPI.getMyApplications(userId);
+
         // Try to find in job applications
-        const jobApplications = JSON.parse(
-          localStorage.getItem("jobApplications") || "[]"
-        );
-        let foundApp = jobApplications.find((app) => app.id === id);
+        let foundApp = (data.apply_jobs || []).find((app) => String(app.id) === String(id));
 
         if (foundApp) {
           // Fetch vacancy and department details
           try {
-            const vacancyDetails = await vacanciesAPI.getVacancyById(
-              foundApp.job
-            );
-            const departmentDetails = await departmentsAPI.getDepartmentById(
-              vacancyDetails.management.department
-            );
+            if (foundApp.job) {
+              const vacancyDetails = await vacanciesAPI.getVacancyById(foundApp.job);
+              const departmentDetails = await departmentsAPI.getDepartmentById(
+                vacancyDetails.management.department
+              );
+              foundApp = {
+                ...foundApp,
+                applicationType: "job",
+                vacancyTitle: vacancyDetails.title,
+                departmentName: departmentDetails.name,
+                submittedAt: foundApp.created_at || foundApp.submittedAt,
+                status: foundApp.status || "pending",
+              };
+            } else {
+              foundApp = {
+                ...foundApp,
+                applicationType: "job",
+                submittedAt: foundApp.created_at || foundApp.submittedAt,
+                status: foundApp.status || "pending",
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching job details:", error);
             foundApp = {
               ...foundApp,
               applicationType: "job",
-              vacancyTitle: vacancyDetails.title,
-              departmentName: departmentDetails.name,
+              submittedAt: foundApp.created_at || foundApp.submittedAt,
+              status: foundApp.status || "pending",
             };
-          } catch (error) {
-            foundApp = { ...foundApp, applicationType: "job" };
           }
         } else {
-          // Try to find in submissions
-          const submissions = JSON.parse(
-            localStorage.getItem("submissions") || "[]"
-          );
-          foundApp = submissions.find((sub) => sub.id === id);
+          // Try to find in reports
+          foundApp = (data.reports || []).find((report) => String(report.id) === String(id));
           if (foundApp) {
-            foundApp = { ...foundApp, applicationType: "submission" };
-
-            // Fix old date format in localStorage
-            if (foundApp.submittedDate && !foundApp.submittedAt) {
-              foundApp.submittedAt = new Date().toISOString();
+            foundApp = {
+              ...foundApp,
+              applicationType: "submission",
+              type: foundApp.summary?.toLowerCase().includes("korruptsiya") || 
+                    foundApp.summary?.toLowerCase().includes("коррупция")
+                ? "corruption"
+                : "consumer_rights",
+              typeLabel: foundApp.summary?.toLowerCase().includes("korruptsiya") || 
+                         foundApp.summary?.toLowerCase().includes("коррупция")
+                ? "Korruptsiya"
+                : "Iste'molchilar huquqlari",
+              subject: foundApp.summary || "Murojaat",
+              fullName: foundApp.full_name,
+              phone: foundApp.phone_number,
+              email: foundApp.email,
+              description: foundApp.message_text,
+              submittedAt: foundApp.created_at,
+              status: foundApp.is_archived ? "archived" : "pending",
+            };
+          } else {
+            // Try to find in appeals
+            foundApp = (data.appeals || []).find((appeal) => String(appeal.id) === String(id));
+            if (foundApp) {
+              foundApp = {
+                ...foundApp,
+                applicationType: "submission",
+                type: "appeal",
+                typeLabel: "Murojaat",
+                subject: foundApp.subject || "Murojaat",
+                submittedAt: foundApp.created_at,
+                status: foundApp.status || "pending",
+              };
+            } else {
+              // Try to find in spelling reports
+              foundApp = (data.spelling_reports || []).find(
+                (report) => String(report.id) === String(id)
+              );
+              if (foundApp) {
+                foundApp = {
+                  ...foundApp,
+                  applicationType: "submission",
+                  type: "spelling",
+                  typeLabel: "Orfografik xatolar",
+                  subject: foundApp.description || "Orfografik xato haqida murojaat",
+                  fullName: foundApp.full_name,
+                  phone: foundApp.phone_number,
+                  email: foundApp.email,
+                  description: foundApp.description,
+                  text_snippet: foundApp.text_snippet,
+                  source_url: foundApp.source_url,
+                  attachment: foundApp.attachment,
+                  submittedAt: foundApp.created_at,
+                  status: foundApp.status === "new" ? "pending" : foundApp.status || "pending",
+                };
+              }
             }
           }
         }
@@ -71,13 +145,50 @@ const ApplicationDetail = () => {
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
+      case "new":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "approved":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
       case "rejected":
         return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "archived":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+    }
+  };
+
+  const getStatusText = (status) => {
+    if (status === "Ko'rib chiqilmoqda") return status;
+    if (status === "new") return "Yangi";
+    if (status === "archived") return "Arxivlangan";
+    
+    switch (status) {
+      case "pending":
+        return "Kutilmoqda";
+      case "approved":
+        return "Qabul qilindi";
+      case "rejected":
+        return "Rad etildi";
+      default:
+        return status || "Noma'lum";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "pending":
+      case "Ko'rib chiqilmoqda":
+      case "new":
+        return "Clock";
+      case "approved":
+        return "CheckCircle";
+      case "rejected":
+        return "XCircle";
+      case "archived":
+        return "Archive";
+      default:
+        return "HelpCircle";
     }
   };
 
@@ -217,7 +328,11 @@ const ApplicationDetail = () => {
                       application.status
                     )}`}
                   >
-                    <span>{application.status}</span>
+                    <Icon
+                      name={getStatusIcon(application.status)}
+                      size={14}
+                    />
+                    <span>{getStatusText(application.status)}</span>
                   </div>
                 </div>
 
@@ -332,15 +447,64 @@ const ApplicationDetail = () => {
               )}
 
               {/* Description */}
-              {application.description && (
+              {(application.description || application.message_text) && (
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
                   <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
                     Murojaat matni
                   </h2>
                   <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                    {application.description}
+                    {application.description || application.message_text}
                   </p>
                 </div>
+              )}
+
+              {/* Spelling Report Specific Fields */}
+              {application.type === "spelling" && (
+                <>
+                  {application.text_snippet && (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
+                      <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
+                        Xato matni
+                      </h2>
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                        {application.text_snippet}
+                      </p>
+                    </div>
+                  )}
+                  {application.source_url && (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
+                      <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
+                        Manba URL
+                      </h2>
+                      <a
+                        href={application.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                      >
+                        {application.source_url}
+                      </a>
+                    </div>
+                  )}
+                  {application.attachment && (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
+                      <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
+                        Ilova
+                      </h2>
+                      <div className="mt-2">
+                        <a
+                          href={`${import.meta.env.VITE_API_BASE_URL?.replace(/\/v1\/?$/, "") || "https://b21b5a398785.ngrok-free.app/api"}${application.attachment}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <Icon name="File" size={16} />
+                          <span>Ilovani ko'rish</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : (

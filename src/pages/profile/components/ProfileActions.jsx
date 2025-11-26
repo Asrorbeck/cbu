@@ -3,18 +3,49 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Icon from "../../../components/AppIcon";
 import Button from "../../../components/ui/Button";
+import { myApplicationsAPI } from "../../../services/api";
 
 const ProfileActions = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
+  const [applicationsCount, setApplicationsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load applications from localStorage
-    const savedApplications = JSON.parse(
-      localStorage.getItem("jobApplications") || "[]"
-    );
-    setApplications(savedApplications);
+    const fetchApplicationsCount = async () => {
+      try {
+        // Get Telegram user ID
+        let userId = 905770018; // Default
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          if (
+            window.Telegram.WebApp.initDataUnsafe &&
+            window.Telegram.WebApp.initDataUnsafe.user
+          ) {
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+          }
+        }
+
+        // Fetch applications from API
+        const data = await myApplicationsAPI.getMyApplications(userId);
+        
+        // Calculate total count
+        const totalCount =
+          (data.apply_jobs?.length || 0) +
+          (data.reports?.length || 0) +
+          (data.appeals?.length || 0) +
+          (data.spelling_reports?.length || 0);
+        
+        setApplicationsCount(totalCount);
+      } catch (error) {
+        console.error("Error fetching applications count:", error);
+        setApplicationsCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplicationsCount();
   }, []);
 
   const actionItems = [
@@ -23,8 +54,10 @@ const ProfileActions = () => {
       icon: "FileText",
       title: t("profile.actions.my_applications") || "Mening arizalarim",
       description:
-        t("profile.actions.my_applications_desc") ||
-        `${applications.length} ta ariza`,
+        isLoading
+          ? t("profile.actions.loading") || "Yuklanmoqda..."
+          : t("profile.actions.my_applications_desc") ||
+            `${applicationsCount} ta ariza`,
       color: "blue",
       onClick: () => {
         navigate("/applications");
