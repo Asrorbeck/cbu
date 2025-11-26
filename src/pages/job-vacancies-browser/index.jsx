@@ -330,9 +330,7 @@ const JobVacanciesBrowser = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t("jobs.no_departments_found")}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            "{searchQuery}" bo'yicha hech qanday bo'lim topilmadi
-          </p>
+          
         </div>
       )}
     </div>
