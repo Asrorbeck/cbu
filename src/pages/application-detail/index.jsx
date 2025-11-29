@@ -9,7 +9,7 @@ import { formatDate } from "../../utils/dateFormatter";
 
 const ApplicationDetail = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { type, id } = useParams();
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,43 +31,68 @@ const ApplicationDetail = () => {
         // Fetch all applications from API
         const data = await myApplicationsAPI.getMyApplications(userId);
 
-        // Try to find in job applications
-        let foundApp = (data.apply_jobs || []).find((app) => String(app.id) === String(id));
+        let foundApp = null;
 
-        if (foundApp) {
-          // Fetch vacancy and department details
-          try {
-            if (foundApp.job) {
-              const vacancyDetails = await vacanciesAPI.getVacancyById(foundApp.job);
-              const departmentDetails = await departmentsAPI.getDepartmentById(
-                vacancyDetails.management.department
-              );
+        // Search based on type parameter
+        if (type === "jobs") {
+          // Try to find in job applications
+          foundApp = (data.apply_jobs || []).find((app) => String(app.id) === String(id));
+
+          if (foundApp) {
+            // Transform application data from backend format
+            try {
+              // Extract job details from foundApp.job object
+              const jobData = foundApp.job;
+              let departmentName = "Noma'lum";
+              
+              // Get department name from management_details
+              if (jobData?.management_details?.department) {
+                try {
+                  const departmentDetails = await departmentsAPI.getDepartmentById(
+                    jobData.management_details.department
+                  );
+                  departmentName = departmentDetails?.name || jobData.management_details?.name || "Noma'lum";
+                } catch (error) {
+                  console.error("Error fetching department details:", error);
+                  departmentName = jobData.management_details?.name || "Noma'lum";
+                }
+              } else if (jobData?.management_details?.name) {
+                departmentName = jobData.management_details.name;
+              }
+              
               foundApp = {
                 ...foundApp,
                 applicationType: "job",
-                vacancyTitle: vacancyDetails.title,
-                departmentName: departmentDetails.name,
+                vacancyTitle: jobData?.title || "Noma'lum vakansiya",
+                departmentName: departmentName,
+                fullName: foundApp.full_name,
+                phone: foundApp.phone,
+                birthDate: foundApp.data_of_birth,
+                additionalInfo: foundApp.additional_information,
+                graduations: foundApp.graduations || [],
+                employments: foundApp.employments || [],
+                languages: foundApp.languages || [],
                 submittedAt: foundApp.created_at || foundApp.submittedAt,
                 status: foundApp.status || "pending",
               };
-            } else {
+            } catch (error) {
+              console.error("Error processing job application:", error);
               foundApp = {
                 ...foundApp,
                 applicationType: "job",
+                fullName: foundApp.full_name,
+                phone: foundApp.phone,
+                birthDate: foundApp.data_of_birth,
+                additionalInfo: foundApp.additional_information,
+                graduations: foundApp.graduations || [],
+                employments: foundApp.employments || [],
+                languages: foundApp.languages || [],
                 submittedAt: foundApp.created_at || foundApp.submittedAt,
                 status: foundApp.status || "pending",
               };
             }
-          } catch (error) {
-            console.error("Error fetching job details:", error);
-            foundApp = {
-              ...foundApp,
-              applicationType: "job",
-              submittedAt: foundApp.created_at || foundApp.submittedAt,
-              status: foundApp.status || "pending",
-            };
           }
-        } else {
+        } else if (type === "reports") {
           // Try to find in reports
           foundApp = (data.reports || []).find((report) => String(report.id) === String(id));
           if (foundApp) {
@@ -90,43 +115,43 @@ const ApplicationDetail = () => {
               submittedAt: foundApp.created_at,
               status: foundApp.is_archived ? "archived" : "pending",
             };
-          } else {
-            // Try to find in appeals
-            foundApp = (data.appeals || []).find((appeal) => String(appeal.id) === String(id));
-            if (foundApp) {
-              foundApp = {
-                ...foundApp,
-                applicationType: "submission",
-                type: "appeal",
-                typeLabel: "Murojaat",
-                subject: foundApp.subject || "Murojaat",
-                submittedAt: foundApp.created_at,
-                status: foundApp.status || "pending",
-              };
-            } else {
-              // Try to find in spelling reports
-              foundApp = (data.spelling_reports || []).find(
-                (report) => String(report.id) === String(id)
-              );
-              if (foundApp) {
-                foundApp = {
-                  ...foundApp,
-                  applicationType: "submission",
-                  type: "spelling",
-                  typeLabel: "Orfografik xatolar",
-                  subject: foundApp.description || "Orfografik xato haqida murojaat",
-                  fullName: foundApp.full_name,
-                  phone: foundApp.phone_number,
-                  email: foundApp.email,
-                  description: foundApp.description,
-                  text_snippet: foundApp.text_snippet,
-                  source_url: foundApp.source_url,
-                  attachment: foundApp.attachment,
-                  submittedAt: foundApp.created_at,
-                  status: foundApp.status === "new" ? "pending" : foundApp.status || "pending",
-                };
-              }
-            }
+          }
+        } else if (type === "appeals") {
+          // Try to find in appeals
+          foundApp = (data.appeals || []).find((appeal) => String(appeal.id) === String(id));
+          if (foundApp) {
+            foundApp = {
+              ...foundApp,
+              applicationType: "submission",
+              type: "appeal",
+              typeLabel: "Murojaat",
+              subject: foundApp.subject || "Murojaat",
+              submittedAt: foundApp.created_at,
+              status: foundApp.status || "pending",
+            };
+          }
+        } else if (type === "spelling") {
+          // Try to find in spelling reports
+          foundApp = (data.spelling_reports || []).find(
+            (report) => String(report.id) === String(id)
+          );
+          if (foundApp) {
+            foundApp = {
+              ...foundApp,
+              applicationType: "submission",
+              type: "spelling",
+              typeLabel: "Orfografik xatolar",
+              subject: foundApp.description || "Orfografik xato haqida murojaat",
+              fullName: foundApp.full_name,
+              phone: foundApp.phone_number,
+              email: foundApp.email,
+              description: foundApp.description,
+              text_snippet: foundApp.text_snippet,
+              source_url: foundApp.source_url,
+              attachment: foundApp.attachment,
+              submittedAt: foundApp.created_at,
+              status: foundApp.status === "new" ? "pending" : foundApp.status || "pending",
+            };
           }
         }
 
@@ -139,18 +164,22 @@ const ApplicationDetail = () => {
     };
 
     loadApplication();
-  }, [id]);
+  }, [type, id]);
 
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
       case "new":
+      case "NEW":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "approved":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
       case "rejected":
+      case "REJECTED_DOCS":
         return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "TEST_SCHEDULED":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
       case "archived":
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
       default:
@@ -160,16 +189,20 @@ const ApplicationDetail = () => {
 
   const getStatusText = (status) => {
     if (status === "Ko'rib chiqilmoqda") return status;
-    if (status === "new") return "Yangi";
     if (status === "archived") return "Arxivlangan";
     
     switch (status) {
       case "pending":
+      case "new":
+      case "NEW":
         return "Kutilmoqda";
       case "approved":
         return "Qabul qilindi";
       case "rejected":
-        return "Rad etildi";
+      case "REJECTED_DOCS":
+        return "Rad etilgan";
+      case "TEST_SCHEDULED":
+        return "Testga qabul qilindi";
       default:
         return status || "Noma'lum";
     }
@@ -180,7 +213,10 @@ const ApplicationDetail = () => {
       case "pending":
       case "Ko'rib chiqilmoqda":
       case "new":
+      case "NEW":
         return "Clock";
+      case "TEST_SCHEDULED":
+        return "CheckCircle";
       case "approved":
         return "CheckCircle";
       case "rejected":
@@ -246,7 +282,7 @@ const ApplicationDetail = () => {
               <p className="text-muted-foreground mb-6">
                 Bunday ariza mavjud emas yoki o'chirilgan
               </p>
-              <Button onClick={() => navigate("/applications")}>
+              <Button onClick={() => navigate(type ? `/applications/${type}` : "/applications")}>
                 Arizalarga qaytish
               </Button>
             </div>
@@ -260,9 +296,11 @@ const ApplicationDetail = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>
-          {application.applicationType === "job"
-            ? application.vacancyTitle
-            : application.subject}{" "}
+          {application
+            ? application.applicationType === "job"
+              ? application.vacancyTitle || "Ish arizasi"
+              : application.subject || "Ariza"
+            : "Ariza tafsilotlari"}{" "}
           - Ariza tafsilotlari
         </title>
       </Helmet>
@@ -273,7 +311,7 @@ const ApplicationDetail = () => {
           <div className="mb-6 flex items-center justify-between">
             <Button
               variant="ghost"
-              onClick={() => navigate("/applications")}
+              onClick={() => navigate(type ? `/applications/${type}` : "/applications")}
               iconName="ArrowLeft"
               iconPosition="left"
               className="text-muted-foreground hover:text-foreground"
@@ -521,7 +559,17 @@ const ApplicationDetail = () => {
                       F.I.SH
                     </p>
                     <p className="text-sm font-semibold text-foreground">
-                      {application.full_name}
+                      {application.fullName || application.full_name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Tug'ilgan sana
+                    </p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {application.birthDate || application.data_of_birth 
+                        ? formatDate(application.birthDate || application.data_of_birth)
+                        : "Kiritilmagan"}
                     </p>
                   </div>
                   <div>
@@ -532,14 +580,6 @@ const ApplicationDetail = () => {
                       {application.phone}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      Jinoiy javobgarlik
-                    </p>
-                    <p className="text-sm font-semibold text-foreground">
-                      {application.hasCriminalRecord ? "Ha" : "Yo'q"}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -548,7 +588,7 @@ const ApplicationDetail = () => {
                 application.graduations.length > 0 && (
                   <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
                     <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
-                      Ma'lumoti
+                      Oliy ta'lim ma'lumoti
                     </h2>
                     <div className="space-y-4">
                       {application.graduations.map((edu, index) => (
@@ -621,13 +661,13 @@ const ApplicationDetail = () => {
               )}
 
               {/* Additional Info */}
-              {application.additional_information && (
+              {(application.additionalInfo || application.additional_information) && (
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-slate-700">
                   <h2 className="text-lg font-bold text-foreground mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
                     Qo'shimcha ma'lumot
                   </h2>
-                  <p className="text-sm text-foreground leading-relaxed">
-                    {application.additional_information}
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                    {application.additionalInfo || application.additional_information}
                   </p>
                 </div>
               )}

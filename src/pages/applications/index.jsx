@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
-import { departmentsAPI, vacanciesAPI, myApplicationsAPI } from "../../services/api";
+import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
+import {
+  departmentsAPI,
+  vacanciesAPI,
+  myApplicationsAPI,
+} from "../../services/api";
 
 const Applications = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get("type"); // "jobs", "reports", "appeals", "spelling"
-  
+  const { type } = useParams(); // "jobs", "reports", "appeals", "spelling"
+
   const [applicationsData, setApplicationsData] = useState({
     apply_jobs: [],
     reports: [],
@@ -44,19 +48,41 @@ const Applications = () => {
           (data.apply_jobs || []).map(async (app) => {
             try {
               // Get vacancy details if job ID exists
-              if (app.job) {
-                const vacancyDetails = await vacanciesAPI.getVacancyById(app.job);
-                const departmentDetails = await departmentsAPI.getDepartmentById(
-                  vacancyDetails.management.department
-                );
-                return {
-                  ...app,
-                  applicationType: "job",
-                  vacancyTitle: vacancyDetails.title,
-                  departmentName: departmentDetails.name,
-                  submittedAt: app.created_at || app.submittedAt,
-                  status: app.status || "pending",
-                };
+              // Handle both number and object cases for app.job
+              const jobId =
+                typeof app.job === "object" && app.job !== null
+                  ? app.job.id || app.job
+                  : app.job;
+
+              if (jobId) {
+                const vacancyDetails = await vacanciesAPI.getVacancyById(jobId);
+
+                // Check if management exists and has department
+                if (vacancyDetails?.management?.department) {
+                  const departmentDetails =
+                    await departmentsAPI.getDepartmentById(
+                      vacancyDetails.management.department
+                    );
+                  return {
+                    ...app,
+                    applicationType: "job",
+                    vacancyTitle: vacancyDetails.title,
+                    departmentName: departmentDetails?.name || "Noma'lum",
+                    submittedAt: app.created_at || app.submittedAt,
+                    status: app.status || "pending",
+                  };
+                } else {
+                  // If no management or department, return with vacancy title only
+                  return {
+                    ...app,
+                    applicationType: "job",
+                    vacancyTitle: vacancyDetails?.title || "Noma'lum vakansiya",
+                    departmentName:
+                      vacancyDetails?.management?.name || "Noma'lum",
+                    submittedAt: app.created_at || app.submittedAt,
+                    status: app.status || "pending",
+                  };
+                }
               }
               return {
                 ...app,
@@ -65,7 +91,10 @@ const Applications = () => {
                 status: app.status || "pending",
               };
             } catch (error) {
-              console.error(`Error fetching details for job application ${app.id}:`, error);
+              console.error(
+                `Error fetching details for job application ${app.id}:`,
+                error
+              );
               return {
                 ...app,
                 applicationType: "job",
@@ -80,15 +109,17 @@ const Applications = () => {
         const reports = (data.reports || []).map((report) => ({
           ...report,
           applicationType: "submission",
-          type: report.summary?.toLowerCase().includes("korruptsiya") || 
-                report.summary?.toLowerCase().includes("коррупция") ||
-                report.summary?.toLowerCase().includes("коррупция")
-            ? "corruption"
-            : "consumer_rights",
-          typeLabel: report.summary?.toLowerCase().includes("korruptsiya") || 
-                     report.summary?.toLowerCase().includes("коррупция")
-            ? "Korruptsiya"
-            : "Iste'molchilar huquqlari",
+          type:
+            report.summary?.toLowerCase().includes("korruptsiya") ||
+            report.summary?.toLowerCase().includes("коррупция") ||
+            report.summary?.toLowerCase().includes("коррупция")
+              ? "corruption"
+              : "consumer_rights",
+          typeLabel:
+            report.summary?.toLowerCase().includes("korruptsiya") ||
+            report.summary?.toLowerCase().includes("коррупция")
+              ? "Korruptsiya"
+              : "Iste'molchilar huquqlari",
           subject: report.summary || "Murojaat",
           submittedAt: report.created_at,
           status: report.is_archived ? "archived" : "pending",
@@ -113,7 +144,8 @@ const Applications = () => {
           typeLabel: "Orfografik xatolar",
           subject: report.description || "Orfografik xato haqida murojaat",
           submittedAt: report.created_at,
-          status: report.status === "new" ? "pending" : report.status || "pending",
+          status:
+            report.status === "new" ? "pending" : report.status || "pending",
         }));
 
         // Store all data
@@ -160,11 +192,15 @@ const Applications = () => {
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
+      case "NEW":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "approved":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
       case "rejected":
+      case "REJECTED_DOCS":
         return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "TEST_SCHEDULED":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
@@ -175,22 +211,26 @@ const Applications = () => {
 
     switch (status) {
       case "pending":
+      case "NEW":
         return "Kutilmoqda";
       case "approved":
         return "Qabul qilindi";
       case "rejected":
-        return "Rad etildi";
+      case "REJECTED_DOCS":
+        return "Rad etilgan";
+      case "TEST_SCHEDULED":
+        return "Testga qabul qilindi";
       default:
         return status || "Noma'lum";
     }
   };
 
   const handleCardClick = (applicationId) => {
-    navigate(`/applications/${applicationId}`);
+    navigate(`/applications/${type}/${applicationId}`);
   };
 
   const handleTypeCardClick = (typeName) => {
-    navigate(`/applications?type=${typeName}`);
+    navigate(`/applications/${typeName}`);
   };
 
   const getTypeTitle = (typeName) => {
@@ -242,11 +282,15 @@ const Applications = () => {
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
+      case "NEW":
         return "Clock";
       case "approved":
         return "CheckCircle";
       case "rejected":
+      case "REJECTED_DOCS":
         return "XCircle";
+      case "TEST_SCHEDULED":
+        return "CheckCircle";
       default:
         return "HelpCircle";
     }
@@ -258,18 +302,75 @@ const Applications = () => {
         <Navbar />
         <main className="pt-20 pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="animate-pulse space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-card border border-border rounded-xl p-6"
-                >
-                  <div className="h-6 bg-muted rounded w-1/3 mb-3"></div>
-                  <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-1/4"></div>
-                </div>
-              ))}
+            {/* Header Skeleton */}
+            <div className="mb-8">
+              <div className="text-center mb-6">
+                <div className="h-8 bg-muted rounded-lg w-64 mx-auto mb-3 animate-pulse"></div>
+                <div className="h-5 bg-muted rounded-lg w-96 mx-auto animate-pulse"></div>
+              </div>
             </div>
+
+            {/* Type Cards Skeleton or Application Cards Skeleton */}
+            {!type ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6 animate-pulse"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                        <div className="space-y-2">
+                          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                        </div>
+                      </div>
+                      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Stats Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-card border border-border rounded-xl p-4 text-center animate-pulse"
+                    >
+                      <div className="h-8 bg-muted rounded w-16 mx-auto mb-2"></div>
+                      <div className="h-4 bg-muted rounded w-24 mx-auto"></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Application Cards Skeleton */}
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5 md:p-6 animate-pulse"
+                    >
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex-1 space-y-3">
+                          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                        </div>
+                        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                      </div>
+                      <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between">
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </main>
         {/* Bottom navigation spacing - mobile only */}
@@ -285,19 +386,6 @@ const Applications = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/profile")}
-                  className="flex items-center space-x-2"
-                >
-                  <Icon name="ArrowLeft" size={18} />
-                  <span>Orqaga</span>
-                </Button>
-              </div>
-            </div>
-
             <div className="text-center">
               <h1 className="text-3xl font-bold text-foreground mb-3">
                 {type ? getTypeTitle(type) : "Mening arizalarim"}
@@ -332,7 +420,11 @@ const Applications = () => {
                       </p>
                     </div>
                   </div>
-                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                  <Icon
+                    name="ChevronRight"
+                    size={20}
+                    className="text-gray-400"
+                  />
                 </div>
               </div>
 
@@ -343,7 +435,9 @@ const Applications = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg ${getTypeColor("reports")}`}>
+                    <div
+                      className={`p-3 rounded-lg ${getTypeColor("reports")}`}
+                    >
                       <Icon name={getTypeIcon("reports")} size={24} />
                     </div>
                     <div>
@@ -355,7 +449,11 @@ const Applications = () => {
                       </p>
                     </div>
                   </div>
-                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                  <Icon
+                    name="ChevronRight"
+                    size={20}
+                    className="text-gray-400"
+                  />
                 </div>
               </div>
 
@@ -366,7 +464,9 @@ const Applications = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg ${getTypeColor("appeals")}`}>
+                    <div
+                      className={`p-3 rounded-lg ${getTypeColor("appeals")}`}
+                    >
                       <Icon name={getTypeIcon("appeals")} size={24} />
                     </div>
                     <div>
@@ -378,7 +478,11 @@ const Applications = () => {
                       </p>
                     </div>
                   </div>
-                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                  <Icon
+                    name="ChevronRight"
+                    size={20}
+                    className="text-gray-400"
+                  />
                 </div>
               </div>
 
@@ -389,7 +493,9 @@ const Applications = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg ${getTypeColor("spelling")}`}>
+                    <div
+                      className={`p-3 rounded-lg ${getTypeColor("spelling")}`}
+                    >
                       <Icon name={getTypeIcon("spelling")} size={24} />
                     </div>
                     <div>
@@ -401,7 +507,11 @@ const Applications = () => {
                       </p>
                     </div>
                   </div>
-                  <Icon name="ChevronRight" size={20} className="text-gray-400" />
+                  <Icon
+                    name="ChevronRight"
+                    size={20}
+                    className="text-gray-400"
+                  />
                 </div>
               </div>
             </div>
@@ -435,137 +545,146 @@ const Applications = () => {
                   <h3 className="text-xl font-semibold text-card-foreground mb-2">
                     {getTypeTitle(type)} topilmadi
                   </h3>
-                  <p className="text-muted-foreground mb-6">
-                    Siz hali hech qanday {getTypeTitle(type).toLowerCase()} yubormagansiz
+                  <p className="text-muted-foreground">
+                    Siz hali hech qanday {getTypeTitle(type).toLowerCase()}{" "}
+                    yubormagansiz
                   </p>
-                  <Button
-                    onClick={() => navigate("/departments")}
-                    className="inline-flex items-center space-x-2"
-                  >
-                    <Icon name="Plus" size={16} />
-                    <span>Ish qidirish</span>
-                  </Button>
+                  {type === "jobs" && (
+                    <div className="mt-6">
+                      <Button
+                        onClick={() => navigate("/departments")}
+                        className="inline-flex items-center space-x-2"
+                      >
+                        <Icon name="Plus" size={16} />
+                        <span>Ish qidirish</span>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
-            <div className="space-y-6">
-              {/* Stats - Show only when viewing specific type */}
-              {type && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div className="bg-card border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-foreground mb-1">
-                      {applications.length}
+              <div className="space-y-6">
+                {/* Stats - Show only when viewing specific type */}
+                {type && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-card border border-border rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-foreground mb-1">
+                        {applications.length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Jami arizalar
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      Jami arizalar
+                    <div className="bg-card border border-border rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-600 mb-1">
+                        {
+                          applications.filter(
+                            (app) =>
+                              app.status === "pending" ||
+                              app.status === "Ko'rib chiqilmoqda" ||
+                              app.status === "new" ||
+                              app.status === "NEW"
+                          ).length
+                        }
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Kutilmoqda
+                      </div>
+                    </div>
+                    <div className="bg-card border border-border rounded-xl p-4 text-center">
+                      <div className="text-2xl font-bold text-green-600 mb-1">
+                        {
+                          applications.filter(
+                            (app) =>
+                              app.status === "approved" ||
+                              app.status === "TEST_SCHEDULED"
+                          ).length
+                        }
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Qabul qilingan
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-600 mb-1">
-                      {
-                        applications.filter(
-                          (app) =>
-                            app.status === "pending" ||
-                            app.status === "Ko'rib chiqilmoqda" ||
-                            app.status === "new"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Kutilmoqda
-                    </div>
-                  </div>
-                  <div className="bg-card border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600 mb-1">
-                      {
-                        applications.filter((app) => app.status === "approved")
-                          .length
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Qabul qilingan
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {/* Applications Cards */}
-              <div className="space-y-4">
-                {applications.map((application) => {
-                  return (
-                    <div
-                      key={application.id}
-                      onClick={() => handleCardClick(application.id)}
-                      className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer p-5 md:p-6"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <div className="flex-1 min-w-0">
-                            {/* Type Badge */}
-                            {application.applicationType === "submission" && (
-                              <div
-                                className={`inline-flex px-3 py-1 rounded-lg text-xs font-semibold mb-3 ${
-                                  application.type === "corruption"
-                                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                }`}
-                              >
-                                {application.typeLabel}
+                {/* Applications Cards */}
+                <div className="space-y-4">
+                  {applications.map((application) => {
+                    return (
+                      <div
+                        key={application.id}
+                        onClick={() => handleCardClick(application.id)}
+                        className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer p-5 md:p-6"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex-1 min-w-0">
+                              {/* Type Badge */}
+                              {application.applicationType === "submission" && (
+                                <div
+                                  className={`inline-flex px-3 py-1 rounded-lg text-xs font-semibold mb-3 ${
+                                    application.type === "corruption"
+                                      ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                  }`}
+                                >
+                                  {application.typeLabel}
+                                </div>
+                              )}
+
+                              {/* Title */}
+                              <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                                {application.applicationType === "job"
+                                  ? application.vacancyTitle
+                                  : application.subject}
+                              </h3>
+
+                              {/* Subtitle */}
+                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                {application.applicationType === "job"
+                                  ? application.departmentName
+                                  : `Murojaat raqami: ${application.id}`}
+                              </p>
+                            </div>
+
+                            {/* Arrow Icon */}
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-colors duration-200">
+                                <Icon
+                                  name="ArrowRight"
+                                  size={20}
+                                  className="text-gray-600 dark:text-gray-400"
+                                />
                               </div>
-                            )}
-
-                            {/* Title */}
-                            <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                              {application.applicationType === "job"
-                                ? application.vacancyTitle
-                                : application.subject}
-                            </h3>
-
-                            {/* Subtitle */}
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              {application.applicationType === "job"
-                                ? application.departmentName
-                                : `Murojaat raqami: ${application.id}`}
-                            </p>
-                          </div>
-
-                          {/* Arrow Icon */}
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-colors duration-200">
-                              <Icon
-                                name="ArrowRight"
-                                size={20}
-                                className="text-gray-600 dark:text-gray-400"
-                              />
                             </div>
                           </div>
-                        </div>
 
-                        {/* Status - Bottom */}
-                        <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Holati:
-                            </span>
-                            <div
-                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${getStatusColor(
-                                application.status
-                              )}`}
-                            >
-                              <Icon
-                                name={getStatusIcon(application.status)}
-                                size={12}
-                              />
-                              <span>{getStatusText(application.status)}</span>
+                          {/* Status - Bottom */}
+                          <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                Holati:
+                              </span>
+                              <div
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${getStatusColor(
+                                  application.status
+                                )}`}
+                              >
+                                <Icon
+                                  name={getStatusIcon(application.status)}
+                                  size={12}
+                                />
+                                <span>{getStatusText(application.status)}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
             )
           ) : null}
         </div>

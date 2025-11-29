@@ -133,6 +133,11 @@ const JobApplicationForm = () => {
       english: "",
     },
     additionalInfo: "",
+    neverWorked: false,
+    convicted: false,
+    convictionDetails: "",
+    expectedSalary: "",
+    businessTripReady: "",
   });
 
   // Get user ID from Telegram Web App or use default
@@ -224,10 +229,18 @@ const JobApplicationForm = () => {
     // Barcha "qizi" variantlari
     const validQiziVariants = ["qizi", "qizzi"];
     // Barcha "vich/vna" variantlari
-    const validOtchestvoEndings = ["vich", "vna", "ovich", "ovna", "evich", "evna"];
-    
+    const validOtchestvoEndings = [
+      "vich",
+      "vna",
+      "ovich",
+      "ovna",
+      "evich",
+      "evna",
+    ];
+
     const lastWord = words[words.length - 1].toLowerCase();
-    const secondLastWord = words.length > 3 ? words[words.length - 2].toLowerCase() : "";
+    const secondLastWord =
+      words.length > 3 ? words[words.length - 2].toLowerCase() : "";
 
     // Apostrofni olib tashlab tekshirish funksiyasi
     const normalizeForComparison = (word) => {
@@ -236,11 +249,11 @@ const JobApplicationForm = () => {
 
     // Otchestvo 2 so'z bo'lishi mumkin: "Bahodir ogli" yoki "Bahodir qizi" (barcha variantlar bilan)
     const normalizedLastWord = normalizeForComparison(lastWord);
-    const isOgliVariant = validOgliVariants.some(variant => {
+    const isOgliVariant = validOgliVariants.some((variant) => {
       const normalizedVariant = normalizeForComparison(variant);
       return lastWord === variant || normalizedLastWord === normalizedVariant;
     });
-    const isQiziVariant = validQiziVariants.some(variant => {
+    const isQiziVariant = validQiziVariants.some((variant) => {
       const normalizedVariant = normalizeForComparison(variant);
       return lastWord === variant || normalizedLastWord === normalizedVariant;
     });
@@ -251,13 +264,13 @@ const JobApplicationForm = () => {
         return "Otchestvo to'liq kiritilmagan (masalan: Abdullayev Abdulaziz Abdullayevich)";
       }
       // Bu holat qabul qilinadi (masalan: Abdullayev Abdulaziz Abdullayevich)
-    } 
+    }
     // Otchestvo 1 so'z bo'lishi mumkin: "Bahodirovich", "Bahodirovna" va h.k.
     else {
-      const hasValidEnding = validOtchestvoEndings.some(ending => 
-        lastWord.endsWith(ending) && lastWord.length > ending.length
+      const hasValidEnding = validOtchestvoEndings.some(
+        (ending) => lastWord.endsWith(ending) && lastWord.length > ending.length
       );
-      
+
       if (!hasValidEnding) {
         return "Otchestvo 'ogli', 'o'g'li', 'qizi', 'vich' yoki 'vna' bilan tugashi kerak (masalan: Abdullayev Abdulaziz Abdullayevich)";
       }
@@ -286,7 +299,7 @@ const JobApplicationForm = () => {
       ...prev,
       [field]: value,
     }));
-    
+
     // Validate fullName on change (but don't show error until blur)
     if (field === "fullName" && value.trim().length > 0) {
       const error = validateFullName(value);
@@ -517,14 +530,16 @@ const JobApplicationForm = () => {
         degree: edu.degree,
         specialization: edu.specialty,
       })),
-      employments: formData.workExperience.map((work) => ({
-        date_from: yearToDate(work.startYear),
-        date_to: work.isCurrent
-          ? getCurrentDate()
-          : yearToDate(work.endYear, true),
-        organization_name: work.company,
-        position: work.position,
-      })),
+      employments: formData.neverWorked
+        ? null
+        : formData.workExperience.map((work) => ({
+            date_from: yearToDate(work.startYear),
+            date_to: work.isCurrent
+              ? getCurrentDate()
+              : yearToDate(work.endYear, true),
+            organization_name: work.company,
+            position: work.position,
+          })),
       languages: Object.entries(formData.languages).map(
         ([language, level]) => ({
           language_name: language,
@@ -815,6 +830,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
         english: "",
       },
       additionalInfo: "",
+      neverWorked: false,
+      convicted: false,
+      convictionDetails: "",
+      expectedSalary: "",
+      businessTripReady: "",
     });
     setFieldErrors({});
   };
@@ -916,7 +936,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       </label>
                       <Input
                         type="text"
-                        placeholder="Masalan: Abdullayev Abdulaziz Abdullayevich"
+                        placeholder={t(
+                          "jobs.application.form.full_name_placeholder"
+                        )}
                         value={formData.fullName}
                         onChange={(e) =>
                           handleInputChange("fullName", e.target.value)
@@ -944,7 +966,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           {fieldErrors.fullName}
                         </p>
                       )}
-                      
                     </div>
 
                     <div>
@@ -973,30 +994,21 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       </label>
                       <Input
                         type="tel"
-                        placeholder="+998 90 123 45 67"
+                        placeholder={t(
+                          "jobs.application.form.phone_placeholder"
+                        )}
                         value={formData.phone}
                         onChange={(e) => {
                           let value = e.target.value;
-                          // Remove all non-digit characters except +
-                          value = value.replace(/[^\d+]/g, "");
+                          // Allow digits, spaces, hyphens, parentheses, and +
+                          // This allows international phone number formats
+                          value = value.replace(/[^\d+\s\-()]/g, "");
 
-                          // Ensure it starts with +998
-                          if (!value.startsWith("+998")) {
-                            if (value.startsWith("998")) {
-                              value = "+" + value;
-                            } else if (value.startsWith("9")) {
-                              value = "+998" + value;
-                            } else if (
-                              value.length > 0 &&
-                              !value.startsWith("+")
-                            ) {
-                              value = "+998" + value;
-                            }
-                          }
-
-                          // Limit to +998 + 9 digits
-                          if (value.length > 13) {
-                            value = value.substring(0, 13);
+                          // Limit total length to reasonable phone number length
+                          // International phone numbers can be up to 15 digits after country code
+                          // Allowing up to 20 characters total for formatting
+                          if (value.length > 20) {
+                            value = value.substring(0, 20);
                           }
 
                           handleInputChange("phone", value);
@@ -1203,163 +1215,207 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   </h2>
 
                   <div className="space-y-4">
-                    {formData.workExperience.map((work, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4"
+                    {/* Never Worked Checkbox */}
+                    <div className="flex items-center mb-4">
+                      <Checkbox
+                        id="never-worked"
+                        checked={formData.neverWorked}
+                        onChange={(checked) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            neverWorked: checked,
+                            // Clear work experience when checked
+                            workExperience: checked
+                              ? [
+                                  {
+                                    startYear: "",
+                                    endYear: "",
+                                    isCurrent: false,
+                                    company: "",
+                                    position: "",
+                                  },
+                                ]
+                              : prev.workExperience,
+                          }));
+                        }}
+                      />
+                      <label
+                        htmlFor="never-worked"
+                        className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                            {t("jobs.application.form.work_experience")} #
-                            {index + 1}
-                          </h3>
-                          {formData.workExperience.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeWorkExperience(index)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              {t("jobs.application.form.remove_work")}
-                            </button>
-                          )}
-                        </div>
+                        {t("jobs.application.form.never_worked")}
+                      </label>
+                    </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.start_year")}
-                            </label>
-                            <Select
-                              value={work.startYear}
-                              onChange={(value) =>
-                                handleWorkExperienceChange(
-                                  index,
-                                  "startYear",
-                                  value
-                                )
-                              }
-                              options={yearOptions}
-                              placeholder={t(
-                                "jobs.application.form.select_year"
+                    {!formData.neverWorked && (
+                      <>
+                        {formData.workExperience.map((work, index) => (
+                          <div
+                            key={index}
+                            className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4"
+                          >
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                                {t("jobs.application.form.work_experience")} #
+                                {index + 1}
+                              </h3>
+                              {formData.workExperience.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeWorkExperience(index)}
+                                  className="text-red-600 hover:text-red-800 text-sm"
+                                >
+                                  {t("jobs.application.form.remove_work")}
+                                </button>
                               )}
-                              required
-                            />
-                          </div>
+                            </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.end_year")}
-                            </label>
-                            <div className="space-y-2">
-                              <Select
-                                value={work.endYear}
-                                onChange={(value) =>
-                                  handleWorkExperienceChange(
-                                    index,
-                                    "endYear",
-                                    value
-                                  )
-                                }
-                                options={getEndYearOptions(work.startYear)}
-                                placeholder={t(
-                                  "jobs.application.form.select_year"
-                                )}
-                                disabled={work.isCurrent}
-                                required={!work.isCurrent}
-                              />
-                              <div className="flex items-center">
-                                <Checkbox
-                                  id={`work-current-${index}`}
-                                  checked={work.isCurrent}
-                                  onChange={(checked) =>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  {t("jobs.application.form.start_year")}
+                                </label>
+                                <Select
+                                  value={work.startYear}
+                                  onChange={(value) =>
                                     handleWorkExperienceChange(
                                       index,
-                                      "isCurrent",
-                                      checked
+                                      "startYear",
+                                      value
                                     )
                                   }
+                                  options={yearOptions}
+                                  placeholder={t(
+                                    "jobs.application.form.select_year"
+                                  )}
+                                  required
                                 />
-                                <label
-                                  htmlFor={`work-current-${index}`}
-                                  className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                                >
-                                  {t("jobs.application.form.currently_working")}
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  {t("jobs.application.form.end_year")}
                                 </label>
+                                <div className="space-y-2">
+                                  <Select
+                                    value={work.endYear}
+                                    onChange={(value) =>
+                                      handleWorkExperienceChange(
+                                        index,
+                                        "endYear",
+                                        value
+                                      )
+                                    }
+                                    options={getEndYearOptions(work.startYear)}
+                                    placeholder={t(
+                                      "jobs.application.form.select_year"
+                                    )}
+                                    disabled={work.isCurrent}
+                                    required={!work.isCurrent}
+                                  />
+                                  <div className="flex items-center">
+                                    <Checkbox
+                                      id={`work-current-${index}`}
+                                      checked={work.isCurrent}
+                                      onChange={(checked) =>
+                                        handleWorkExperienceChange(
+                                          index,
+                                          "isCurrent",
+                                          checked
+                                        )
+                                      }
+                                    />
+                                    <label
+                                      htmlFor={`work-current-${index}`}
+                                      className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                                    >
+                                      {t(
+                                        "jobs.application.form.currently_working"
+                                      )}
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  {t("jobs.application.form.company")}
+                                </label>
+                                <Input
+                                  type="text"
+                                  placeholder={t(
+                                    "jobs.application.form.company_placeholder"
+                                  )}
+                                  value={work.company}
+                                  onChange={(e) =>
+                                    handleWorkExperienceChange(
+                                      index,
+                                      "company",
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                />
+                                {fieldErrors[
+                                  `workExperience_${index}_company`
+                                ] && (
+                                  <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                    <Icon name="AlertCircle" size={16} />
+                                    {
+                                      fieldErrors[
+                                        `workExperience_${index}_company`
+                                      ]
+                                    }
+                                  </p>
+                                )}
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  {t("jobs.application.form.position")}
+                                </label>
+                                <Input
+                                  type="text"
+                                  placeholder={t(
+                                    "jobs.application.form.position_placeholder"
+                                  )}
+                                  value={work.position}
+                                  onChange={(e) =>
+                                    handleWorkExperienceChange(
+                                      index,
+                                      "position",
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                />
+                                {fieldErrors[
+                                  `workExperience_${index}_position`
+                                ] && (
+                                  <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                                    <Icon name="AlertCircle" size={16} />
+                                    {
+                                      fieldErrors[
+                                        `workExperience_${index}_position`
+                                      ]
+                                    }
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
+                        ))}
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.company")}
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder={t(
-                                "jobs.application.form.company_placeholder"
-                              )}
-                              value={work.company}
-                              onChange={(e) =>
-                                handleWorkExperienceChange(
-                                  index,
-                                  "company",
-                                  e.target.value
-                                )
-                              }
-                              required
-                            />
-                            {fieldErrors[`workExperience_${index}_company`] && (
-                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
-                                <Icon name="AlertCircle" size={16} />
-                                {fieldErrors[`workExperience_${index}_company`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {t("jobs.application.form.position")}
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder={t(
-                                "jobs.application.form.position_placeholder"
-                              )}
-                              value={work.position}
-                              onChange={(e) =>
-                                handleWorkExperienceChange(
-                                  index,
-                                  "position",
-                                  e.target.value
-                                )
-                              }
-                              required
-                            />
-                            {fieldErrors[
-                              `workExperience_${index}_position`
-                            ] && (
-                              <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
-                                <Icon name="AlertCircle" size={16} />
-                                {
-                                  fieldErrors[
-                                    `workExperience_${index}_position`
-                                  ]
-                                }
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    <button
-                      type="button"
-                      onClick={addWorkExperience}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      <span className="text-xl">+</span>
-                      {t("jobs.application.form.add_work")}
-                    </button>
+                        <button
+                          type="button"
+                          onClick={addWorkExperience}
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          <span className="text-xl">+</span>
+                          {t("jobs.application.form.add_work")}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1504,6 +1560,140 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         <Icon name="AlertCircle" size={16} />
                         {fieldErrors.additionalInfo}
                       </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expected Salary and Business Trip Ready Section (Frontend Only) */}
+                <div className="px-4 sm:px-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Expected Salary */}
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t("jobs.application.form.expected_salary")}
+                      </label>
+                      <Select
+                        value={formData.expectedSalary}
+                        onChange={(value) =>
+                          handleInputChange("expectedSalary", value)
+                        }
+                        options={[
+                          {
+                            value: "10_plus",
+                            label: t("jobs.application.form.salary_10_plus"),
+                          },
+                          {
+                            value: "20_plus",
+                            label: t("jobs.application.form.salary_20_plus"),
+                          },
+                          {
+                            value: "other",
+                            label: t("jobs.application.form.salary_other"),
+                          },
+                        ]}
+                        placeholder={t(
+                          "jobs.application.form.expected_salary_placeholder"
+                        )}
+                      />
+                    </div>
+
+                    {/* Business Trip Ready */}
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t("jobs.application.form.business_trip_ready")}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                        <label className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                          <input
+                            type="radio"
+                            name="businessTripReady"
+                            value="yes"
+                            checked={formData.businessTripReady === "yes"}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "businessTripReady",
+                                e.target.value
+                              )
+                            }
+                            className="text-blue-600"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            {t("jobs.application.form.yes")}
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                          <input
+                            type="radio"
+                            name="businessTripReady"
+                            value="no"
+                            checked={formData.businessTripReady === "no"}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "businessTripReady",
+                                e.target.value
+                              )
+                            }
+                            className="text-blue-600"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            {t("jobs.application.form.no")}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conviction Section (Frontend Only) */}
+                <div className="px-4 sm:px-6">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 sm:p-6 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="convicted"
+                        checked={formData.convicted}
+                        onChange={(checked) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            convicted: checked,
+                            // Clear conviction details when unchecked
+                            convictionDetails: checked
+                              ? prev.convictionDetails
+                              : "",
+                          }));
+                        }}
+                      />
+                      <label
+                        htmlFor="convicted"
+                        className="flex-1 text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
+                      >
+                        {t("jobs.application.form.convicted")}
+                      </label>
+                    </div>
+
+                    {formData.convicted && (
+                      <div className="mt-4 pl-7">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          {t("jobs.application.form.conviction_details")}
+                        </label>
+                        <textarea
+                          className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm transition-all"
+                          rows={5}
+                          placeholder={t(
+                            "jobs.application.form.conviction_details_placeholder"
+                          )}
+                          value={formData.convictionDetails}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "convictionDetails",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={14} />
+                          {t("jobs.application.form.conviction_info_note")}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

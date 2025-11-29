@@ -81,7 +81,11 @@ const Routes = () => {
           />
           <Route path="/profile" element={<Profile />} />
           <Route path="/applications" element={<Applications />} />
-          <Route path="/applications/:id" element={<ApplicationDetail />} />
+          <Route path="/applications/:type" element={<Applications />} />
+          <Route
+            path="/applications/:type/:id"
+            element={<ApplicationDetail />}
+          />
           <Route
             path="/submissions/consumer-rights"
             element={<ConsumerRightsSubmission />}
