@@ -30,9 +30,16 @@ const JobVacanciesBrowser = () => {
       setLoading(true);
       setApiError(null);
       try {
-        const data = await departmentsAPI.getDepartments();
+        const response = await departmentsAPI.getDepartments();
+        // Handle paginated response structure: { count, next, previous, results: [...] }
+        const departmentsData = response.results || response;
+        // Ensure it's an array
+        const departmentsArray = Array.isArray(departmentsData) 
+          ? departmentsData 
+          : [];
+        
         // Transform API data to match component structure
-        const transformedDepartments = data.map((dept) => ({
+        const transformedDepartments = departmentsArray.map((dept) => ({
           id: dept.id.toString(),
           name: dept.name,
           description: dept.description,

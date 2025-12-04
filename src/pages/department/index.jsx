@@ -47,24 +47,31 @@ const DepartmentPage = () => {
         setDepartment(transformedDepartment);
 
         // Fetch vacancies data
-        const vacanciesData = await vacanciesAPI.getVacanciesByDepartment(
+        const vacanciesResponse = await vacanciesAPI.getVacanciesByDepartment(
           departmentId
         );
-        const transformedVacancies = vacanciesData.map((vacancy) => ({
+        // Handle paginated response structure: { count, next, previous, results: [...] }
+        const vacanciesData = vacanciesResponse.results || vacanciesResponse;
+        // Ensure it's an array
+        const vacanciesArray = Array.isArray(vacanciesData) 
+          ? vacanciesData 
+          : [];
+        
+        const transformedVacancies = vacanciesArray.map((vacancy) => ({
           id: vacancy.id, // Keep original numeric ID for encoding
           title: vacancy.title, // Keep original title from backend
           department: departmentData.name,
-          location: vacancy.management?.name || "Markaziy apparat",
+          location: vacancy.branch_type_display || "Markaziy apparat",
           type: "Full-time",
           deadline: vacancy.application_deadline,
-          testDeadline: vacancy.application_deadline, // Using application_deadline until test deadline field is available
+          testDeadline: vacancy.test_scheduled_at || vacancy.application_deadline,
           salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
-          description: vacancy.management?.name
-            ? `${vacancy.management.name} - ${vacancy.title}`
-            : vacancy.title, // Use management.name + title for short description
+          description: vacancy.management_details?.name
+            ? `${vacancy.management_details.name} - ${vacancy.title}`
+            : vacancy.title, // Use management_details.name + title for short description
           fullDescription: vacancy.description,
-          requirements: parseJsonArray(vacancy.requirements),
-          responsibilities: parseJsonArray(vacancy.job_tasks),
+          requirements: parseRequirements(vacancy.requirements),
+          responsibilities: parseJobTasks(vacancy.job_tasks),
         }));
         setVacancies(transformedVacancies);
 
@@ -95,17 +102,54 @@ const DepartmentPage = () => {
     fetchData();
   }, [departmentId, t]);
 
-  // Helper function to parse JSON string arrays
-  const parseJsonArray = (jsonString) => {
-    try {
-      const parsed = JSON.parse(jsonString);
-      return Array.isArray(parsed)
-        ? parsed.map((item) => item.task || item)
-        : [];
-    } catch (error) {
-      console.error("Error parsing JSON array:", error);
-      return [];
+  // Helper function to parse requirements (can be string or JSON)
+  const parseRequirements = (requirements) => {
+    if (!requirements) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(requirements)) {
+      return requirements.map((item) => item.task || item);
     }
+    
+    // If it's a string, try to parse as JSON first
+    if (typeof requirements === 'string') {
+      try {
+        const parsed = JSON.parse(requirements);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => item.task || item);
+        }
+      } catch (error) {
+        // If parsing fails, treat as plain string and split by newlines or return as single item
+        return requirements.split('\n').filter(item => item.trim().length > 0);
+      }
+    }
+    
+    return [];
+  };
+
+  // Helper function to parse job_tasks (can be string or JSON)
+  const parseJobTasks = (jobTasks) => {
+    if (!jobTasks) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(jobTasks)) {
+      return jobTasks.map((item) => item.task || item);
+    }
+    
+    // If it's a string, try to parse as JSON first
+    if (typeof jobTasks === 'string') {
+      try {
+        const parsed = JSON.parse(jobTasks);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => item.task || item);
+        }
+      } catch (error) {
+        // If parsing fails, treat as plain string and split by newlines or return as single item
+        return jobTasks.split('\n').filter(item => item.trim().length > 0);
+      }
+    }
+    
+    return [];
   };
 
   // Vacancies are now fetched from API and stored in state
