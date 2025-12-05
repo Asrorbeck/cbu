@@ -91,15 +91,33 @@ export const departmentsAPI = {
 
 export const vacanciesAPI = {
   // Get vacancies by department ID
-  getVacanciesByDepartment: async (departmentId) => {
+  getVacanciesByDepartment: async (departmentId, branchType = null) => {
     try {
-      const response = await apiClient.get(
-        `/vacancies/?department_id=${departmentId}`
-      );
+      let url = `/vacancies/?department_id=${departmentId}`;
+      if (branchType) {
+        url += `&branch_type=${branchType}`;
+      }
+      const response = await apiClient.get(url);
       return response.data;
     } catch (error) {
       console.error(
         `Error fetching vacancies for department ${departmentId}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  // Get vacancies by region and branch type
+  getVacanciesByRegion: async (region, branchType = "regional") => {
+    try {
+      const response = await apiClient.get(
+        `/vacancies/?region=${region}&branch_type=${branchType}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error fetching vacancies for region ${region}:`,
         error
       );
       throw error;

@@ -7,7 +7,7 @@ import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton
 import { vacanciesAPI } from "../../services/api";
 
 const VacancyDetailPage = () => {
-  const { departmentId, vacancyId } = useParams();
+  const { departmentId, regionName, vacancyId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -33,18 +33,45 @@ const VacancyDetailPage = () => {
 
         const vacancyData = await vacanciesAPI.getVacancyById(decodedVacancyId);
 
+        // Helper function to format region name
+        const formatRegionName = (region) => {
+          if (!region) return "";
+          
+          const regionLower = region.toLowerCase().trim();
+          
+          // Special case for Qoraqalpog'iston
+          if (regionLower === "qoraqalpogiston") {
+            return "Qoraqalpog'iston Respublikasi";
+          }
+          
+          // For other regions: capitalize first letter and add "viloyati"
+          const capitalized = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+          return `${capitalized} viloyati`;
+        };
+
+        // Helper function to format location based on branch_type
+        const formatLocation = (vacancyData) => {
+          if (vacancyData.branch_type === "central") {
+            return vacancyData.branch_type_display || "Markaziy Apparat";
+          } else if (vacancyData.branch_type === "regional") {
+            return formatRegionName(vacancyData.region);
+          }
+          // Fallback
+          return vacancyData.branch_type_display || "Markaziy Apparat";
+        };
+
         // Transform the API response to match our component structure
         const transformedVacancy = {
           id: vacancyData.id.toString(),
           title: vacancyData.title,
-          department: vacancyData.management?.name || "Markaziy apparat",
-          location: vacancyData.management?.name || "Markaziy apparat",
+          department: vacancyData.management_details?.name || vacancyData.management?.name || "Markaziy apparat",
+          location: formatLocation(vacancyData),
           type: "Full-time",
           deadline: vacancyData.application_deadline,
-          testDeadline: vacancyData.application_deadline,
+          testDeadline: vacancyData.test_scheduled_at || vacancyData.application_deadline,
           salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
-          description: vacancyData.management?.name
-            ? `${vacancyData.management.name} - ${vacancyData.title}`
+          description: vacancyData.management_details?.name || vacancyData.management?.name
+            ? `${vacancyData.management_details?.name || vacancyData.management?.name} - ${vacancyData.title}`
             : vacancyData.title,
           fullDescription: vacancyData.description,
           requirements: parseJsonArray(vacancyData.requirements),
@@ -175,17 +202,21 @@ const VacancyDetailPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() =>
-                navigate(
-                  departmentId ? `/departments/${departmentId}` : "/departments"
-                )
-              }
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Icon name="ArrowLeft" size={16} />
-              <span>{t("jobs.back_to_departments")}</span>
-            </button>
+              <button
+                onClick={() => {
+                  if (regionName) {
+                    navigate(`/region/${regionName}`);
+                  } else if (departmentId) {
+                    navigate(`/departments/${departmentId}`);
+                  } else {
+                    navigate("/departments");
+                  }
+                }}
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Icon name="ArrowLeft" size={16} />
+                <span>{regionName ? "Orqaga" : t("jobs.back_to_departments")}</span>
+              </button>
           </div>
 
           {/* Vacancy Details */}
@@ -323,12 +354,14 @@ const VacancyDetailPage = () => {
                 <button
                   onClick={() => {
                     if (!isVacancyClosed) {
-                      navigate(
-                        `/departments/${departmentId}/${vacancyId}/terms-and-conditions`,
-                        {
-                          state: { vacancyInfo: vacancy },
-                        }
-                      );
+                      // Check if it's a region route or department route
+                      const termsPath = regionName
+                        ? `/region/${regionName}/${vacancyId}/terms-and-conditions`
+                        : `/departments/${departmentId}/${vacancyId}/terms-and-conditions`;
+                      
+                      navigate(termsPath, {
+                        state: { vacancyInfo: vacancy },
+                      });
                     }
                   }}
                   disabled={isVacancyClosed}

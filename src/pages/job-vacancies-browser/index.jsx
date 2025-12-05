@@ -15,7 +15,8 @@ import { departmentsAPI } from "../../services/api";
 const JobVacanciesBrowser = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [currentStep, setCurrentStep] = useState(1); // 1: departments, 2: vacancies, 3: details
+  const [currentStep, setCurrentStep] = useState(1); // 1: branch type selection, 2: departments, 3: vacancies, 4: details
+  const [selectedBranchType, setSelectedBranchType] = useState(null); // "central" or "regional"
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
@@ -24,8 +25,30 @@ const JobVacanciesBrowser = () => {
   const [departments, setDepartments] = useState([]);
   const [apiError, setApiError] = useState(null);
 
-  // Fetch departments from API
+  // Branch type cards data
+  const branchTypeCards = [
+    {
+      id: "central",
+      title: "Markaziy apparat",
+      description: "Markaziy apparat bo'limlari va vakansiyalari",
+      icon: "Building2",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+    },
+    {
+      id: "regional",
+      title: "Hududiy bosh boshqarmalar",
+      description: "Hududiy boshqarmalar bo'limlari va vakansiyalari",
+      icon: "MapPin",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+    },
+  ];
+
+  // Fetch departments from API when branch type is selected
   useEffect(() => {
+    if (!selectedBranchType) return;
+
     const fetchDepartments = async () => {
       setLoading(true);
       setApiError(null);
@@ -53,27 +76,14 @@ const JobVacanciesBrowser = () => {
       } catch (error) {
         console.error("Error fetching departments:", error);
         setApiError("Failed to load departments. Please try again later.");
-        // Fallback to mock data in case of API failure
-        setDepartments([
-          {
-            id: "information-technology",
-            name: t("jobs.departments.information_technology.name"),
-            description: t(
-              "jobs.departments.information_technology.description"
-            ),
-            icon: "Monitor",
-            color: "text-warning",
-            bgColor: "bg-warning/10",
-            openings: 1,
-          },
-        ]);
+        setDepartments([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDepartments();
-  }, [t]);
+  }, [selectedBranchType]);
 
   // Filter departments based on search query
   const filteredDepartments = departments.filter((dept) =>
@@ -232,11 +242,22 @@ const JobVacanciesBrowser = () => {
     ],
   };
 
+  const handleBranchTypeSelect = (branchType) => {
+    if (branchType === "central") {
+      // For central, fetch departments and show them
+      setSelectedBranchType(branchType);
+      setCurrentStep(2);
+    } else if (branchType === "regional") {
+      // For regional, navigate to /region page
+      navigate("/region");
+    }
+  };
+
   const handleDepartmentSelect = (department) => {
     setLoading(true);
     setTimeout(() => {
       setSelectedDepartment(department);
-      setCurrentStep(2);
+      setCurrentStep(3);
       setLoading(false);
     }, 800);
   };
@@ -249,10 +270,15 @@ const JobVacanciesBrowser = () => {
   const handleBreadcrumbNavigate = (step) => {
     if (step === 1) {
       setCurrentStep(1);
+      setSelectedBranchType(null);
       setSelectedDepartment(null);
       setSelectedVacancy(null);
-    } else if (step === 2 && selectedDepartment) {
+    } else if (step === 2 && selectedBranchType) {
       setCurrentStep(2);
+      setSelectedDepartment(null);
+      setSelectedVacancy(null);
+    } else if (step === 3 && selectedDepartment) {
+      setCurrentStep(3);
       setSelectedVacancy(null);
     }
   };
@@ -261,6 +287,51 @@ const JobVacanciesBrowser = () => {
     if (!selectedDepartment) return [];
     return vacanciesByDepartment?.[selectedDepartment?.id] || [];
   };
+
+  const renderBranchTypeSelection = () => (
+    <div className="space-y-6">
+      {/* Branch Type Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {branchTypeCards.map((card) => (
+          <div
+            key={card.id}
+            onClick={() => handleBranchTypeSelect(card.id)}
+            className="group relative bg-white dark:bg-slate-800 rounded-xl p-6 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 border border-gray-200 dark:border-slate-700"
+          >
+            {/* Icon in top-right corner */}
+            <div
+              className={`absolute top-4 right-4 w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center group-hover:opacity-80 transition-opacity duration-300`}
+            >
+              <Icon name={card.icon} size={20} className={card.color} />
+            </div>
+
+            {/* Content */}
+            <div className="space-y-3 pr-16">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                {card.title}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                {card.description}
+              </p>
+            </div>
+
+            {/* Action */}
+            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
+              <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
+                <span className="text-sm font-medium">{t("jobs.view_details")}</span>
+                <Icon
+                  name="ArrowRight"
+                  size={16}
+                  className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
 
   const renderDepartments = () => (
     <div className="space-y-6">
@@ -284,6 +355,18 @@ const JobVacanciesBrowser = () => {
           </div>
         </div>
       )}
+
+      {/* Back Button */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => handleBreadcrumbNavigate(1)}
+          iconName="ArrowLeft"
+          iconPosition="left"
+        >
+          Orqaga
+        </Button>
+      </div>
 
       {/* Search Section */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
@@ -419,6 +502,7 @@ const JobVacanciesBrowser = () => {
           {currentStep > 1 && (
             <Breadcrumb
               currentStep={currentStep}
+              selectedBranchType={selectedBranchType}
               selectedDepartment={selectedDepartment}
               selectedVacancy={selectedVacancy}
               onNavigate={handleBreadcrumbNavigate}
@@ -426,8 +510,9 @@ const JobVacanciesBrowser = () => {
           )}
 
           {/* Content */}
-          {currentStep === 1 && renderDepartments()}
-          {currentStep === 2 && renderVacancies()}
+          {currentStep === 1 && renderBranchTypeSelection()}
+          {currentStep === 2 && selectedBranchType === "central" && renderDepartments()}
+          {currentStep === 3 && renderVacancies()}
         </div>
       </main>
       {/* Job Detail Modal */}

@@ -14,7 +14,7 @@ import { vacanciesAPI } from "../../services/api";
 import apiClient from "../../services/api";
 
 const JobApplicationForm = () => {
-  const { departmentId, vacancyId } = useParams();
+  const { departmentId, regionName, vacancyId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -585,9 +585,13 @@ const JobApplicationForm = () => {
       // Clear form
       clearForm();
 
-      // Navigate to departments page after a short delay
+      // Navigate back after a short delay - check if it's a region route or department route
       setTimeout(() => {
-        navigate("/departments");
+        if (regionName) {
+          navigate(`/region/${regionName}`);
+        } else {
+          navigate("/departments");
+        }
       }, 1500);
     } catch (error) {
       console.error("Form submission error:", error);
@@ -873,10 +877,16 @@ ${formData.additionalInfo || "Kiritilmagan"}
                 {error || "Vacancy not found"}
               </p>
               <button
-                onClick={() => navigate("/departments")}
+                onClick={() => {
+                  if (regionName) {
+                    navigate(`/region/${regionName}`);
+                  } else {
+                    navigate("/departments");
+                  }
+                }}
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
               >
-                {t("jobs.back_to_departments")}
+                {regionName ? "Orqaga" : t("jobs.back_to_departments")}
               </button>
             </div>
           </div>

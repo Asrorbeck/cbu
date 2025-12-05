@@ -24,6 +24,8 @@ import NewsArticlesHub from "./pages/news-articles-hub";
 import FeedbackSubmission from "./pages/feedback-submission";
 import JobVacanciesBrowser from "./pages/job-vacancies-browser";
 import DepartmentPage from "./pages/department";
+import RegionsPage from "./pages/regions";
+import RegionPage from "./pages/region";
 import VacancyDetailPage from "./pages/vacancy-detail";
 import JobApplicationForm from "./pages/job-application-form";
 import TermsAndConditionsPage from "./pages/terms-and-conditions";
@@ -64,10 +66,24 @@ const Routes = () => {
             path="/departments/:departmentId/:vacancyId/form"
             element={<JobApplicationForm />}
           />
+          <Route
+            path="/region/:regionName/:vacancyId/form"
+            element={<JobApplicationForm />}
+          />
+          <Route path="/region" element={<RegionsPage />} />
+          <Route path="/region/:regionName" element={<RegionPage />} />
+          <Route
+            path="/region/:regionName/:vacancyId"
+            element={<VacancyDetailPage />}
+          />
           <Route path="/test" element={<VacancyTest />} />
           <Route path="/test/:test_id/:test_token" element={<VacancyTest />} />
           <Route
             path="/departments/:departmentId/:vacancyId/terms-and-conditions"
+            element={<TermsAndConditionsPage />}
+          />
+          <Route
+            path="/region/:regionName/:vacancyId/terms-and-conditions"
             element={<TermsAndConditionsPage />}
           />
           <Route path="/vacancy/:vacancyId" element={<VacancyDetailPage />} />

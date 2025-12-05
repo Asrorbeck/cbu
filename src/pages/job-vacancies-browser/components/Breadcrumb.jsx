@@ -1,11 +1,11 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const Breadcrumb = ({ currentStep, selectedDepartment, selectedVacancy, onNavigate }) => {
+const Breadcrumb = ({ currentStep, selectedBranchType, selectedDepartment, selectedVacancy, onNavigate }) => {
   const steps = [
-    { id: 'departments', label: 'Departments', step: 1 },
-    { id: 'vacancies', label: selectedDepartment?.name || 'Vacancies', step: 2 },
-    { id: 'details', label: selectedVacancy?.title || 'Job Details', step: 3 }
+    { id: 'departments', label: selectedDepartment?.name || 'Departments', step: 2 },
+    { id: 'vacancies', label: selectedVacancy?.title || 'Vacancies', step: 3 },
+    { id: 'details', label: selectedVacancy?.title || 'Job Details', step: 4 }
   ];
 
   const handleStepClick = (step) => {

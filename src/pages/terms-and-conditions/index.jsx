@@ -7,7 +7,7 @@ import Icon from "../../components/AppIcon";
 const TermsAndConditionsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { departmentId, vacancyId } = useParams();
+  const { departmentId, regionName, vacancyId } = useParams();
   const { t } = useTranslation();
   const [isAgreed, setIsAgreed] = useState(false);
 
@@ -17,6 +17,7 @@ const TermsAndConditionsPage = () => {
   // Get vacancy info from location state or URL params
   const vacancyInfo = location.state?.vacancyInfo || {
     departmentId,
+    regionName,
     vacancyId: decodedVacancyId,
   };
 
@@ -30,8 +31,14 @@ const TermsAndConditionsPage = () => {
 
   const handleContinue = () => {
     if (isAgreed) {
-      // Navigate to job application form
-      if (departmentId && vacancyId) {
+      // Navigate to job application form - check if it's a region route or department route
+      if (regionName && vacancyId) {
+        // Region route
+        navigate(`/region/${regionName}/${vacancyId}/form`, {
+          state: { vacancyInfo },
+        });
+      } else if (departmentId && vacancyId) {
+        // Department route
         navigate(`/departments/${departmentId}/${vacancyId}/form`, {
           state: { vacancyInfo },
         });
