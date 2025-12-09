@@ -107,7 +107,6 @@ const JobApplicationForm = () => {
     birthDate: "",
     phone: "",
     jshshir: "",
-    resume: null,
     education: [
       {
         startYear: "",
@@ -744,6 +743,65 @@ const JobApplicationForm = () => {
     // Clean phone number (remove spaces)
     const cleanPhone = formData.phone ? formData.phone.replace(/\s/g, "") : "";
     
+    // Filter and map graduations - only include entries with required fields
+    const graduations = formData.education
+      .filter((edu) => {
+        // Check if entry has minimum required data
+        return (
+          edu.startYear &&
+          edu.startMonth &&
+          (edu.isCurrent || (edu.endYear && edu.endMonth)) &&
+          edu.institution &&
+          edu.institution.trim() !== "" &&
+          edu.degree &&
+          edu.degree.trim() !== "" &&
+          edu.specialty &&
+          edu.specialty.trim() !== ""
+        );
+      })
+      .map((edu) => ({
+        date_from: yearMonthToDate(edu.startYear, edu.startMonth, false),
+        date_to: edu.isCurrent
+          ? getCurrentDate()
+          : yearMonthToDate(edu.endYear, edu.endMonth, true),
+        university: edu.institution,
+        degree: edu.degree,
+        specialization: edu.specialty,
+      }));
+
+    // Filter and map employments - only include entries with required fields
+    const employments = formData.neverWorked
+      ? null
+      : formData.workExperience
+          .filter((work) => {
+            // Check if entry has minimum required data
+            return (
+              work.startYear &&
+              work.startMonth &&
+              (work.isCurrent || (work.endYear && work.endMonth)) &&
+              work.company &&
+              work.company.trim() !== "" &&
+              work.position &&
+              work.position.trim() !== ""
+            );
+          })
+          .map((work) => ({
+            date_from: yearMonthToDate(work.startYear, work.startMonth, false),
+            date_to: work.isCurrent
+              ? getCurrentDate()
+              : yearMonthToDate(work.endYear, work.endMonth, true),
+            organization_name: work.company,
+            position: work.position,
+          }));
+    
+    // Prepare languages array - filter out empty languages and map to correct format
+    const languagesArray = Object.entries(formData.languages)
+      .filter(([_, level]) => level && level.trim() !== "") // Filter out empty languages
+      .map(([language, level]) => ({
+        language_name: language,
+        degree: level,
+      }));
+
     // Prepare data in JSON format (as backend expects)
     const formDataToSend = {
       job: parseInt(decodedVacancyId),
@@ -753,69 +811,26 @@ const JobApplicationForm = () => {
       phone: cleanPhone,
       jshshir: formData.jshshir,
       additional_information: formData.additionalInfo || "",
-      monthly_salary: formData.expectedSalary ? parseInt(formData.expectedSalary) || null : null,
-      graduations: formData.education.map((edu) => ({
-        date_from: yearMonthToDate(edu.startYear, edu.startMonth, false),
-        date_to: edu.isCurrent
-          ? getCurrentDate()
-          : yearMonthToDate(edu.endYear, edu.endMonth, true),
-        university: edu.institution,
-        degree: edu.degree,
-        specialization: edu.specialty,
-      })),
-      employments: formData.neverWorked
-        ? null
-        : formData.workExperience.map((work) => ({
-            date_from: yearMonthToDate(work.startYear, work.startMonth, false),
-            date_to: work.isCurrent
-              ? getCurrentDate()
-              : yearMonthToDate(work.endYear, work.endMonth, true),
-            organization_name: work.company,
-            position: work.position,
-          })),
-      languages: Object.entries(formData.languages)
-        .filter(([_, level]) => level && level.trim() !== "") // Filter out empty languages
-        .map(([language, level]) => ({
-          language_name: language,
-          degree: level,
-        })),
+      graduations: graduations,
+      employments: employments,
+      languages: languagesArray,
     };
+
+    // Add monthly_salary only if it exists
+    if (formData.expectedSalary && formData.expectedSalary.trim() !== "") {
+      const salaryValue = parseInt(formData.expectedSalary.replace(/\s/g, ""));
+      if (!isNaN(salaryValue) && salaryValue > 0) {
+        formDataToSend.monthly_salary = salaryValue;
+      }
+    }
 
     try {
       // Send to API using apiClient with JSON format
-      let response;
-      
-      // If resume exists, send as FormData with JSON data
-      if (formData.resume) {
-        const formDataWithFile = new FormData();
-        
-        // Add all JSON fields as strings
-        formDataWithFile.append("job", formDataToSend.job.toString());
-        formDataWithFile.append("user_id", formDataToSend.user_id.toString());
-        formDataWithFile.append("full_name", formDataToSend.full_name);
-        formDataWithFile.append("data_of_birth", formDataToSend.data_of_birth);
-        formDataWithFile.append("phone", formDataToSend.phone);
-        formDataWithFile.append("jshshir", formDataToSend.jshshir);
-        formDataWithFile.append("additional_information", formDataToSend.additional_information);
-        formDataWithFile.append("monthly_salary", formDataToSend.monthly_salary ? formDataToSend.monthly_salary.toString() : "");
-        formDataWithFile.append("graduations", JSON.stringify(formDataToSend.graduations));
-        formDataWithFile.append("employments", formDataToSend.employments ? JSON.stringify(formDataToSend.employments) : "null");
-        formDataWithFile.append("languages", JSON.stringify(formDataToSend.languages));
-        formDataWithFile.append("resume", formData.resume);
-        
-        response = await apiClient.post("/apply-jobs/", formDataWithFile, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-      } else {
-        // Send as pure JSON if no resume
-        response = await apiClient.post("/apply-jobs/", formDataToSend, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      }
+      const response = await apiClient.post("/apply-jobs/", formDataToSend, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       // Show success toast
       toast.success(t("jobs.application.form.success_message"), {
@@ -827,7 +842,6 @@ const JobApplicationForm = () => {
       const applicationData = {
         id: Date.now().toString(),
         ...formDataToSend,
-        resume: formData.resume ? formData.resume.name : null,
         status: "pending",
         submittedAt: new Date().toISOString(),
         vacancyTitle: currentVacancy?.title,
@@ -1104,7 +1118,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
       expectedSalary: "",
       businessTripReady: "",
       jshshir: "",
-      resume: null,
     });
     setFieldErrors({});
   };
@@ -1339,103 +1352,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       )}
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Resume (Rezyume)
-                      </label>
-                      
-                      {!formData.resume ? (
-                        <div className="relative">
-                          <input
-                            type="file"
-                            accept=".docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                // Check if file is .docx
-                                if (!file.name.toLowerCase().endsWith('.docx')) {
-                                  setFieldErrors((prev) => ({
-                                    ...prev,
-                                    resume: "Faqat .docx formatidagi fayllar qabul qilinadi",
-                                  }));
-                                  e.target.value = ""; // Clear input
-                                  return;
-                                }
-                                
-                                // Clear error if file is valid
-                                setFieldErrors((prev) => {
-                                  const newErrors = { ...prev };
-                                  delete newErrors.resume;
-                                  return newErrors;
-                                });
-                                
-                                handleInputChange("resume", file);
-                              }
-                            }}
-                            className="hidden"
-                            id="resume-upload"
-                          />
-                          <label
-                            htmlFor="resume-upload"
-                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                              <Icon
-                                name="UploadCloud"
-                                size={32}
-                                className="text-gray-400 dark:text-gray-500 mb-2"
-                              />
-                              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                <span className="font-semibold">Fayl yuklash</span> yoki bu yerga bosing
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Faqat .docx formatidagi fayllar qabul qilinadi
-                              </p>
-                            </div>
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="flex-shrink-0">
-                              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                                <Icon name="File" size={20} className="text-blue-600 dark:text-blue-400" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {formData.resume.name}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {(formData.resume.size / 1024).toFixed(2)} KB
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleInputChange("resume", null);
-                              // Clear file input
-                              const fileInput = document.getElementById("resume-upload");
-                              if (fileInput) {
-                                fileInput.value = "";
-                              }
-                            }}
-                            className="ml-3 flex-shrink-0 p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                            title="Faylni o'chirish"
-                          >
-                            <Icon name="X" size={20} />
-                          </button>
-                        </div>
-                      )}
-                      
-                      {fieldErrors.resume && (
-                        <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center gap-1">
-                          <Icon name="AlertCircle" size={16} />
-                          {fieldErrors.resume}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 </div>
 
