@@ -61,7 +61,6 @@ const JobApplicationForm = () => {
 
         setVacancy(transformedVacancy);
       } catch (error) {
-        console.error("Error fetching vacancy:", error);
         setError("Failed to load vacancy details. Please try again later.");
       } finally {
         setLoading(false);
@@ -89,7 +88,6 @@ const JobApplicationForm = () => {
           : [];
       } catch (error) {
         // If JSON parsing fails, treat as plain text and split by newlines
-        console.log("Treating as plain text:", data);
         return data.split("\n").filter((line) => line.trim().length > 0);
       }
     }
@@ -108,10 +106,14 @@ const JobApplicationForm = () => {
     fullName: "",
     birthDate: "",
     phone: "",
+    jshshir: "",
+    resume: null,
     education: [
       {
         startYear: "",
+        startMonth: "",
         endYear: "",
+        endMonth: "",
         isCurrent: false,
         institution: "",
         degree: "",
@@ -121,7 +123,9 @@ const JobApplicationForm = () => {
     workExperience: [
       {
         startYear: "",
+        startMonth: "",
         endYear: "",
+        endMonth: "",
         isCurrent: false,
         company: "",
         position: "",
@@ -154,17 +158,13 @@ const JobApplicationForm = () => {
           window.Telegram.WebApp.initDataUnsafe.user
         ) {
           const user = window.Telegram.WebApp.initDataUnsafe.user;
-          console.log("Telegram user ID found:", user.id);
           return user.id;
         }
       }
 
       // If Telegram Web App is not available or user data not found, use default ID
-      console.log("Using default user ID: 905770018");
       return 905770018;
     } catch (error) {
-      console.error("Error getting user ID:", error);
-      console.log("Using default user ID due to error: 905770018");
       return 905770018;
     }
   };
@@ -188,6 +188,22 @@ const JobApplicationForm = () => {
     return generateYearOptions(start);
   };
 
+  // Month options in Uzbek
+  const monthOptions = [
+    { value: "1", label: "Yanvar" },
+    { value: "2", label: "Fevral" },
+    { value: "3", label: "Mart" },
+    { value: "4", label: "Aprel" },
+    { value: "5", label: "May" },
+    { value: "6", label: "Iyun" },
+    { value: "7", label: "Iyul" },
+    { value: "8", label: "Avgust" },
+    { value: "9", label: "Sentabr" },
+    { value: "10", label: "Oktyabr" },
+    { value: "11", label: "Noyabr" },
+    { value: "12", label: "Dekabr" },
+  ];
+
   // Degree options
   const degreeOptions = [
     { value: "Bachelor", label: "Bakalavr" },
@@ -202,6 +218,142 @@ const JobApplicationForm = () => {
     { value: "intermediate", label: t("jobs.application.form.intermediate") },
     { value: "excellent", label: t("jobs.application.form.excellent") },
   ];
+
+  // Format JShShIR (14 digits without spaces: 12345678901234)
+  const formatJShShIR = (value) => {
+    if (!value) return "";
+    
+    // Remove all non-digit characters
+    let cleaned = value.replace(/\D/g, "");
+    
+    // Limit to 14 digits
+    if (cleaned.length > 14) {
+      cleaned = cleaned.substring(0, 14);
+    }
+    
+    // Return without formatting (just digits)
+    return cleaned;
+  };
+
+  // Validate JShShIR (must be exactly 14 digits)
+  const validateJShShIR = (value) => {
+    if (!value || value.trim().length === 0) {
+      return "JShShIR kiritilishi shart";
+    }
+    
+    // Remove spaces and check if it's exactly 14 digits
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length !== 14) {
+      return "JShShIR 14 ta raqamdan iborat bo'lishi kerak";
+    }
+    
+    return null; // Validation passed
+  };
+
+  // Format salary number with spaces (1 000 000)
+  const formatSalary = (value) => {
+    if (!value) return "";
+    
+    // Remove all non-digit characters
+    let cleaned = value.replace(/\D/g, "");
+    
+    // If empty, return empty
+    if (!cleaned) return "";
+    
+    // Format with spaces: 1 000 000
+    return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  };
+
+  // Format phone number with mask
+  const formatPhoneNumber = (value, previousValue = "") => {
+    // If empty, return empty
+    if (!value) return "";
+    
+    // Remove all non-digit characters except +
+    let cleaned = value.replace(/[^\d+]/g, "");
+    
+    // If user is deleting, allow it
+    if (value.length < previousValue.length) {
+      return value;
+    }
+    
+    // If starts with +998
+    if (cleaned.startsWith("+998")) {
+      // Remove +998 prefix to get only digits
+      let digits = cleaned.replace("+998", "");
+      
+      // Limit to 9 digits (Uzbekistan format: +998 XX XXX XX XX)
+      if (digits.length > 9) {
+        digits = digits.substring(0, 9);
+      }
+      
+      // Format: +998 XX XXX XX XX
+      if (digits.length === 0) {
+        return "+998";
+      } else if (digits.length <= 2) {
+        return `+998 ${digits}`;
+      } else if (digits.length <= 5) {
+        return `+998 ${digits.substring(0, 2)} ${digits.substring(2)}`;
+      } else if (digits.length <= 7) {
+        return `+998 ${digits.substring(0, 2)} ${digits.substring(2, 5)} ${digits.substring(5)}`;
+      } else {
+        return `+998 ${digits.substring(0, 2)} ${digits.substring(2, 5)} ${digits.substring(5, 7)} ${digits.substring(7)}`;
+      }
+    }
+    // If starts with +7
+    else if (cleaned.startsWith("+7")) {
+      // Remove +7 prefix to get only digits
+      let digits = cleaned.replace("+7", "");
+      
+      // Limit to 10 digits (Russia format: +7 XXX XXX XX XX)
+      if (digits.length > 10) {
+        digits = digits.substring(0, 10);
+      }
+      
+      // Format: +7 XXX XXX XX XX
+      if (digits.length === 0) {
+        return "+7";
+      } else if (digits.length <= 3) {
+        return `+7 ${digits}`;
+      } else if (digits.length <= 6) {
+        return `+7 ${digits.substring(0, 3)} ${digits.substring(3)}`;
+      } else if (digits.length <= 8) {
+        return `+7 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`;
+      } else {
+        return `+7 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6, 8)} ${digits.substring(8)}`;
+      }
+    }
+    // If starts with + but not +998 or +7, allow typing
+    else if (cleaned.startsWith("+")) {
+      // Allow user to continue typing country code
+      return cleaned;
+    }
+    // If doesn't start with +, check if it's all digits and auto-add +998
+    else if (/^\d+$/.test(cleaned)) {
+      // If user types digits without +, auto-add +998 prefix
+      // Limit to 9 digits for Uzbekistan format
+      if (cleaned.length > 9) {
+        cleaned = cleaned.substring(0, 9);
+      }
+      
+      // Format: +998 XX XXX XX XX
+      if (cleaned.length === 0) {
+        return "";
+      } else if (cleaned.length <= 2) {
+        return `+998 ${cleaned}`;
+      } else if (cleaned.length <= 5) {
+        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2)}`;
+      } else if (cleaned.length <= 7) {
+        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2, 5)} ${cleaned.substring(5)}`;
+      } else {
+        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2, 5)} ${cleaned.substring(5, 7)} ${cleaned.substring(7)}`;
+      }
+    }
+    // Otherwise, return as is
+    else {
+      return cleaned;
+    }
+  };
 
   // Validate full name format: Familya Ism Otchestvo
   const validateFullName = (name) => {
@@ -333,18 +485,40 @@ const JobApplicationForm = () => {
     const updatedEducation = [...formData.education];
     updatedEducation[index][field] = value;
 
-    // If start year changes and end year is before start year, clear end year
+    // If start year changes and end year is before start year, clear end year and month
     if (field === "startYear" && updatedEducation[index].endYear) {
       const startYear = parseInt(value);
       const endYear = parseInt(updatedEducation[index].endYear);
       if (endYear < startYear) {
         updatedEducation[index].endYear = "";
+        updatedEducation[index].endMonth = "";
+      } else if (endYear === startYear && updatedEducation[index].endMonth) {
+        // If same year, check if end month is before start month
+        const startMonth = parseInt(updatedEducation[index].startMonth || "1");
+        const endMonth = parseInt(updatedEducation[index].endMonth);
+        if (endMonth < startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
       }
     }
 
-    // If isCurrent is checked, clear end year
+    // If start month changes and same year, check end month
+    if (field === "startMonth" && updatedEducation[index].startYear && updatedEducation[index].endYear) {
+      const startYear = parseInt(updatedEducation[index].startYear);
+      const endYear = parseInt(updatedEducation[index].endYear);
+      if (startYear === endYear && updatedEducation[index].endMonth) {
+        const startMonth = parseInt(value || "1");
+        const endMonth = parseInt(updatedEducation[index].endMonth);
+        if (endMonth < startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
+      }
+    }
+
+    // If isCurrent is checked, clear end year and month
     if (field === "isCurrent" && value === true) {
       updatedEducation[index].endYear = "";
+      updatedEducation[index].endMonth = "";
     }
 
     setFormData((prev) => ({
@@ -371,7 +545,9 @@ const JobApplicationForm = () => {
         ...prev.education,
         {
           startYear: "",
+          startMonth: "",
           endYear: "",
+          endMonth: "",
           isCurrent: false,
           institution: "",
           degree: "",
@@ -397,18 +573,40 @@ const JobApplicationForm = () => {
     const updatedWorkExperience = [...formData.workExperience];
     updatedWorkExperience[index][field] = value;
 
-    // If start year changes and end year is before start year, clear end year
+    // If start year changes and end year is before start year, clear end year and month
     if (field === "startYear" && updatedWorkExperience[index].endYear) {
       const startYear = parseInt(value);
       const endYear = parseInt(updatedWorkExperience[index].endYear);
       if (endYear < startYear) {
         updatedWorkExperience[index].endYear = "";
+        updatedWorkExperience[index].endMonth = "";
+      } else if (endYear === startYear && updatedWorkExperience[index].endMonth) {
+        // If same year, check if end month is before start month
+        const startMonth = parseInt(updatedWorkExperience[index].startMonth || "1");
+        const endMonth = parseInt(updatedWorkExperience[index].endMonth);
+        if (endMonth < startMonth) {
+          updatedWorkExperience[index].endMonth = "";
+        }
       }
     }
 
-    // If isCurrent is checked, clear end year
+    // If start month changes and same year, check end month
+    if (field === "startMonth" && updatedWorkExperience[index].startYear && updatedWorkExperience[index].endYear) {
+      const startYear = parseInt(updatedWorkExperience[index].startYear);
+      const endYear = parseInt(updatedWorkExperience[index].endYear);
+      if (startYear === endYear && updatedWorkExperience[index].endMonth) {
+        const startMonth = parseInt(value || "1");
+        const endMonth = parseInt(updatedWorkExperience[index].endMonth);
+        if (endMonth < startMonth) {
+          updatedWorkExperience[index].endMonth = "";
+        }
+      }
+    }
+
+    // If isCurrent is checked, clear end year and month
     if (field === "isCurrent" && value === true) {
       updatedWorkExperience[index].endYear = "";
+      updatedWorkExperience[index].endMonth = "";
     }
 
     setFormData((prev) => ({
@@ -435,7 +633,9 @@ const JobApplicationForm = () => {
         ...prev.workExperience,
         {
           startYear: "",
+          startMonth: "",
           endYear: "",
+          endMonth: "",
           isCurrent: false,
           company: "",
           position: "",
@@ -496,15 +696,43 @@ const JobApplicationForm = () => {
       return;
     }
 
+    // Validate JShShIR before submission
+    const jshshirError = validateJShShIR(formData.jshshir);
+    if (jshshirError) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        jshshir: jshshirError,
+      }));
+      toast.error("Iltimos, JShShIR ni to'g'ri kiriting (14 ta raqam)", {
+        duration: 4000,
+        position: "top-center",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Helper function to convert year to full date
-    const yearToDate = (year, isEndDate = false) => {
+    // Helper function to get last day of month
+    const getLastDayOfMonth = (year, month) => {
+      // month is 1-12, but Date uses 0-11, so we use month directly for next month
+      const date = new Date(year, month, 0); // Day 0 gives last day of previous month
+      return date.getDate();
+    };
+
+    // Helper function to convert year and month to full date
+    const yearMonthToDate = (year, month, isEndDate = false) => {
       if (!year) return "";
+      const yearNum = parseInt(year);
+      const monthNum = month ? parseInt(month) : (isEndDate ? 12 : 1);
+      
       if (isEndDate) {
-        return `${year}-12-31`;
+        const lastDay = getLastDayOfMonth(yearNum, monthNum);
+        return `${yearNum}-${String(monthNum).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      } else {
+        // Start date: first day of month
+        return `${yearNum}-${String(monthNum).padStart(2, "0")}-01`;
       }
-      return `${year}-01-01`;
     };
 
     // Helper function to get current date
@@ -513,19 +741,24 @@ const JobApplicationForm = () => {
       return today.toISOString().split("T")[0];
     };
 
-    // Transform form data to match API format
+    // Clean phone number (remove spaces)
+    const cleanPhone = formData.phone ? formData.phone.replace(/\s/g, "") : "";
+    
+    // Prepare data in JSON format (as backend expects)
     const formDataToSend = {
-      job: parseInt(decodedVacancyId), // Convert to integer
-      user_id: getUserId(), // Add user ID from Telegram Web App or default
+      job: parseInt(decodedVacancyId),
+      user_id: getUserId(),
       full_name: formData.fullName,
       data_of_birth: formData.birthDate,
-      phone: formData.phone,
+      phone: cleanPhone,
+      jshshir: formData.jshshir,
       additional_information: formData.additionalInfo || "",
+      monthly_salary: formData.expectedSalary ? parseInt(formData.expectedSalary) || null : null,
       graduations: formData.education.map((edu) => ({
-        date_from: yearToDate(edu.startYear),
+        date_from: yearMonthToDate(edu.startYear, edu.startMonth, false),
         date_to: edu.isCurrent
           ? getCurrentDate()
-          : yearToDate(edu.endYear, true),
+          : yearMonthToDate(edu.endYear, edu.endMonth, true),
         university: edu.institution,
         degree: edu.degree,
         specialization: edu.specialty,
@@ -533,28 +766,56 @@ const JobApplicationForm = () => {
       employments: formData.neverWorked
         ? null
         : formData.workExperience.map((work) => ({
-            date_from: yearToDate(work.startYear),
+            date_from: yearMonthToDate(work.startYear, work.startMonth, false),
             date_to: work.isCurrent
               ? getCurrentDate()
-              : yearToDate(work.endYear, true),
+              : yearMonthToDate(work.endYear, work.endMonth, true),
             organization_name: work.company,
             position: work.position,
           })),
-      languages: Object.entries(formData.languages).map(
-        ([language, level]) => ({
+      languages: Object.entries(formData.languages)
+        .filter(([_, level]) => level && level.trim() !== "") // Filter out empty languages
+        .map(([language, level]) => ({
           language_name: language,
           degree: level,
-        })
-      ),
+        })),
     };
 
-    console.log("Job Application Form Data:", formDataToSend);
-
     try {
-      // Send to API using apiClient
-      const response = await apiClient.post("/apply-jobs/", formDataToSend);
-
-      console.log("Application submitted successfully:", response.data);
+      // Send to API using apiClient with JSON format
+      let response;
+      
+      // If resume exists, send as FormData with JSON data
+      if (formData.resume) {
+        const formDataWithFile = new FormData();
+        
+        // Add all JSON fields as strings
+        formDataWithFile.append("job", formDataToSend.job.toString());
+        formDataWithFile.append("user_id", formDataToSend.user_id.toString());
+        formDataWithFile.append("full_name", formDataToSend.full_name);
+        formDataWithFile.append("data_of_birth", formDataToSend.data_of_birth);
+        formDataWithFile.append("phone", formDataToSend.phone);
+        formDataWithFile.append("jshshir", formDataToSend.jshshir);
+        formDataWithFile.append("additional_information", formDataToSend.additional_information);
+        formDataWithFile.append("monthly_salary", formDataToSend.monthly_salary ? formDataToSend.monthly_salary.toString() : "");
+        formDataWithFile.append("graduations", JSON.stringify(formDataToSend.graduations));
+        formDataWithFile.append("employments", formDataToSend.employments ? JSON.stringify(formDataToSend.employments) : "null");
+        formDataWithFile.append("languages", JSON.stringify(formDataToSend.languages));
+        formDataWithFile.append("resume", formData.resume);
+        
+        response = await apiClient.post("/apply-jobs/", formDataWithFile, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        // Send as pure JSON if no resume
+        response = await apiClient.post("/apply-jobs/", formDataToSend, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
 
       // Show success toast
       toast.success(t("jobs.application.form.success_message"), {
@@ -566,6 +827,7 @@ const JobApplicationForm = () => {
       const applicationData = {
         id: Date.now().toString(),
         ...formDataToSend,
+        resume: formData.resume ? formData.resume.name : null,
         status: "pending",
         submittedAt: new Date().toISOString(),
         vacancyTitle: currentVacancy?.title,
@@ -594,8 +856,6 @@ const JobApplicationForm = () => {
         }
       }, 1500);
     } catch (error) {
-      console.error("Form submission error:", error);
-
       // Parse backend errors
       const errors = {};
 
@@ -812,7 +1072,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
       education: [
         {
           startYear: "",
+          startMonth: "",
           endYear: "",
+          endMonth: "",
           isCurrent: false,
           institution: "",
           degree: "",
@@ -822,7 +1084,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
       workExperience: [
         {
           startYear: "",
+          startMonth: "",
           endYear: "",
+          endMonth: "",
           isCurrent: false,
           company: "",
           position: "",
@@ -839,6 +1103,8 @@ ${formData.additionalInfo || "Kiritilmagan"}
       convictionDetails: "",
       expectedSalary: "",
       businessTripReady: "",
+      jshshir: "",
+      resume: null,
     });
     setFieldErrors({});
   };
@@ -1004,24 +1270,16 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       </label>
                       <Input
                         type="tel"
-                        placeholder={t(
-                          "jobs.application.form.phone_placeholder"
-                        )}
+                        placeholder="+998 XX XXX XX XX yoki +7 XXX XXX XX XX"
                         value={formData.phone}
                         onChange={(e) => {
                           let value = e.target.value;
-                          // Allow digits, spaces, hyphens, parentheses, and +
-                          // This allows international phone number formats
-                          value = value.replace(/[^\d+\s\-()]/g, "");
-
-                          // Limit total length to reasonable phone number length
-                          // International phone numbers can be up to 15 digits after country code
-                          // Allowing up to 20 characters total for formatting
-                          if (value.length > 20) {
-                            value = value.substring(0, 20);
-                          }
-
-                          handleInputChange("phone", value);
+                          const previousValue = formData.phone;
+                          
+                          // Format phone number with mask
+                          const formatted = formatPhoneNumber(value, previousValue);
+                          
+                          handleInputChange("phone", formatted);
                         }}
                         required
                       />
@@ -1029,6 +1287,152 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
                           <Icon name="AlertCircle" size={16} />
                           {fieldErrors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        JShShIR
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="12345678901234"
+                        value={formData.jshshir ? formatJShShIR(formData.jshshir) : ""}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          
+                          // Remove all non-digit characters
+                          value = value.replace(/\D/g, "");
+                          
+                          // Limit to 14 digits
+                          if (value.length > 14) {
+                            value = value.substring(0, 14);
+                          }
+                          
+                          handleInputChange("jshshir", value);
+                        }}
+                        onBlur={(e) => {
+                          const error = validateJShShIR(e.target.value);
+                          if (error) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              jshshir: error,
+                            }));
+                          } else {
+                            setFieldErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.jshshir;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        required
+                      />
+                      {fieldErrors.jshshir && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.jshshir}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Resume (Rezyume)
+                      </label>
+                      
+                      {!formData.resume ? (
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".docx"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                // Check if file is .docx
+                                if (!file.name.toLowerCase().endsWith('.docx')) {
+                                  setFieldErrors((prev) => ({
+                                    ...prev,
+                                    resume: "Faqat .docx formatidagi fayllar qabul qilinadi",
+                                  }));
+                                  e.target.value = ""; // Clear input
+                                  return;
+                                }
+                                
+                                // Clear error if file is valid
+                                setFieldErrors((prev) => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors.resume;
+                                  return newErrors;
+                                });
+                                
+                                handleInputChange("resume", file);
+                              }
+                            }}
+                            className="hidden"
+                            id="resume-upload"
+                          />
+                          <label
+                            htmlFor="resume-upload"
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Icon
+                                name="UploadCloud"
+                                size={32}
+                                className="text-gray-400 dark:text-gray-500 mb-2"
+                              />
+                              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="font-semibold">Fayl yuklash</span> yoki bu yerga bosing
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Faqat .docx formatidagi fayllar qabul qilinadi
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                                <Icon name="File" size={20} className="text-blue-600 dark:text-blue-400" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {formData.resume.name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {(formData.resume.size / 1024).toFixed(2)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleInputChange("resume", null);
+                              // Clear file input
+                              const fileInput = document.getElementById("resume-upload");
+                              if (fileInput) {
+                                fileInput.value = "";
+                              }
+                            }}
+                            className="ml-3 flex-shrink-0 p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Faylni o'chirish"
+                          >
+                            <Icon name="X" size={20} />
+                          </button>
+                        </div>
+                      )}
+                      
+                      {fieldErrors.resume && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.resume}
                         </p>
                       )}
                     </div>
@@ -1072,17 +1476,28 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               {t("jobs.application.form.start_year")}
                             </label>
-                            <Select
-                              value={edu.startYear}
-                              onChange={(value) =>
-                                handleEducationChange(index, "startYear", value)
-                              }
-                              options={yearOptions}
-                              placeholder={t(
-                                "jobs.application.form.select_year"
-                              )}
-                              required
-                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <Select
+                                value={edu.startYear}
+                                onChange={(value) =>
+                                  handleEducationChange(index, "startYear", value)
+                                }
+                                options={yearOptions}
+                                placeholder={t(
+                                  "jobs.application.form.select_year"
+                                )}
+                                required
+                              />
+                              <Select
+                                value={edu.startMonth}
+                                onChange={(value) =>
+                                  handleEducationChange(index, "startMonth", value)
+                                }
+                                options={monthOptions}
+                                placeholder="Oy"
+                                required
+                              />
+                            </div>
                           </div>
 
                           <div>
@@ -1090,18 +1505,30 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               {t("jobs.application.form.end_year")}
                             </label>
                             <div className="space-y-2">
-                              <Select
-                                value={edu.endYear}
-                                onChange={(value) =>
-                                  handleEducationChange(index, "endYear", value)
-                                }
-                                options={getEndYearOptions(edu.startYear)}
-                                placeholder={t(
-                                  "jobs.application.form.select_year"
-                                )}
-                                disabled={edu.isCurrent}
-                                required={!edu.isCurrent}
-                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                <Select
+                                  value={edu.endYear}
+                                  onChange={(value) =>
+                                    handleEducationChange(index, "endYear", value)
+                                  }
+                                  options={getEndYearOptions(edu.startYear)}
+                                  placeholder={t(
+                                    "jobs.application.form.select_year"
+                                  )}
+                                  disabled={edu.isCurrent}
+                                  required={!edu.isCurrent}
+                                />
+                                <Select
+                                  value={edu.endMonth}
+                                  onChange={(value) =>
+                                    handleEducationChange(index, "endMonth", value)
+                                  }
+                                  options={monthOptions}
+                                  placeholder="Oy"
+                                  disabled={edu.isCurrent}
+                                  required={!edu.isCurrent}
+                                />
+                              </div>
                               {index > 0 && (
                                 <div className="flex items-center">
                                   <Checkbox
@@ -1239,7 +1666,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               ? [
                                   {
                                     startYear: "",
+                                    startMonth: "",
                                     endYear: "",
+                                    endMonth: "",
                                     isCurrent: false,
                                     company: "",
                                     position: "",
@@ -1285,21 +1714,36 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   {t("jobs.application.form.start_year")}
                                 </label>
-                                <Select
-                                  value={work.startYear}
-                                  onChange={(value) =>
-                                    handleWorkExperienceChange(
-                                      index,
-                                      "startYear",
-                                      value
-                                    )
-                                  }
-                                  options={yearOptions}
-                                  placeholder={t(
-                                    "jobs.application.form.select_year"
-                                  )}
-                                  required
-                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Select
+                                    value={work.startYear}
+                                    onChange={(value) =>
+                                      handleWorkExperienceChange(
+                                        index,
+                                        "startYear",
+                                        value
+                                      )
+                                    }
+                                    options={yearOptions}
+                                    placeholder={t(
+                                      "jobs.application.form.select_year"
+                                    )}
+                                    required
+                                  />
+                                  <Select
+                                    value={work.startMonth}
+                                    onChange={(value) =>
+                                      handleWorkExperienceChange(
+                                        index,
+                                        "startMonth",
+                                        value
+                                      )
+                                    }
+                                    options={monthOptions}
+                                    placeholder="Oy"
+                                    required
+                                  />
+                                </div>
                               </div>
 
                               <div>
@@ -1307,22 +1751,38 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                   {t("jobs.application.form.end_year")}
                                 </label>
                                 <div className="space-y-2">
-                                  <Select
-                                    value={work.endYear}
-                                    onChange={(value) =>
-                                      handleWorkExperienceChange(
-                                        index,
-                                        "endYear",
-                                        value
-                                      )
-                                    }
-                                    options={getEndYearOptions(work.startYear)}
-                                    placeholder={t(
-                                      "jobs.application.form.select_year"
-                                    )}
-                                    disabled={work.isCurrent}
-                                    required={!work.isCurrent}
-                                  />
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Select
+                                      value={work.endYear}
+                                      onChange={(value) =>
+                                        handleWorkExperienceChange(
+                                          index,
+                                          "endYear",
+                                          value
+                                        )
+                                      }
+                                      options={getEndYearOptions(work.startYear)}
+                                      placeholder={t(
+                                        "jobs.application.form.select_year"
+                                      )}
+                                      disabled={work.isCurrent}
+                                      required={!work.isCurrent}
+                                    />
+                                    <Select
+                                      value={work.endMonth}
+                                      onChange={(value) =>
+                                        handleWorkExperienceChange(
+                                          index,
+                                          "endMonth",
+                                          value
+                                        )
+                                      }
+                                      options={monthOptions}
+                                      placeholder="Oy"
+                                      disabled={work.isCurrent}
+                                      required={!work.isCurrent}
+                                    />
+                                  </div>
                                   <div className="flex items-center">
                                     <Checkbox
                                       id={`work-current-${index}`}
@@ -1582,29 +2042,28 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.expected_salary")}
                       </label>
-                      <Select
-                        value={formData.expectedSalary}
-                        onChange={(value) =>
-                          handleInputChange("expectedSalary", value)
-                        }
-                        options={[
-                          {
-                            value: "10_plus",
-                            label: t("jobs.application.form.salary_10_plus"),
-                          },
-                          {
-                            value: "20_plus",
-                            label: t("jobs.application.form.salary_20_plus"),
-                          },
-                          {
-                            value: "other",
-                            label: t("jobs.application.form.salary_other"),
-                          },
-                        ]}
-                        placeholder={t(
-                          "jobs.application.form.expected_salary_placeholder"
-                        )}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder={t(
+                            "jobs.application.form.expected_salary_placeholder"
+                          )}
+                          value={formData.expectedSalary ? formatSalary(formData.expectedSalary) : ""}
+                          onChange={(e) => {
+                            let value = e.target.value;
+                            
+                            // Remove all non-digit characters
+                            value = value.replace(/\D/g, "");
+                            
+                            handleInputChange("expectedSalary", value);
+                          }}
+                          className="pr-12"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-600 dark:text-gray-400 pointer-events-none">
+                          {formData.expectedSalary ? "so'm" : ""}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Business Trip Ready */}

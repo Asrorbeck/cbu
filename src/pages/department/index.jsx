@@ -58,7 +58,10 @@ const DepartmentPage = () => {
           ? vacanciesData 
           : [];
         
-        const transformedVacancies = vacanciesArray.map((vacancy) => ({
+        // Filter only active vacancies (is_active: true)
+        const activeVacancies = vacanciesArray.filter((vacancy) => vacancy.is_active === true);
+        
+        const transformedVacancies = activeVacancies.map((vacancy) => ({
           id: vacancy.id, // Keep original numeric ID for encoding
           title: vacancy.title, // Keep original title from backend
           department: departmentData.name,
