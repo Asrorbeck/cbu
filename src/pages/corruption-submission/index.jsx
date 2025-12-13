@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
@@ -10,19 +11,19 @@ import { reportsAPI } from "../../services/api";
 
 const CorruptionSubmission = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const { i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [telegramUserId, setTelegramUserId] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    // Step 1: Personal Info
     fullName: "",
     phone: "+998 ",
     email: "",
-    // Step 2: Complaint
     subject: "",
     description: "",
   });
@@ -93,7 +94,16 @@ const CorruptionSubmission = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
 
     if (name === "phone") {
       const formatted = formatPhoneNumber(value);
@@ -101,6 +111,8 @@ const CorruptionSubmission = () => {
         ...prev,
         [name]: formatted,
       }));
+    } else if (name === "isAnonymous") {
+      setIsAnonymous(checked);
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -110,29 +122,21 @@ const CorruptionSubmission = () => {
   };
 
   // Encode backend ID to reference number format
-  // This creates a secure-looking reference number from the backend ID
   const encodeReferenceNumber = (backendId) => {
     if (!backendId) return null;
 
-    // Convert ID to string and ensure it's a number
     const id =
       typeof backendId === "number" ? backendId : parseInt(backendId, 10);
     if (isNaN(id)) return null;
 
-    // Simple encoding: multiply by a prime number and convert to base36
-    const salt = 1234567; // Salt for encoding
+    const salt = 1234567;
     const encoded = (id * salt).toString(36).toUpperCase();
-
-    // Take first 8 characters and pad if needed
     const padded = encoded.substring(0, 8).padStart(8, "0");
-
-    // Generate checksum from ID (last 2 digits + offset)
     const checksum = ((id % 100) + 36)
       .toString(36)
       .toUpperCase()
       .padStart(2, "0");
 
-    // Format: AC + encoded ID (8 chars) + checksum (2 chars) = 12 chars total
     return `AC${padded}${checksum}`;
   };
 
@@ -142,37 +146,25 @@ const CorruptionSubmission = () => {
     return `AC${timestamp}${random}`;
   };
 
-  const isStep1Valid = () => {
-    // Check if phone has exactly 9 digits after +998
-    const phoneDigits = formData.phone.replace(/\D/g, "").slice(3);
-    return (
-      formData.fullName.trim() !== "" &&
-      phoneDigits.length === 9 &&
-      formData.email.trim() !== ""
-    );
-  };
-
-  const isStep2Valid = () => {
-    return (
-      formData.subject.trim() !== "" && formData.description.trim().length >= 50
-    );
-  };
-
-  const handleNext = () => {
-    if (currentStep === 1 && isStep1Valid()) {
-      setCurrentStep(2);
+  const isFormValid = () => {
+    if (!formData.subject.trim()) return false;
+    if (formData.description.trim().length < 50) return false;
+    if (!isAnonymous) {
+      const phoneDigits = formData.phone.replace(/\D/g, "").slice(3);
+      // full_name va phone_number required, email optional
+      if (!formData.fullName.trim() || phoneDigits.length !== 9) {
+        return false;
+      }
     }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isStep2Valid()) return;
+    if (!isFormValid()) {
+      toast.error("Iltimos, barcha maydonlarni to'ldiring");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -180,15 +172,28 @@ const CorruptionSubmission = () => {
       // Clean phone number (remove spaces and keep only digits with +)
       const cleanPhone = formData.phone.replace(/\s/g, "");
 
+      // Get current language and convert to backend format
+      const currentLang = i18n.language || localStorage.getItem("language") || "uz-Latn";
+      let languageValue;
+      if (currentLang === "uz-Latn") {
+        languageValue = "O'zbekcha";
+      } else if (currentLang === "uz-Cyrl") {
+        languageValue = "Ўзбекча";
+      } else if (currentLang === "ru") {
+        languageValue = "Русский";
+      } else {
+        languageValue = "O'zbekcha"; // default
+      }
+
       // Prepare payload for backend
       const payload = {
-        full_name: formData.fullName.trim(),
-        phone_number: cleanPhone,
-        email: formData.email.trim(),
+        full_name: isAnonymous ? null : formData.fullName.trim(),
+        phone_number: isAnonymous ? "" : cleanPhone,
+        email: isAnonymous ? null : formData.email.trim() || null,
         summary: formData.subject.trim(),
         message_text: formData.description.trim(),
-        language: "O'zbekcha",
-        is_archived: false,
+        language: languageValue,
+        is_anonymous: isAnonymous,
         user_id: telegramUserId || 905770018,
       };
 
@@ -201,7 +206,6 @@ const CorruptionSubmission = () => {
       // Generate reference number from backend ID (encode it)
       let refNumber;
       if (response.id) {
-        // Encode the backend ID to a reference number
         refNumber = encodeReferenceNumber(response.id);
         console.log(
           "Encoded reference number from backend ID:",
@@ -212,7 +216,6 @@ const CorruptionSubmission = () => {
       } else if (response.reference_number) {
         refNumber = response.reference_number;
       } else {
-        // Fallback: generate a random reference number
         refNumber = generateReferenceNumber();
       }
       setReferenceNumber(refNumber);
@@ -240,14 +243,53 @@ const CorruptionSubmission = () => {
     } catch (error) {
       console.error("Error submitting report:", error);
 
-      // Show error message to user
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.detail ||
-        error.message ||
-        "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+      // Parse field-specific errors from backend
+      const backendErrors = error.response?.data;
+      if (backendErrors && typeof backendErrors === "object") {
+        const parsedErrors = {};
+        let hasFieldErrors = false;
 
-      toast.error(errorMessage);
+        const fieldMapping = {
+          full_name: "fullName",
+          phone_number: "phone",
+          email: "email",
+          summary: "subject",
+          message_text: "description",
+        };
+
+        Object.keys(backendErrors).forEach((key) => {
+          const frontendFieldName = fieldMapping[key] || key;
+          const errorValue = backendErrors[key];
+
+          if (Array.isArray(errorValue) && errorValue.length > 0) {
+            parsedErrors[frontendFieldName] = errorValue[0];
+            hasFieldErrors = true;
+          } else if (typeof errorValue === "string") {
+            parsedErrors[frontendFieldName] = errorValue;
+            hasFieldErrors = true;
+          }
+        });
+
+        if (hasFieldErrors) {
+          setFieldErrors(parsedErrors);
+          toast.error("Iltimos, formadagi xatolarni tuzating");
+        } else {
+          const errorMessage =
+            backendErrors.message ||
+            backendErrors.error ||
+            "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+          toast.error(
+            Array.isArray(errorMessage) ? errorMessage[0] : errorMessage
+          );
+        }
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.detail ||
+          error.message ||
+          "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -350,67 +392,40 @@ const CorruptionSubmission = () => {
               Korrupsiya haqida xabar berish
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Ma'lumotlarni bosqichma-bosqich to'ldiring
+              Korrupsiya haqidagi xabaringizni yuboring
             </p>
-          </div>
-
-          {/* Progress Steps */}
-          <div className="mb-8 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-slate-700">
-            <div className="flex items-center justify-between relative">
-              {/* Progress Line */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 dark:bg-slate-700 mx-5 md:mx-8">
-                <div
-                  className="h-full bg-blue-600 transition-all duration-300"
-                  style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
-                />
-              </div>
-
-              {/* Steps */}
-              {[
-                { num: 1, label: "Shaxsiy ma'lumotlar", short: "Shaxsiy" },
-                { num: 2, label: "Murojaat", short: "Murojaat" },
-              ].map((step) => (
-                <div
-                  key={step.num}
-                  className="flex flex-col items-center flex-1 relative z-10"
-                >
-                  <div
-                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold transition-all duration-200 shadow-md ${
-                      currentStep >= step.num
-                        ? "bg-blue-600 text-white scale-110"
-                        : "bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 border-2 border-gray-300 dark:border-slate-600"
-                    }`}
-                  >
-                    {currentStep > step.num ? (
-                      <Icon
-                        name="Check"
-                        size={20}
-                        className="animate-in fade-in zoom-in duration-200"
-                      />
-                    ) : (
-                      <span className="text-sm md:text-base">{step.num}</span>
-                    )}
-                  </div>
-                  <p
-                    className={`text-xs md:text-sm mt-2 md:mt-3 font-medium text-center transition-colors duration-200 ${
-                      currentStep >= step.num
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    <span className="hidden md:inline">{step.label}</span>
-                    <span className="md:hidden">{step.short}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Form Card */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-slate-700">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 1: Personal Information */}
-              {currentStep === 1 && (
+              {/* Anonymous Checkbox */}
+              <div className="bg-gray-50 dark:bg-slate-700/30 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="isAnonymous"
+                    name="isAnonymous"
+                    checked={isAnonymous}
+                    onChange={handleInputChange}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="isAnonymous"
+                      className="cursor-pointer font-medium text-foreground"
+                    >
+                      Anonim sorov
+                    </label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Shaxsiy ma'lumotlaringiz ko'rsatilmaydi
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              {!isAnonymous && (
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">
@@ -424,153 +439,158 @@ const CorruptionSubmission = () => {
                         onChange={handleInputChange}
                         placeholder="Masalan: Karimov Karim Karimovich"
                         required
+                        error={fieldErrors.fullName}
                       />
 
-                      <Input
-                        label="Bog'lanish uchun telefon nomeri"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+998 XX XXX XX XX"
-                        required
-                        maxLength={17}
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          label="Bog'lanish uchun telefon nomeri"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="+998 XX XXX XX XX"
+                          required
+                          maxLength={17}
+                          error={fieldErrors.phone}
+                        />
 
-                      <Input
-                        label="Elektron pochta manzili"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="example@mail.com"
-                        required
-                      />
+                        <Input
+                          label="Elektron pochta manzili"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="example@mail.com"
+                          error={fieldErrors.email}
+                        />
+                      </div>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start space-x-3">
-                      <Icon
-                        name="Info"
-                        size={20}
-                        className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Barcha maydonlar to'ldirilgandan keyin keyingi bosqichga
-                        o'tishingiz mumkin.
+              {/* Complaint Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Murojaat tafsilotlari
+                </h3>
+
+                <Input
+                  label="Murojaatning qisqacha mazmuni"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  placeholder="Murojaat mavzusini qisqacha yozing"
+                  required
+                  error={fieldErrors.subject}
+                />
+
+                <div>
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      fieldErrors.description
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-foreground"
+                    }`}
+                  >
+                    Murojaat matni <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={6}
+                    className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:border-transparent transition-all duration-200 ${
+                      fieldErrors.description
+                        ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
+                        : "border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    }`}
+                    placeholder="Murojaatingizni batafsil va aniq yozing. Hodisani, shaxslarni, sanalarni va boshqa muhim tafsilotlarni ko'rsating..."
+                    required
+                  />
+                  {fieldErrors.description ? (
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                      {fieldErrors.description}
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Minimum 50 belgi kerak
+                      </p>
+                      <p
+                        className={`text-xs ${
+                          formData.description.length >= 50
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {formData.description.length} / 50
                       </p>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {/* Step 2: Complaint Details */}
-              {currentStep === 2 && (
-                <div className="space-y-6">
+              {/* Privacy Notice */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start space-x-3">
+                  <Icon
+                    name="Shield"
+                    size={20}
+                    className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
+                  />
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                      Murojaat tafsilotlari
-                    </h3>
-                    <div className="space-y-4">
-                      <Input
-                        label="Murojaatning qisqacha mazmuni"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        placeholder="Murojaat mavzusini qisqacha yozing"
-                        required
-                      />
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          Murojaat matni <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleInputChange}
-                          rows={8}
-                          className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200"
-                          placeholder="Murojaatingizni batafsil va aniq yozing. Hodisani, shaxslarni, sanalarni va boshqa muhim tafsilotlarni ko'rsating..."
-                          required
-                        />
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-muted-foreground">
-                            Minimum 50 belgi kerak
-                          </p>
-                          <p
-                            className={`text-xs ${
-                              formData.description.length >= 50
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {formData.description.length} / 50
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-start space-x-3">
-                      <Icon
-                        name="ShieldAlert"
-                        size={20}
-                        className="text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5"
-                      />
-                      <div>
-                        <h4 className="text-sm font-semibold text-foreground mb-1">
-                          Ogohlantirish
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          Yolg'on xabar berish qonunga xilof. Faqat haqiqiy va
-                          ishonchli ma'lumotlarni yuboring.
-                        </p>
-                      </div>
-                    </div>
+                    <h4 className="text-sm font-semibold text-foreground mb-1">
+                      Maxfiylik kafolati
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Sizning shaxsiy ma'lumotlaringiz maxfiy saqlanadi va faqat
+                      tegishli bo'limlar tomonidan ko'rib chiqiladi.
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Navigation Buttons */}
+              {/* Warning */}
+              <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800">
+                <div className="flex items-start space-x-3">
+                  <Icon
+                    name="ShieldAlert"
+                    size={20}
+                    className="text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5"
+                  />
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-1">
+                      Ogohlantirish
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Yolg'on xabar berish qonunga xilof. Faqat haqiqiy va
+                      ishonchli ma'lumotlarni yuboring.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handlePrevious}
-                    iconName="ArrowLeft"
-                    iconPosition="left"
-                    className="flex-1"
-                  >
-                    Orqaga
-                  </Button>
-                )}
-
-                {currentStep < 2 ? (
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={currentStep === 1 && !isStep1Valid()}
-                    iconName="ArrowRight"
-                    iconPosition="right"
-                    className="flex-1"
-                  >
-                    Keyingisi
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting || !isStep2Valid()}
-                    iconName="Send"
-                    iconPosition="left"
-                    className="flex-1"
-                  >
-                    {isSubmitting ? "Yuborilmoqda..." : "Xabarni yuborish"}
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  className="flex-1"
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !isFormValid()}
+                  className="flex-1"
+                  iconName="Send"
+                  iconPosition="left"
+                >
+                  {isSubmitting ? "Yuborilmoqda..." : "Xabarni yuborish"}
+                </Button>
               </div>
             </form>
           </div>
@@ -655,7 +675,6 @@ const CorruptionSubmission = () => {
                       </div>
                     </div>
                   </div>
-
                 </div>
               ))}
             </div>
