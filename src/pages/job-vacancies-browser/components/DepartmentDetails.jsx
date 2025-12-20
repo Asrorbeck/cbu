@@ -13,23 +13,15 @@ const DepartmentDetails = ({ department }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">
-      {/* Department Header */}
-      <div className="mb-6">
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {department?.name}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {department?.description}
-          </p>
-          <div className="flex items-center space-x-2 mt-2">
-            <Icon name="Briefcase" size={16} className="text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">
-              {department?.openings} {t("jobs.open_positions")}
-            </span>
-          </div>
+      {/* Openings Count */}
+      {department?.openings !== undefined && (
+        <div className="flex items-center space-x-2 mb-6">
+          <Icon name="Briefcase" size={16} className="text-blue-600" />
+          <span className="text-sm font-medium text-blue-600">
+            {department?.openings} {t("jobs.open_positions")}
+          </span>
         </div>
-      </div>
+      )}
 
       {/* Department Tasks */}
       <div className="space-y-4">

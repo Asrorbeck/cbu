@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
+import Button from "../../components/ui/Button";
 import DepartmentDetails from "../job-vacancies-browser/components/DepartmentDetails";
 import VacancyCard from "../job-vacancies-browser/components/VacancyCard";
 import JobDetailModal from "../job-vacancies-browser/components/JobDetailModal";
@@ -12,7 +13,7 @@ import { departmentsAPI, vacanciesAPI } from "../../services/api";
 const DepartmentPage = () => {
   const { departmentId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,14 @@ const DepartmentPage = () => {
   const [vacancies, setVacancies] = useState([]);
   const [vacanciesLoading, setVacanciesLoading] = useState(false);
   const [vacanciesError, setVacanciesError] = useState(null);
+
+  // Helper function to get language suffix for API fields
+  const getLanguageSuffix = (language) => {
+    if (language === "uz-Latn") return "uz";
+    if (language === "uz-Cyrl") return "cr";
+    if (language === "ru") return "ru";
+    return "uz"; // default fallback
+  };
 
   // Fetch department and vacancies data from API
   useEffect(() => {
@@ -37,12 +46,29 @@ const DepartmentPage = () => {
         const departmentData = await departmentsAPI.getDepartmentById(
           departmentId
         );
+        
+        // Get current language suffix
+        const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const langSuffix = getLanguageSuffix(currentLanguage);
+        
+        // Get name and tasks based on current language
+        const nameField = `name_${langSuffix}`;
+        const tasksField = `department_tasks_${langSuffix}`;
+        
+        const name = departmentData[nameField] || departmentData.name_uz || departmentData.name_cr || departmentData.name_ru || "";
+        const departmentTasks = departmentData[tasksField] || departmentData.department_tasks_uz || departmentData.department_tasks_cr || departmentData.department_tasks_ru || [];
+        
+        // Ensure department_tasks is an array of objects with 'task' property
+        const formattedTasks = Array.isArray(departmentTasks) 
+          ? departmentTasks.map(task => typeof task === 'string' ? { task } : task)
+          : [];
+        
         const transformedDepartment = {
           id: departmentData.id.toString(),
-          name: departmentData.name,
-          description: departmentData.description,
-          openings: 0, // Will be updated after fetching vacancies
-          department_tasks: departmentData.department_tasks || [],
+          name: name,
+          description: departmentData.description || "", // Add description field if needed in future
+          openings: departmentData.active_vacancies_count || 0, // Will be updated after fetching vacancies
+          department_tasks: formattedTasks,
         };
         setDepartment(transformedDepartment);
 
@@ -61,22 +87,54 @@ const DepartmentPage = () => {
         // Filter only active vacancies (is_active: true)
         const activeVacancies = vacanciesArray.filter((vacancy) => vacancy.is_active === true);
         
-        const transformedVacancies = activeVacancies.map((vacancy) => ({
-          id: vacancy.id, // Keep original numeric ID for encoding
-          title: vacancy.title, // Keep original title from backend
-          department: departmentData.name,
-          location: formatLocation(vacancy),
-          type: "Full-time",
-          deadline: vacancy.application_deadline,
-          testDeadline: vacancy.test_scheduled_at || vacancy.application_deadline,
-          salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
-          description: vacancy.management_details?.name
-            ? `${vacancy.management_details.name} - ${vacancy.title}`
-            : vacancy.title, // Use management_details.name + title for short description
-          fullDescription: vacancy.description,
-          requirements: parseRequirements(vacancy.requirements),
-          responsibilities: parseJobTasks(vacancy.job_tasks),
-        }));
+        // Get language-specific fields for vacancies
+        const titleField = `title_${langSuffix}`;
+        const requirementsField = `requirements_${langSuffix}`;
+        const jobTasksField = `job_tasks_${langSuffix}`;
+        const managementNameField = `name_${langSuffix}`;
+        
+        const transformedVacancies = activeVacancies.map((vacancy) => {
+          // Get title based on current language
+          const vacancyTitle = vacancy[titleField] || vacancy.title_uz || vacancy.title_cr || vacancy.title_ru || "";
+          
+          // Get management name based on current language
+          const managementName = vacancy.management_details?.[managementNameField] 
+            || vacancy.management_details?.name_uz 
+            || vacancy.management_details?.name_cr 
+            || vacancy.management_details?.name_ru 
+            || "";
+          
+          // Get requirements based on current language
+          const vacancyRequirements = vacancy[requirementsField] 
+            || vacancy.requirements_uz 
+            || vacancy.requirements_cr 
+            || vacancy.requirements_ru 
+            || [];
+          
+          // Get job tasks based on current language
+          const vacancyJobTasks = vacancy[jobTasksField] 
+            || vacancy.job_tasks_uz 
+            || vacancy.job_tasks_cr 
+            || vacancy.job_tasks_ru 
+            || [];
+          
+          return {
+            id: vacancy.id, // Keep original numeric ID for encoding
+            title: vacancyTitle,
+            department: name, // Use the transformed department name from current language
+            location: formatLocation(vacancy),
+            type: "Full-time",
+            deadline: vacancy.application_deadline,
+            testDeadline: vacancy.test_scheduled_at || vacancy.application_deadline,
+            salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
+            description: managementName
+              ? `${managementName} - ${vacancyTitle}`
+              : vacancyTitle, // Use management_details.name + title for short description
+            fullDescription: vacancy.description || "",
+            requirements: parseRequirements(vacancyRequirements),
+            responsibilities: parseJobTasks(vacancyJobTasks),
+          };
+        });
         setVacancies(transformedVacancies);
 
         // Update department openings count
@@ -104,7 +162,7 @@ const DepartmentPage = () => {
     };
 
     fetchData();
-  }, [departmentId, t]);
+  }, [departmentId, t, i18n.language]);
 
   // Helper function to format region name
   const formatRegionName = (region) => {
@@ -277,15 +335,23 @@ const DepartmentPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Department Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {department?.name}
+            </h1>
+          </div>
+
+          {/* Back Button */}
           <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => navigate("/departments")}
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            <Button
+              variant="outline"
+              onClick={() => navigate("/departments?branchType=central")}
+              iconName="ArrowLeft"
+              iconPosition="left"
             >
-              <Icon name="ArrowLeft" size={16} />
-              <span>{t("jobs.back_to_departments")}</span>
-            </button>
+              Orqaga
+            </Button>
           </div>
 
           {/* Error Message */}

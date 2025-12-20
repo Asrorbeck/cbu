@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
+import Button from "../../components/ui/Button";
 import VacancyCard from "../job-vacancies-browser/components/VacancyCard";
 import JobDetailModal from "../job-vacancies-browser/components/JobDetailModal";
 import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
@@ -189,12 +190,14 @@ const RegionPage = () => {
                 Error Loading Vacancies
               </h1>
               <p className="text-muted-foreground mb-6">{apiError}</p>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => navigate("/region")}
-                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                iconName="ArrowLeft"
+                iconPosition="left"
               >
                 Orqaga
-              </button>
+              </Button>
             </div>
           </div>
         </main>
@@ -207,15 +210,26 @@ const RegionPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Region Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {regionDisplayName}
+            </h1>
+            <p className="text-lg text-muted-foreground mt-2">
+              {vacancies.length} {t("jobs.vacancies_title").toLowerCase()}
+            </p>
+          </div>
+
+          {/* Back Button */}
           <div className="flex items-center justify-between mb-8">
-              <button
-                onClick={() => navigate("/region")}
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Icon name="ArrowLeft" size={16} />
-                <span>Orqaga</span>
-              </button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/region")}
+              iconName="ArrowLeft"
+              iconPosition="left"
+            >
+              Orqaga
+            </Button>
           </div>
 
           {/* Error Message */}
@@ -238,16 +252,6 @@ const RegionPage = () => {
               </div>
             </div>
           )}
-
-          {/* Region Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {regionDisplayName}
-            </h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              {vacancies.length} {t("jobs.vacancies_title").toLowerCase()}
-            </p>
-          </div>
 
           {/* Vacancies Section */}
           <div className="space-y-6 pb-20">

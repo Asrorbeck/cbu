@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
@@ -8,13 +8,13 @@ import DepartmentCard from "./components/DepartmentCard";
 import DepartmentDetails from "./components/DepartmentDetails";
 import VacancyCard from "./components/VacancyCard";
 import JobDetailModal from "./components/JobDetailModal";
-import Breadcrumb from "./components/Breadcrumb";
 import LoadingSkeleton from "./components/LoadingSkeleton";
 import { departmentsAPI } from "../../services/api";
 
 const JobVacanciesBrowser = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const { t, i18n } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1); // 1: branch type selection, 2: departments, 3: vacancies, 4: details
   const [selectedBranchType, setSelectedBranchType] = useState(null); // "central" or "regional"
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -24,6 +24,15 @@ const JobVacanciesBrowser = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [departments, setDepartments] = useState([]);
   const [apiError, setApiError] = useState(null);
+
+  // Check URL query params on mount to restore state
+  useEffect(() => {
+    const branchType = searchParams.get("branchType");
+    if (branchType === "central") {
+      setSelectedBranchType("central");
+      setCurrentStep(2);
+    }
+  }, [searchParams]);
 
   // Branch type cards data
   const branchTypeCards = [
@@ -45,6 +54,14 @@ const JobVacanciesBrowser = () => {
     },
   ];
 
+  // Helper function to get language suffix for API fields
+  const getLanguageSuffix = (language) => {
+    if (language === "uz-Latn") return "uz";
+    if (language === "uz-Cyrl") return "cr";
+    if (language === "ru") return "ru";
+    return "uz"; // default fallback
+  };
+
   // Fetch departments from API when branch type is selected
   useEffect(() => {
     if (!selectedBranchType) return;
@@ -61,17 +78,35 @@ const JobVacanciesBrowser = () => {
           ? departmentsData 
           : [];
         
+        // Get current language suffix
+        const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const langSuffix = getLanguageSuffix(currentLanguage);
+        
         // Transform API data to match component structure
-        const transformedDepartments = departmentsArray.map((dept) => ({
-          id: dept.id.toString(),
-          name: dept.name,
-          description: dept.description,
-          icon: "Monitor", // Default icon, can be customized based on department
-          color: "text-warning",
-          bgColor: "bg-warning/10",
-          openings: 0, // This can be calculated from vacancies if needed
-          department_tasks: dept.department_tasks || [],
-        }));
+        const transformedDepartments = departmentsArray.map((dept) => {
+          // Get name based on current language
+          const nameField = `name_${langSuffix}`;
+          const tasksField = `department_tasks_${langSuffix}`;
+          
+          const name = dept[nameField] || dept.name_uz || dept.name_cr || dept.name_ru || "";
+          const departmentTasks = dept[tasksField] || dept.department_tasks_uz || dept.department_tasks_cr || dept.department_tasks_ru || [];
+          
+          // Ensure department_tasks is an array of objects with 'task' property
+          const formattedTasks = Array.isArray(departmentTasks) 
+            ? departmentTasks.map(task => typeof task === 'string' ? { task } : task)
+            : [];
+          
+          return {
+            id: dept.id.toString(),
+            name: name,
+            description: "", // Add description field if needed in future
+            icon: "Monitor", // Default icon, can be customized based on department
+            color: "text-warning",
+            bgColor: "bg-warning/10",
+            openings: dept.active_vacancies_count || 0,
+            department_tasks: formattedTasks,
+          };
+        });
         setDepartments(transformedDepartments);
       } catch (error) {
         console.error("Error fetching departments:", error);
@@ -83,11 +118,11 @@ const JobVacanciesBrowser = () => {
     };
 
     fetchDepartments();
-  }, [selectedBranchType]);
+  }, [selectedBranchType, i18n.language]);
 
   // Filter departments based on search query
   const filteredDepartments = departments.filter((dept) =>
-    dept.name.toLowerCase().includes(searchQuery.toLowerCase())
+    dept?.name && dept.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Mock vacancies data
@@ -498,16 +533,6 @@ const JobVacanciesBrowser = () => {
             </p>
           </div>
 
-          {/* Breadcrumb */}
-          {currentStep > 1 && (
-            <Breadcrumb
-              currentStep={currentStep}
-              selectedBranchType={selectedBranchType}
-              selectedDepartment={selectedDepartment}
-              selectedVacancy={selectedVacancy}
-              onNavigate={handleBreadcrumbNavigate}
-            />
-          )}
 
           {/* Content */}
           {currentStep === 1 && renderBranchTypeSelection()}

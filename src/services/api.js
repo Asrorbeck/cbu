@@ -1,9 +1,15 @@
 // API service for departments
 import axios from "axios";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://b21b5a398785.ngrok-free.app/api/v1";
+// Get API base URL from environment variable only
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  const errorMessage =
+    "VITE_API_BASE_URL environment variable is not set. Please configure it in your .env file and restart the Vite dev server.";
+  console.error(errorMessage);
+  throw new Error(errorMessage);
+}
 
 const API_BASE_URL_NO_VERSION = API_BASE_URL.replace(/\/v1\/?$/, "");
 

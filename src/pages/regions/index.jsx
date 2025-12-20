@@ -35,17 +35,6 @@ const RegionsPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => navigate("/departments")}
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Icon name="ArrowLeft" size={16} />
-              <span>{t("jobs.back_to_departments")}</span>
-            </button>
-          </div>
-
           {/* Page Header */}
           <div className="text-left mb-8">
             <h1 className="text-3xl font-bold text-foreground">
@@ -54,6 +43,18 @@ const RegionsPage = () => {
             <p className="text-lg text-muted-foreground mt-2">
               Hududiy boshqarmalar bo'limlari va vakansiyalari
             </p>
+          </div>
+
+          {/* Back Button */}
+          <div className="flex items-center justify-between mb-8">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/departments")}
+              iconName="ArrowLeft"
+              iconPosition="left"
+            >
+              Orqaga
+            </Button>
           </div>
 
           {/* Region Cards Grid */}
