@@ -159,7 +159,7 @@ const Navbar = () => {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div className="block">
+              <div className="hidden sm:block">
                 <p className="text-xs text-muted-foreground -mt-1">
                   O'zbekiston Respublikasi
                 </p>

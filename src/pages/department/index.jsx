@@ -46,23 +46,36 @@ const DepartmentPage = () => {
         const departmentData = await departmentsAPI.getDepartmentById(
           departmentId
         );
-        
+
         // Get current language suffix
-        const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const currentLanguage =
+          i18n.language || localStorage.getItem("language") || "uz-Latn";
         const langSuffix = getLanguageSuffix(currentLanguage);
-        
+
         // Get name and tasks based on current language
         const nameField = `name_${langSuffix}`;
         const tasksField = `department_tasks_${langSuffix}`;
-        
-        const name = departmentData[nameField] || departmentData.name_uz || departmentData.name_cr || departmentData.name_ru || "";
-        const departmentTasks = departmentData[tasksField] || departmentData.department_tasks_uz || departmentData.department_tasks_cr || departmentData.department_tasks_ru || [];
-        
+
+        const name =
+          departmentData[nameField] ||
+          departmentData.name_uz ||
+          departmentData.name_cr ||
+          departmentData.name_ru ||
+          "";
+        const departmentTasks =
+          departmentData[tasksField] ||
+          departmentData.department_tasks_uz ||
+          departmentData.department_tasks_cr ||
+          departmentData.department_tasks_ru ||
+          [];
+
         // Ensure department_tasks is an array of objects with 'task' property
-        const formattedTasks = Array.isArray(departmentTasks) 
-          ? departmentTasks.map(task => typeof task === 'string' ? { task } : task)
+        const formattedTasks = Array.isArray(departmentTasks)
+          ? departmentTasks.map((task) =>
+              typeof task === "string" ? { task } : task
+            )
           : [];
-        
+
         const transformedDepartment = {
           id: departmentData.id.toString(),
           name: name,
@@ -80,44 +93,54 @@ const DepartmentPage = () => {
         // Handle paginated response structure: { count, next, previous, results: [...] }
         const vacanciesData = vacanciesResponse.results || vacanciesResponse;
         // Ensure it's an array
-        const vacanciesArray = Array.isArray(vacanciesData) 
-          ? vacanciesData 
+        const vacanciesArray = Array.isArray(vacanciesData)
+          ? vacanciesData
           : [];
-        
+
         // Filter only active vacancies (is_active: true)
-        const activeVacancies = vacanciesArray.filter((vacancy) => vacancy.is_active === true);
-        
+        const activeVacancies = vacanciesArray.filter(
+          (vacancy) => vacancy.is_active === true
+        );
+
         // Get language-specific fields for vacancies
         const titleField = `title_${langSuffix}`;
         const requirementsField = `requirements_${langSuffix}`;
         const jobTasksField = `job_tasks_${langSuffix}`;
         const managementNameField = `name_${langSuffix}`;
-        
+
         const transformedVacancies = activeVacancies.map((vacancy) => {
           // Get title based on current language
-          const vacancyTitle = vacancy[titleField] || vacancy.title_uz || vacancy.title_cr || vacancy.title_ru || "";
-          
+          const vacancyTitle =
+            vacancy[titleField] ||
+            vacancy.title_uz ||
+            vacancy.title_cr ||
+            vacancy.title_ru ||
+            "";
+
           // Get management name based on current language
-          const managementName = vacancy.management_details?.[managementNameField] 
-            || vacancy.management_details?.name_uz 
-            || vacancy.management_details?.name_cr 
-            || vacancy.management_details?.name_ru 
-            || "";
-          
+          const managementName =
+            vacancy.management_details?.[managementNameField] ||
+            vacancy.management_details?.name_uz ||
+            vacancy.management_details?.name_cr ||
+            vacancy.management_details?.name_ru ||
+            "";
+
           // Get requirements based on current language
-          const vacancyRequirements = vacancy[requirementsField] 
-            || vacancy.requirements_uz 
-            || vacancy.requirements_cr 
-            || vacancy.requirements_ru 
-            || [];
-          
+          const vacancyRequirements =
+            vacancy[requirementsField] ||
+            vacancy.requirements_uz ||
+            vacancy.requirements_cr ||
+            vacancy.requirements_ru ||
+            [];
+
           // Get job tasks based on current language
-          const vacancyJobTasks = vacancy[jobTasksField] 
-            || vacancy.job_tasks_uz 
-            || vacancy.job_tasks_cr 
-            || vacancy.job_tasks_ru 
-            || [];
-          
+          const vacancyJobTasks =
+            vacancy[jobTasksField] ||
+            vacancy.job_tasks_uz ||
+            vacancy.job_tasks_cr ||
+            vacancy.job_tasks_ru ||
+            [];
+
           return {
             id: vacancy.id, // Keep original numeric ID for encoding
             title: vacancyTitle,
@@ -125,7 +148,8 @@ const DepartmentPage = () => {
             location: formatLocation(vacancy),
             type: "Full-time",
             deadline: vacancy.application_deadline,
-            testDeadline: vacancy.test_scheduled_at || vacancy.application_deadline,
+            testDeadline:
+              vacancy.test_scheduled_at || vacancy.application_deadline,
             salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
             description: managementName
               ? `${managementName} - ${vacancyTitle}`
@@ -167,16 +191,17 @@ const DepartmentPage = () => {
   // Helper function to format region name
   const formatRegionName = (region) => {
     if (!region) return "";
-    
+
     const regionLower = region.toLowerCase().trim();
-    
+
     // Special case for Qoraqalpog'iston
     if (regionLower === "qoraqalpogiston") {
       return "Qoraqalpog'iston Respublikasi";
     }
-    
+
     // For other regions: capitalize first letter and add "viloyati"
-    const capitalized = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+    const capitalized =
+      region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
     return `${capitalized} viloyati`;
   };
 
@@ -194,14 +219,14 @@ const DepartmentPage = () => {
   // Helper function to parse requirements (can be string or JSON)
   const parseRequirements = (requirements) => {
     if (!requirements) return [];
-    
+
     // If it's already an array, return it
     if (Array.isArray(requirements)) {
       return requirements.map((item) => item.task || item);
     }
-    
+
     // If it's a string, try to parse as JSON first
-    if (typeof requirements === 'string') {
+    if (typeof requirements === "string") {
       try {
         const parsed = JSON.parse(requirements);
         if (Array.isArray(parsed)) {
@@ -209,24 +234,26 @@ const DepartmentPage = () => {
         }
       } catch (error) {
         // If parsing fails, treat as plain string and split by newlines or return as single item
-        return requirements.split('\n').filter(item => item.trim().length > 0);
+        return requirements
+          .split("\n")
+          .filter((item) => item.trim().length > 0);
       }
     }
-    
+
     return [];
   };
 
   // Helper function to parse job_tasks (can be string or JSON)
   const parseJobTasks = (jobTasks) => {
     if (!jobTasks) return [];
-    
+
     // If it's already an array, return it
     if (Array.isArray(jobTasks)) {
       return jobTasks.map((item) => item.task || item);
     }
-    
+
     // If it's a string, try to parse as JSON first
-    if (typeof jobTasks === 'string') {
+    if (typeof jobTasks === "string") {
       try {
         const parsed = JSON.parse(jobTasks);
         if (Array.isArray(parsed)) {
@@ -234,10 +261,10 @@ const DepartmentPage = () => {
         }
       } catch (error) {
         // If parsing fails, treat as plain string and split by newlines or return as single item
-        return jobTasks.split('\n').filter(item => item.trim().length > 0);
+        return jobTasks.split("\n").filter((item) => item.trim().length > 0);
       }
     }
-    
+
     return [];
   };
 
@@ -335,23 +362,19 @@ const DepartmentPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Department Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
+          {/* Department Header with Back Button */}
+          <div className="flex items-center gap-3 mb-4 sm:mb-5 md:mb-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/departments?branchType=central")}
+              className="flex-shrink-0"
+            >
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
               {department?.name}
             </h1>
-          </div>
-
-          {/* Back Button */}
-          <div className="flex items-center justify-between mb-8">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/departments?branchType=central")}
-              iconName="ArrowLeft"
-              iconPosition="left"
-            >
-              Orqaga
-            </Button>
           </div>
 
           {/* Error Message */}
@@ -380,7 +403,7 @@ const DepartmentPage = () => {
 
           {/* Vacancies Section */}
           <div className="space-y-6 pb-20">
-            <h2 className="text-2xl font-bold text-foreground">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {t("jobs.available_positions")} ({vacancies.length})
             </h2>
 

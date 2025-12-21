@@ -12,18 +12,30 @@ const RegionsPage = () => {
   // Region cards data
   const regionCards = [
     { id: "toshkent", name: "Toshkent", displayName: "Toshkent viloyati" },
-    { id: "qashqadaryo", name: "Qashqadaryo", displayName: "Qashqadaryo viloyati" },
+    {
+      id: "qashqadaryo",
+      name: "Qashqadaryo",
+      displayName: "Qashqadaryo viloyati",
+    },
     { id: "samarqand", name: "Samarqand", displayName: "Samarqand viloyati" },
     { id: "navoiy", name: "Navoiy", displayName: "Navoiy viloyati" },
     { id: "andijon", name: "Andijon", displayName: "Andijon viloyati" },
     { id: "fargona", name: "Farg'ona", displayName: "Farg'ona viloyati" },
     { id: "namangan", name: "Namangan", displayName: "Namangan viloyati" },
-    { id: "surxondaryo", name: "Surxondaryo", displayName: "Surxondaryo viloyati" },
+    {
+      id: "surxondaryo",
+      name: "Surxondaryo",
+      displayName: "Surxondaryo viloyati",
+    },
     { id: "sirdaryo", name: "Sirdaryo", displayName: "Sirdaryo viloyati" },
     { id: "jizzax", name: "Jizzax", displayName: "Jizzax viloyati" },
     { id: "buxoro", name: "Buxoro", displayName: "Buxoro viloyati" },
     { id: "xorazm", name: "Xorazm", displayName: "Xorazm viloyati" },
-    { id: "qoraqalpogiston", name: "Qoraqalpog'iston", displayName: "Qoraqalpog'iston Respublikasi" },
+    {
+      id: "qoraqalpogiston",
+      name: "Qoraqalpog'iston",
+      displayName: "Qoraqalpog'iston Respublikasi",
+    },
   ];
 
   const handleRegionSelect = (regionId) => {
@@ -35,26 +47,24 @@ const RegionsPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Page Header */}
-          <div className="text-left mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              Hududiy bosh boshqarmalar
-            </h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              Hududiy boshqarmalar bo'limlari va vakansiyalari
-            </p>
-          </div>
-
-          {/* Back Button */}
-          <div className="flex items-center justify-between mb-8">
+          {/* Page Header with Back Button */}
+          <div className="flex items-center gap-3 mb-4 sm:mb-5 md:mb-4">
             <Button
-              variant="outline"
+              variant="ghost"
+              size="icon"
               onClick={() => navigate("/departments")}
-              iconName="ArrowLeft"
-              iconPosition="left"
+              className="flex-shrink-0"
             >
-              Orqaga
+              <Icon name="ArrowLeft" size={20} />
             </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                Hududiy bosh boshqarmalar
+              </h1>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
+                Hududiy boshqarmalar bo'limlari va vakansiyalari
+              </p>
+            </div>
           </div>
 
           {/* Region Cards Grid */}
@@ -87,7 +97,9 @@ const RegionsPage = () => {
                 {/* Action */}
                 <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
                   <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
-                    <span className="text-sm font-medium">{t("jobs.view_details")}</span>
+                    <span className="text-sm font-medium">
+                      {t("jobs.view_details")}
+                    </span>
                     <Icon
                       name="ArrowRight"
                       size={16}
@@ -107,4 +119,3 @@ const RegionsPage = () => {
 };
 
 export default RegionsPage;
-

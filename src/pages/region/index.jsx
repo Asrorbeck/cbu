@@ -22,16 +22,17 @@ const RegionPage = () => {
   // Helper function to format region name
   const formatRegionName = (region) => {
     if (!region) return "";
-    
+
     const regionLower = region.toLowerCase().trim();
-    
+
     // Special case for Qoraqalpog'iston
     if (regionLower === "qoraqalpogiston") {
       return "Qoraqalpog'iston Respublikasi";
     }
-    
+
     // For other regions: capitalize first letter and add "viloyati"
-    const capitalized = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+    const capitalized =
+      region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
     return `${capitalized} viloyati`;
   };
 
@@ -49,14 +50,14 @@ const RegionPage = () => {
   // Helper function to parse requirements (can be string or JSON)
   const parseRequirements = (requirements) => {
     if (!requirements) return [];
-    
+
     // If it's already an array, return it
     if (Array.isArray(requirements)) {
       return requirements.map((item) => item.task || item);
     }
-    
+
     // If it's a string, try to parse as JSON first
-    if (typeof requirements === 'string') {
+    if (typeof requirements === "string") {
       try {
         const parsed = JSON.parse(requirements);
         if (Array.isArray(parsed)) {
@@ -64,24 +65,26 @@ const RegionPage = () => {
         }
       } catch (error) {
         // If parsing fails, treat as plain string and split by newlines or return as single item
-        return requirements.split('\n').filter(item => item.trim().length > 0);
+        return requirements
+          .split("\n")
+          .filter((item) => item.trim().length > 0);
       }
     }
-    
+
     return [];
   };
 
   // Helper function to parse job_tasks (can be string or JSON)
   const parseJobTasks = (jobTasks) => {
     if (!jobTasks) return [];
-    
+
     // If it's already an array, return it
     if (Array.isArray(jobTasks)) {
       return jobTasks.map((item) => item.task || item);
     }
-    
+
     // If it's a string, try to parse as JSON first
-    if (typeof jobTasks === 'string') {
+    if (typeof jobTasks === "string") {
       try {
         const parsed = JSON.parse(jobTasks);
         if (Array.isArray(parsed)) {
@@ -89,10 +92,10 @@ const RegionPage = () => {
         }
       } catch (error) {
         // If parsing fails, treat as plain string and split by newlines or return as single item
-        return jobTasks.split('\n').filter(item => item.trim().length > 0);
+        return jobTasks.split("\n").filter((item) => item.trim().length > 0);
       }
     }
-    
+
     return [];
   };
 
@@ -113,10 +116,10 @@ const RegionPage = () => {
         // Handle paginated response structure: { count, next, previous, results: [...] }
         const vacanciesData = vacanciesResponse.results || vacanciesResponse;
         // Ensure it's an array
-        const vacanciesArray = Array.isArray(vacanciesData) 
-          ? vacanciesData 
+        const vacanciesArray = Array.isArray(vacanciesData)
+          ? vacanciesData
           : [];
-        
+
         const transformedVacancies = vacanciesArray.map((vacancy) => ({
           id: vacancy.id, // Keep original numeric ID for encoding
           title: vacancy.title, // Keep original title from backend
@@ -124,7 +127,8 @@ const RegionPage = () => {
           location: formatLocation(vacancy),
           type: "Full-time",
           deadline: vacancy.application_deadline,
-          testDeadline: vacancy.test_scheduled_at || vacancy.application_deadline,
+          testDeadline:
+            vacancy.test_scheduled_at || vacancy.application_deadline,
           salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
           description: vacancy.management_details?.name
             ? `${vacancy.management_details.name} - ${vacancy.title}`
@@ -210,26 +214,24 @@ const RegionPage = () => {
       <Navbar />
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Region Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {regionDisplayName}
-            </h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              {vacancies.length} {t("jobs.vacancies_title").toLowerCase()}
-            </p>
-          </div>
-
-          {/* Back Button */}
-          <div className="flex items-center justify-between mb-8">
+          {/* Region Header with Back Button */}
+          <div className="flex items-center gap-3 mb-4 sm:mb-5 md:mb-4">
             <Button
-              variant="outline"
+              variant="ghost"
+              size="icon"
               onClick={() => navigate("/region")}
-              iconName="ArrowLeft"
-              iconPosition="left"
+              className="flex-shrink-0"
             >
-              Orqaga
+              <Icon name="ArrowLeft" size={20} />
             </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                {regionDisplayName}
+              </h1>
+              <p className="text-lg text-muted-foreground mt-2">
+                {vacancies.length} {t("jobs.vacancies_title").toLowerCase()}
+              </p>
+            </div>
           </div>
 
           {/* Error Message */}
@@ -295,4 +297,3 @@ const RegionPage = () => {
 };
 
 export default RegionPage;
-

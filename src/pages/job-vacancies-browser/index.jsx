@@ -74,28 +74,41 @@ const JobVacanciesBrowser = () => {
         // Handle paginated response structure: { count, next, previous, results: [...] }
         const departmentsData = response.results || response;
         // Ensure it's an array
-        const departmentsArray = Array.isArray(departmentsData) 
-          ? departmentsData 
+        const departmentsArray = Array.isArray(departmentsData)
+          ? departmentsData
           : [];
-        
+
         // Get current language suffix
-        const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const currentLanguage =
+          i18n.language || localStorage.getItem("language") || "uz-Latn";
         const langSuffix = getLanguageSuffix(currentLanguage);
-        
+
         // Transform API data to match component structure
         const transformedDepartments = departmentsArray.map((dept) => {
           // Get name based on current language
           const nameField = `name_${langSuffix}`;
           const tasksField = `department_tasks_${langSuffix}`;
-          
-          const name = dept[nameField] || dept.name_uz || dept.name_cr || dept.name_ru || "";
-          const departmentTasks = dept[tasksField] || dept.department_tasks_uz || dept.department_tasks_cr || dept.department_tasks_ru || [];
-          
+
+          const name =
+            dept[nameField] ||
+            dept.name_uz ||
+            dept.name_cr ||
+            dept.name_ru ||
+            "";
+          const departmentTasks =
+            dept[tasksField] ||
+            dept.department_tasks_uz ||
+            dept.department_tasks_cr ||
+            dept.department_tasks_ru ||
+            [];
+
           // Ensure department_tasks is an array of objects with 'task' property
-          const formattedTasks = Array.isArray(departmentTasks) 
-            ? departmentTasks.map(task => typeof task === 'string' ? { task } : task)
+          const formattedTasks = Array.isArray(departmentTasks)
+            ? departmentTasks.map((task) =>
+                typeof task === "string" ? { task } : task
+              )
             : [];
-          
+
           return {
             id: dept.id.toString(),
             name: name,
@@ -104,6 +117,7 @@ const JobVacanciesBrowser = () => {
             color: "text-warning",
             bgColor: "bg-warning/10",
             openings: dept.active_vacancies_count || 0,
+            active_vacancies_count: dept.active_vacancies_count || 0,
             department_tasks: formattedTasks,
           };
         });
@@ -121,8 +135,9 @@ const JobVacanciesBrowser = () => {
   }, [selectedBranchType, i18n.language]);
 
   // Filter departments based on search query
-  const filteredDepartments = departments.filter((dept) =>
-    dept?.name && dept.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredDepartments = departments.filter(
+    (dept) =>
+      dept?.name && dept.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Mock vacancies data
@@ -353,7 +368,9 @@ const JobVacanciesBrowser = () => {
             {/* Action */}
             <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
               <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
-                <span className="text-sm font-medium">{t("jobs.view_details")}</span>
+                <span className="text-sm font-medium">
+                  {t("jobs.view_details")}
+                </span>
                 <Icon
                   name="ArrowRight"
                   size={16}
@@ -366,7 +383,6 @@ const JobVacanciesBrowser = () => {
       </div>
     </div>
   );
-
 
   const renderDepartments = () => (
     <div className="space-y-6">
@@ -391,29 +407,17 @@ const JobVacanciesBrowser = () => {
         </div>
       )}
 
-      {/* Back Button */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => handleBreadcrumbNavigate(1)}
-          iconName="ArrowLeft"
-          iconPosition="left"
-        >
-          Orqaga
-        </Button>
-      </div>
-
       {/* Search Section */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-        <div className="space-y-4">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
               {t("jobs.search_departments")}
             </h2>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium"
               >
                 {t("jobs.clear_search")}
               </button>
@@ -422,15 +426,15 @@ const JobVacanciesBrowser = () => {
           <div className="relative">
             <Icon
               name="Search"
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
             />
             <input
               type="text"
               placeholder={t("jobs.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
             />
           </div>
         </div>
@@ -455,7 +459,6 @@ const JobVacanciesBrowser = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t("jobs.no_departments_found")}
           </h3>
-          
         </div>
       )}
     </div>
@@ -466,23 +469,23 @@ const JobVacanciesBrowser = () => {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5 md:mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleBreadcrumbNavigate(2)}
+            className="flex-shrink-0"
+          >
+            <Icon name="ArrowLeft" size={20} />
+          </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
               {selectedDepartment?.name}
             </h1>
-            <p className="text-lg text-muted-foreground mt-2">
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
               {vacancies?.length} {t("jobs.vacancies_title").toLowerCase()}
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => handleBreadcrumbNavigate(1)}
-            iconName="ArrowLeft"
-            iconPosition="left"
-          >
-            {t("jobs.back_to_departments")}
-          </Button>
         </div>
 
         {/* Department Details */}
@@ -524,19 +527,30 @@ const JobVacanciesBrowser = () => {
       <main className="pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-left mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {t("jobs.title")}
-            </h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              {t("jobs.subtitle")}
-            </p>
+          <div className="flex items-center gap-3 mb-4 sm:mb-5 md:mb-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              className="flex-shrink-0"
+            >
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                {t("jobs.title")}
+              </h1>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
+                {t("jobs.subtitle")}
+              </p>
+            </div>
           </div>
-
 
           {/* Content */}
           {currentStep === 1 && renderBranchTypeSelection()}
-          {currentStep === 2 && selectedBranchType === "central" && renderDepartments()}
+          {currentStep === 2 &&
+            selectedBranchType === "central" &&
+            renderDepartments()}
           {currentStep === 3 && renderVacancies()}
         </div>
       </main>

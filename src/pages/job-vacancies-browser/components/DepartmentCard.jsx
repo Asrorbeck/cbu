@@ -19,7 +19,7 @@ const DepartmentCard = ({ department }) => {
       {/* Icon in top-right corner */}
       <div className="absolute top-4 right-4 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors duration-300">
         <Icon
-          name={department?.icon}
+          name="Info"
           size={20}
           className="text-blue-600 dark:text-blue-400"
         />
@@ -30,9 +30,17 @@ const DepartmentCard = ({ department }) => {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
           {department?.name}
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          {department?.description}
-        </p>
+        {department?.active_vacancies_count !== undefined &&
+          department?.active_vacancies_count > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t("jobs.active_vacancies")}: {department.active_vacancies_count}
+            </p>
+          )}
+        {department?.description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            {department?.description}
+          </p>
+        )}
       </div>
 
       {/* Action */}

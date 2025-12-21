@@ -34,6 +34,9 @@ const VacancyCard = ({ vacancy, onSelect }) => {
   };
 
   const daysRemaining = getDaysRemaining(vacancy?.deadline);
+  const testDaysRemaining = vacancy?.testDeadline
+    ? getDaysRemaining(vacancy.testDeadline)
+    : null;
   const isVacancyClosed = isDeadlinePassed();
   const isUrgent = daysRemaining <= 7 && daysRemaining > 0;
 
@@ -67,15 +70,13 @@ const VacancyCard = ({ vacancy, onSelect }) => {
             </h3>
           </div>
           <div
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${
               isVacancyClosed
-                ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                : isUrgent
-                ? "bg-warning/10 text-warning"
-                : "bg-success/10 text-success"
+                ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700"
+                : "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
             }`}
           >
-            {isVacancyClosed ? "Muddat o'tgan" : t("jobs.open")}
+            {isVacancyClosed ? t("jobs.closed") : t("jobs.open")}
           </div>
         </div>
 
@@ -85,37 +86,57 @@ const VacancyCard = ({ vacancy, onSelect }) => {
         </p>
 
         {/* Deadlines */}
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="space-y-2">
+          <div
+            className={`grid gap-2 ${
+              vacancy?.testDeadline
+                ? "grid-cols-1 md:grid-cols-2"
+                : "grid-cols-1"
+            }`}
+          >
+            <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
               <Icon
                 name="Calendar"
                 size={16}
                 className="text-blue-600 dark:text-blue-400"
               />
-              <div className="flex flex-col">
+              <div className="flex flex-col flex-1">
                 <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                   {t("jobs.application_deadline")}
                 </span>
-                <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                  {formatDeadline(vacancy?.deadline)}
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                    {formatDeadline(vacancy?.deadline)}
+                  </span>
+                  {daysRemaining >= 0 && (
+                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                      {daysRemaining} {t("jobs.days_left")}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             {vacancy?.testDeadline && (
-              <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800 w-full">
                 <Icon
                   name="Clipboard"
                   size={16}
                   className="text-green-600 dark:text-green-400"
                 />
-                <div className="flex flex-col">
+                <div className="flex flex-col flex-1">
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                     {t("jobs.test_period")}
                   </span>
-                  <span className="text-sm font-semibold text-green-800 dark:text-green-200">
-                    {formatDeadline(vacancy?.testDeadline)}
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-green-800 dark:text-green-200">
+                      {formatDeadline(vacancy?.testDeadline)}
+                    </span>
+                    {testDaysRemaining !== null && testDaysRemaining >= 0 && (
+                      <span className="text-xs font-medium text-green-700 dark:text-green-300 whitespace-nowrap">
+                        {testDaysRemaining} {t("jobs.days_left")}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
