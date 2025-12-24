@@ -51,27 +51,56 @@ const VacancyDetailPage = () => {
           if (!region) return "";
 
           const regionLower = region.toLowerCase().trim();
-
-          // Special case for Qoraqalpog'iston
-          if (regionLower === "qoraqalpogiston") {
-            return "Qoraqalpog'iston Respublikasi";
+          
+          // Use translation for region name
+          const regionKey = `jobs.regions.${regionLower}`;
+          const translatedName = t(regionKey);
+          
+          // If translation exists and is different from the key, use it
+          if (translatedName && translatedName !== regionKey) {
+            return translatedName;
           }
 
-          // For other regions: capitalize first letter and add "viloyati"
-          const capitalized =
-            region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
-          return `${capitalized} viloyati`;
+          // Fallback: capitalize first letter and add "viloyati" for Latin
+          const currentLanguage =
+            i18n.language || localStorage.getItem("language") || "uz-Latn";
+          
+          if (currentLanguage === "ru") {
+            // For Russian, add "ская область" or "Республика"
+            if (regionLower === "qoraqalpogiston") {
+              return "Республика Каракалпакстан";
+            }
+            const capitalized =
+              region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+            return `${capitalized}ская область`;
+          } else if (currentLanguage === "uz-Cyrl") {
+            // For Cyrillic, add " вилояти" or " Республикаси"
+            if (regionLower === "qoraqalpogiston") {
+              return "Қорақалпоғистон Республикаси";
+            }
+            const capitalized =
+              region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+            return `${capitalized} вилояти`;
+          } else {
+            // For Latin, add " viloyati" or " Respublikasi"
+            if (regionLower === "qoraqalpogiston") {
+              return "Qoraqalpog'iston Respublikasi";
+            }
+            const capitalized =
+              region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+            return `${capitalized} viloyati`;
+          }
         };
 
         // Helper function to format location based on branch_type
         const formatLocation = (vacancyData) => {
           if (vacancyData.branch_type === "central") {
-            return vacancyData.branch_type_display || "Markaziy Apparat";
+            return vacancyData.branch_type_display || t("jobs.central_apparatus");
           } else if (vacancyData.branch_type === "regional") {
             return formatRegionName(vacancyData.region);
           }
           // Fallback
-          return vacancyData.branch_type_display || "Markaziy Apparat";
+          return vacancyData.branch_type_display || t("jobs.central_apparatus");
         };
 
         // Get language-specific fields
@@ -79,6 +108,8 @@ const VacancyDetailPage = () => {
         const requirementsField = `requirements_${langSuffix}`;
         const jobTasksField = `job_tasks_${langSuffix}`;
         const managementNameField = `name_${langSuffix}`;
+        const regionTitleField = `region_title_${langSuffix}`;
+        const departmentNameField = `name_${langSuffix}`;
 
         // Get title based on current language
         const vacancyTitle =
@@ -88,6 +119,14 @@ const VacancyDetailPage = () => {
           vacancyData.title_ru ||
           "";
 
+        // Get region title based on current language
+        const regionTitle =
+          vacancyData[regionTitleField] ||
+          vacancyData.region_title_uz ||
+          vacancyData.region_title_cr ||
+          vacancyData.region_title_ru ||
+          null;
+
         // Get management name based on current language
         const managementName =
           vacancyData.management_details?.[managementNameField] ||
@@ -95,7 +134,31 @@ const VacancyDetailPage = () => {
           vacancyData.management_details?.name_cr ||
           vacancyData.management_details?.name_ru ||
           vacancyData.management?.name ||
-          "Markaziy apparat";
+          "";
+
+        // Get department name from management_details.department if available
+        let departmentName = "";
+        if (vacancyData.management_details?.department) {
+          // If department is an object with name fields
+          if (typeof vacancyData.management_details.department === 'object') {
+            departmentName =
+              vacancyData.management_details.department[departmentNameField] ||
+              vacancyData.management_details.department.name_uz ||
+              vacancyData.management_details.department.name_cr ||
+              vacancyData.management_details.department.name_ru ||
+              "";
+          }
+        }
+
+        // Format department name: "department_name - management_name" or just management_name
+        let formattedDepartmentName = "";
+        if (departmentName && managementName) {
+          formattedDepartmentName = `${departmentName} - ${managementName}`;
+        } else if (managementName) {
+          formattedDepartmentName = managementName;
+        } else {
+          formattedDepartmentName = t("jobs.central_apparatus");
+        }
 
         // Get requirements based on current language
         const vacancyRequirements =
@@ -117,15 +180,16 @@ const VacancyDetailPage = () => {
         const transformedVacancy = {
           id: vacancyData.id.toString(),
           title: vacancyTitle,
-          department: managementName,
+          department: formattedDepartmentName,
           location: formatLocation(vacancyData),
+          regionTitle: regionTitle,
           type: "Full-time",
           deadline: vacancyData.application_deadline,
           testDeadline:
             vacancyData.test_scheduled_at || vacancyData.application_deadline,
           salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
-          description: managementName
-            ? `${managementName} - ${vacancyTitle}`
+          description: formattedDepartmentName
+            ? `${formattedDepartmentName} - ${vacancyTitle}`
             : vacancyTitle,
           requirements: parseJsonArray(vacancyRequirements),
           responsibilities: parseJsonArray(vacancyJobTasks),
@@ -282,7 +346,7 @@ const VacancyDetailPage = () => {
             >
               <Icon name="ArrowLeft" size={16} />
               <span>
-                {regionName ? "Orqaga" : t("jobs.back_to_departments")}
+                {regionName ? t("surveys.back") : t("jobs.back_to_departments")}
               </span>
             </button>
           </div>
@@ -322,6 +386,27 @@ const VacancyDetailPage = () => {
 
             {/* Content Section */}
             <div className="p-6 space-y-8">
+              {/* Region Title Info */}
+              {vacancy?.regionTitle && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center space-x-3">
+                    <Icon
+                      name="MapPin"
+                      size={18}
+                      className="text-blue-600 dark:text-blue-400 flex-shrink-0"
+                    />
+                    <div className="flex-1">
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium block mb-1">
+                        {t("jobs.region_title")}
+                      </span>
+                      <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                        {vacancy.regionTitle}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Deadlines */}
               <div className="space-y-3">
                 <div

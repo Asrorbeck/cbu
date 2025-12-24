@@ -12,9 +12,17 @@ import {
 } from "../../services/api";
 
 const Applications = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { type } = useParams(); // "jobs", "reports", "appeals", "spelling"
+
+  // Helper function to get language suffix for backend fields
+  const getLanguageSuffix = (language) => {
+    if (language === "uz-Latn") return "uz";
+    if (language === "uz-Cyrl") return "cr";
+    if (language === "ru") return "ru";
+    return "uz"; // default fallback
+  };
 
   const [applicationsData, setApplicationsData] = useState({
     apply_jobs: [],
@@ -44,66 +52,117 @@ const Applications = () => {
         const data = await myApplicationsAPI.getMyApplications(userId);
 
         // Transform job applications
-        const jobApplications = await Promise.all(
-          (data.apply_jobs || []).map(async (app) => {
-            try {
-              // Get vacancy details if job ID exists
-              // Handle both number and object cases for app.job
-              const jobId =
-                typeof app.job === "object" && app.job !== null
-                  ? app.job.id || app.job
-                  : app.job;
+        // Get current language suffix
+        const currentLanguage =
+          i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const langSuffix = getLanguageSuffix(currentLanguage);
 
-              if (jobId) {
-                const vacancyDetails = await vacanciesAPI.getVacancyById(jobId);
+        // Get language-specific fields
+        const titleField = `title_${langSuffix}`;
+        const managementNameField = `name_${langSuffix}`;
+        const departmentNameField = `name_${langSuffix}`;
 
-                // Check if management exists and has department
-                if (vacancyDetails?.management?.department) {
-                  const departmentDetails =
-                    await departmentsAPI.getDepartmentById(
-                      vacancyDetails.management.department
-                    );
-                  return {
-                    ...app,
-                    applicationType: "job",
-                    vacancyTitle: vacancyDetails.title,
-                    departmentName: departmentDetails?.name || "Noma'lum",
-                    submittedAt: app.created_at || app.submittedAt,
-                    status: app.status || "pending",
-                  };
-                } else {
-                  // If no management or department, return with vacancy title only
-                  return {
-                    ...app,
-                    applicationType: "job",
-                    vacancyTitle: vacancyDetails?.title || "Noma'lum vakansiya",
-                    departmentName:
-                      vacancyDetails?.management?.name || "Noma'lum",
-                    submittedAt: app.created_at || app.submittedAt,
-                    status: app.status || "pending",
-                  };
-                }
-              }
+        // Helper function to format region name
+        const formatRegionName = (region) => {
+          if (!region) return "";
+          const regionKey = `jobs.regions.${region.toLowerCase()}`;
+          const translatedName = t(regionKey);
+          if (translatedName && translatedName !== regionKey) {
+            return translatedName;
+          }
+          return region;
+        };
+
+        const jobApplications = (data.apply_jobs || []).map((app) => {
+          try {
+            // Get job data from app.job object
+            const jobData = app.job;
+            
+            if (!jobData) {
               return {
                 ...app,
                 applicationType: "job",
-                submittedAt: app.created_at || app.submittedAt,
-                status: app.status || "pending",
-              };
-            } catch (error) {
-              console.error(
-                `Error fetching details for job application ${app.id}:`,
-                error
-              );
-              return {
-                ...app,
-                applicationType: "job",
+                vacancyTitle: "Noma'lum vakansiya",
+                departmentName: "Noma'lum",
                 submittedAt: app.created_at || app.submittedAt,
                 status: app.status || "pending",
               };
             }
-          })
-        );
+
+            // Get title based on current language
+            const vacancyTitle =
+              jobData[titleField] ||
+              jobData.title_uz ||
+              jobData.title_cr ||
+              jobData.title_ru ||
+              "Noma'lum vakansiya";
+
+            // Get department name and management name
+            let departmentName = "";
+            let managementName = "";
+
+            // Check if management exists
+            if (jobData.management) {
+              // Get management name
+              managementName =
+                jobData.management[managementNameField] ||
+                jobData.management.name_uz ||
+                jobData.management.name_cr ||
+                jobData.management.name_ru ||
+                "";
+
+              // Get department name from management.department if available
+              if (jobData.management.department) {
+                // If department is an object with name fields
+                if (typeof jobData.management.department === 'object') {
+                  departmentName =
+                    jobData.management.department[departmentNameField] ||
+                    jobData.management.department.name_uz ||
+                    jobData.management.department.name_cr ||
+                    jobData.management.department.name_ru ||
+                    "";
+                }
+              }
+            }
+
+            // Format department name: "department_name - management_name" or just management_name or region
+            let formattedDepartmentName = "";
+            if (jobData.branch_type === "regional" && jobData.region) {
+              // For regional, show region name
+              formattedDepartmentName = formatRegionName(jobData.region);
+            } else if (departmentName && managementName) {
+              formattedDepartmentName = `${departmentName} - ${managementName}`;
+            } else if (managementName) {
+              formattedDepartmentName = managementName;
+            } else if (departmentName) {
+              formattedDepartmentName = departmentName;
+            } else {
+              formattedDepartmentName = t("jobs.central_apparatus");
+            }
+
+            return {
+              ...app,
+              applicationType: "job",
+              vacancyTitle: vacancyTitle,
+              departmentName: formattedDepartmentName,
+              submittedAt: app.created_at || app.submittedAt,
+              status: app.status || "pending",
+            };
+          } catch (error) {
+            console.error(
+              `Error processing job application ${app.id}:`,
+              error
+            );
+            return {
+              ...app,
+              applicationType: "job",
+              vacancyTitle: "Noma'lum vakansiya",
+              departmentName: "Noma'lum",
+              submittedAt: app.created_at || app.submittedAt,
+              status: app.status || "pending",
+            };
+          }
+        });
 
         // Transform reports (corruption & consumer rights)
         const reports = (data.reports || []).map((report) => ({
@@ -186,7 +245,7 @@ const Applications = () => {
     };
 
     loadApplications();
-  }, [type]);
+  }, [type, i18n.language]);
 
   const getStatusColor = (status) => {
     switch (status) {

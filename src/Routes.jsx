@@ -23,6 +23,7 @@ import HomeDashboard from "./pages/home-dashboard";
 import NewsArticlesHub from "./pages/news-articles-hub";
 import FeedbackSubmission from "./pages/feedback-submission";
 import JobVacanciesBrowser from "./pages/job-vacancies-browser";
+import CentralDepartmentsPage from "./pages/job-vacancies-browser/central-departments";
 import DepartmentPage from "./pages/department";
 import RegionsPage from "./pages/regions";
 import RegionPage from "./pages/region";
@@ -54,6 +55,18 @@ const Routes = () => {
           <Route path="/news-articles-hub" element={<NewsArticlesHub />} />
           <Route path="/submissions" element={<FeedbackSubmission />} />
           <Route path="/departments" element={<JobVacanciesBrowser />} />
+          <Route
+            path="/departments/central"
+            element={<CentralDepartmentsPage />}
+          />
+          <Route
+            path="/departments/regional"
+            element={<RegionsPage />}
+          />
+          <Route
+            path="/departments/central/:departmentId"
+            element={<DepartmentPage />}
+          />
           <Route
             path="/departments/:departmentId"
             element={<DepartmentPage />}

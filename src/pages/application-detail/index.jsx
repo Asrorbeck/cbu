@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
@@ -10,8 +11,17 @@ import { formatDate } from "../../utils/dateFormatter";
 const ApplicationDetail = () => {
   const navigate = useNavigate();
   const { type, id } = useParams();
+  const { t, i18n } = useTranslation();
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Helper function to get language suffix for API fields
+  const getLanguageSuffix = (language) => {
+    if (language === "uz-Latn") return "uz";
+    if (language === "uz-Cyrl") return "cr";
+    if (language === "ru") return "ru";
+    return "uz"; // default fallback
+  };
 
   useEffect(() => {
     const loadApplication = async () => {
@@ -43,31 +53,74 @@ const ApplicationDetail = () => {
             try {
               // Extract job details from foundApp.job object
               const jobData = foundApp.job;
-              let departmentName = "Noma'lum";
               
-              // Get department name from management_details
-              if (jobData?.management_details?.department) {
-                try {
-                  const departmentDetails = await departmentsAPI.getDepartmentById(
-                    jobData.management_details.department
-                  );
-                  departmentName = departmentDetails?.name || jobData.management_details?.name || "Noma'lum";
-                } catch (error) {
-                  console.error("Error fetching department details:", error);
-                  departmentName = jobData.management_details?.name || "Noma'lum";
-                }
-              } else if (jobData?.management_details?.name) {
-                departmentName = jobData.management_details.name;
+              // Get current language suffix
+              const currentLanguage =
+                i18n.language || localStorage.getItem("language") || "uz-Latn";
+              const langSuffix = getLanguageSuffix(currentLanguage);
+              
+              // Get language-specific fields
+              const titleField = `title_${langSuffix}`;
+              const managementNameField = `name_${langSuffix}`;
+              const departmentNameField = `name_${langSuffix}`;
+              
+              // Get title based on current language
+              const vacancyTitle =
+                jobData?.[titleField] ||
+                jobData?.title_uz ||
+                jobData?.title_cr ||
+                jobData?.title_ru ||
+                "Noma'lum vakansiya";
+              
+              // Get department name and management name
+              let departmentName = "";
+              let managementName = "";
+              
+              // Get department name from management.department
+              if (jobData?.management?.department) {
+                const department = jobData.management.department;
+                departmentName =
+                  department[departmentNameField] ||
+                  department.name_uz ||
+                  department.name_cr ||
+                  department.name_ru ||
+                  "";
               }
+              
+              // Get management name
+              if (jobData?.management?.[managementNameField]) {
+                managementName =
+                  jobData.management[managementNameField] ||
+                  jobData.management.name_uz ||
+                  jobData.management.name_cr ||
+                  jobData.management.name_ru ||
+                  "";
+              }
+              
+              // Format: "department_name - management_name"
+              let formattedDepartmentName = "Noma'lum";
+              if (departmentName && managementName) {
+                formattedDepartmentName = `${departmentName} - ${managementName}`;
+              } else if (departmentName) {
+                formattedDepartmentName = departmentName;
+              } else if (managementName) {
+                formattedDepartmentName = managementName;
+              }
+              
+              // Get user full name from user object
+              const fullName = foundApp.user?.full_name || foundApp.full_name || "";
               
               foundApp = {
                 ...foundApp,
                 applicationType: "job",
-                vacancyTitle: jobData?.title || "Noma'lum vakansiya",
-                departmentName: departmentName,
-                fullName: foundApp.full_name,
-                phone: foundApp.phone,
+                vacancyTitle: vacancyTitle,
+                departmentName: formattedDepartmentName,
+                fullName: fullName,
+                phone: foundApp.phone || foundApp.user?.phone_number || "",
                 birthDate: foundApp.data_of_birth,
+                jshshir: foundApp.jshshir,
+                monthlySalary: foundApp.monthly_salary,
+                resume: foundApp.resume,
                 additionalInfo: foundApp.additional_information,
                 graduations: foundApp.graduations || [],
                 employments: foundApp.employments || [],
@@ -80,9 +133,12 @@ const ApplicationDetail = () => {
               foundApp = {
                 ...foundApp,
                 applicationType: "job",
-                fullName: foundApp.full_name,
-                phone: foundApp.phone,
+                fullName: foundApp.user?.full_name || foundApp.full_name || "",
+                phone: foundApp.phone || foundApp.user?.phone_number || "",
                 birthDate: foundApp.data_of_birth,
+                jshshir: foundApp.jshshir,
+                monthlySalary: foundApp.monthly_salary,
+                resume: foundApp.resume,
                 additionalInfo: foundApp.additional_information,
                 graduations: foundApp.graduations || [],
                 employments: foundApp.employments || [],
@@ -164,7 +220,7 @@ const ApplicationDetail = () => {
     };
 
     loadApplication();
-  }, [type, id]);
+  }, [type, id, i18n.language]);
 
   const getStatusColor = (status) => {
     switch (status) {

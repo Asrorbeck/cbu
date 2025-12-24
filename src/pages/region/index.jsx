@@ -12,39 +12,76 @@ import { vacanciesAPI } from "../../services/api";
 const RegionPage = () => {
   const { regionName } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [vacancies, setVacancies] = useState([]);
 
+  // Helper function to get language suffix for API fields
+  const getLanguageSuffix = (language) => {
+    if (language === "uz-Latn") return "uz";
+    if (language === "uz-Cyrl") return "cr";
+    if (language === "ru") return "ru";
+    return "uz"; // default fallback
+  };
+
   // Helper function to format region name
   const formatRegionName = (region) => {
     if (!region) return "";
 
     const regionLower = region.toLowerCase().trim();
-
-    // Special case for Qoraqalpog'iston
-    if (regionLower === "qoraqalpogiston") {
-      return "Qoraqalpog'iston Respublikasi";
+    
+    // Use translation for region name
+    const regionKey = `jobs.regions.${regionLower}`;
+    const translatedName = t(regionKey);
+    
+    // If translation exists and is different from the key, use it
+    if (translatedName && translatedName !== regionKey) {
+      return translatedName;
     }
 
-    // For other regions: capitalize first letter and add "viloyati"
-    const capitalized =
-      region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
-    return `${capitalized} viloyati`;
+    // Fallback: capitalize first letter and add "viloyati" for Latin
+    const currentLanguage =
+      i18n.language || localStorage.getItem("language") || "uz-Latn";
+    
+    if (currentLanguage === "ru") {
+      // For Russian, add "ская область" or "Республика"
+      if (regionLower === "qoraqalpogiston") {
+        return "Республика Каракалпакстан";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized}ская область`;
+    } else if (currentLanguage === "uz-Cyrl") {
+      // For Cyrillic, add " вилояти" or " Республикаси"
+      if (regionLower === "qoraqalpogiston") {
+        return "Қорақалпоғистон Республикаси";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized} вилояти`;
+    } else {
+      // For Latin, add " viloyati" or " Respublikasi"
+      if (regionLower === "qoraqalpogiston") {
+        return "Qoraqalpog'iston Respublikasi";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized} viloyati`;
+    }
   };
 
   // Helper function to format location based on branch_type
   const formatLocation = (vacancy) => {
     if (vacancy.branch_type === "central") {
-      return vacancy.branch_type_display || "Markaziy Apparat";
+      return vacancy.branch_type_display || t("jobs.central_apparatus");
     } else if (vacancy.branch_type === "regional") {
       return formatRegionName(vacancy.region);
     }
     // Fallback
-    return vacancy.branch_type_display || "Markaziy Apparat";
+    return vacancy.branch_type_display || t("jobs.central_apparatus");
   };
 
   // Helper function to parse requirements (can be string or JSON)
@@ -120,23 +157,73 @@ const RegionPage = () => {
           ? vacanciesData
           : [];
 
-        const transformedVacancies = vacanciesArray.map((vacancy) => ({
-          id: vacancy.id, // Keep original numeric ID for encoding
-          title: vacancy.title, // Keep original title from backend
-          department: vacancy.management_details?.name || "",
-          location: formatLocation(vacancy),
-          type: "Full-time",
-          deadline: vacancy.application_deadline,
-          testDeadline:
-            vacancy.test_scheduled_at || vacancy.application_deadline,
-          salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
-          description: vacancy.management_details?.name
-            ? `${vacancy.management_details.name} - ${vacancy.title}`
-            : vacancy.title, // Use management_details.name + title for short description
-          fullDescription: vacancy.description,
-          requirements: parseRequirements(vacancy.requirements),
-          responsibilities: parseJobTasks(vacancy.job_tasks),
-        }));
+        // Filter only active vacancies (is_active: true)
+        const activeVacancies = vacanciesArray.filter(
+          (vacancy) => vacancy.is_active === true
+        );
+
+        // Get current language suffix
+        const currentLanguage =
+          i18n.language || localStorage.getItem("language") || "uz-Latn";
+        const langSuffix = getLanguageSuffix(currentLanguage);
+
+        // Get language-specific fields for vacancies
+        const titleField = `title_${langSuffix}`;
+        const requirementsField = `requirements_${langSuffix}`;
+        const jobTasksField = `job_tasks_${langSuffix}`;
+        const managementNameField = `name_${langSuffix}`;
+
+        const transformedVacancies = activeVacancies.map((vacancy) => {
+          // Get title based on current language
+          const vacancyTitle =
+            vacancy[titleField] ||
+            vacancy.title_uz ||
+            vacancy.title_cr ||
+            vacancy.title_ru ||
+            "";
+
+          // Get management name based on current language
+          const managementName =
+            vacancy.management_details?.[managementNameField] ||
+            vacancy.management_details?.name_uz ||
+            vacancy.management_details?.name_cr ||
+            vacancy.management_details?.name_ru ||
+            "";
+
+          // Get requirements based on current language
+          const vacancyRequirements =
+            vacancy[requirementsField] ||
+            vacancy.requirements_uz ||
+            vacancy.requirements_cr ||
+            vacancy.requirements_ru ||
+            [];
+
+          // Get job tasks based on current language
+          const vacancyJobTasks =
+            vacancy[jobTasksField] ||
+            vacancy.job_tasks_uz ||
+            vacancy.job_tasks_cr ||
+            vacancy.job_tasks_ru ||
+            [];
+
+          return {
+            id: vacancy.id, // Keep original numeric ID for encoding
+            title: vacancyTitle,
+            department: managementName || formatRegionName(vacancy.region),
+            location: formatLocation(vacancy),
+            type: "Full-time",
+            deadline: vacancy.application_deadline,
+            testDeadline:
+              vacancy.test_scheduled_at || vacancy.application_deadline,
+            salary: "15,000,000 - 22,000,000 UZS", // This might need to come from API
+            description: managementName
+              ? `${managementName} - ${vacancyTitle}`
+              : vacancyTitle, // Use management_details.name + title for short description
+            fullDescription: vacancy.description || "",
+            requirements: parseRequirements(vacancyRequirements),
+            responsibilities: parseJobTasks(vacancyJobTasks),
+          };
+        });
         setVacancies(transformedVacancies);
       } catch (error) {
         console.error("Error fetching vacancies:", error);
@@ -148,7 +235,7 @@ const RegionPage = () => {
     };
 
     fetchVacancies();
-  }, [regionName]);
+  }, [regionName, i18n.language]);
 
   const handleVacancySelect = (vacancy) => {
     // Encode the vacancy ID for URL

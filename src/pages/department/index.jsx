@@ -193,27 +193,56 @@ const DepartmentPage = () => {
     if (!region) return "";
 
     const regionLower = region.toLowerCase().trim();
-
-    // Special case for Qoraqalpog'iston
-    if (regionLower === "qoraqalpogiston") {
-      return "Qoraqalpog'iston Respublikasi";
+    
+    // Use translation for region name
+    const regionKey = `jobs.regions.${regionLower}`;
+    const translatedName = t(regionKey);
+    
+    // If translation exists and is different from the key, use it
+    if (translatedName && translatedName !== regionKey) {
+      return translatedName;
     }
 
-    // For other regions: capitalize first letter and add "viloyati"
-    const capitalized =
-      region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
-    return `${capitalized} viloyati`;
+    // Fallback: capitalize first letter and add "viloyati" for Latin
+    const currentLanguage =
+      i18n.language || localStorage.getItem("language") || "uz-Latn";
+    
+    if (currentLanguage === "ru") {
+      // For Russian, add "ская область" or "Республика"
+      if (regionLower === "qoraqalpogiston") {
+        return "Республика Каракалпакстан";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized}ская область`;
+    } else if (currentLanguage === "uz-Cyrl") {
+      // For Cyrillic, add " вилояти" or " Республикаси"
+      if (regionLower === "qoraqalpogiston") {
+        return "Қорақалпоғистон Республикаси";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized} вилояти`;
+    } else {
+      // For Latin, add " viloyati" or " Respublikasi"
+      if (regionLower === "qoraqalpogiston") {
+        return "Qoraqalpog'iston Respublikasi";
+      }
+      const capitalized =
+        region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+      return `${capitalized} viloyati`;
+    }
   };
 
   // Helper function to format location based on branch_type
   const formatLocation = (vacancy) => {
     if (vacancy.branch_type === "central") {
-      return vacancy.branch_type_display || "Markaziy Apparat";
+      return vacancy.branch_type_display || t("jobs.central_apparatus");
     } else if (vacancy.branch_type === "regional") {
       return formatRegionName(vacancy.region);
     }
     // Fallback
-    return vacancy.branch_type_display || "Markaziy Apparat";
+    return vacancy.branch_type_display || t("jobs.central_apparatus");
   };
 
   // Helper function to parse requirements (can be string or JSON)
@@ -367,7 +396,7 @@ const DepartmentPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/departments?branchType=central")}
+              onClick={() => navigate("/departments/central")}
               className="flex-shrink-0"
             >
               <Icon name="ArrowLeft" size={20} />

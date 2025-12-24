@@ -11,31 +11,19 @@ const RegionsPage = () => {
 
   // Region cards data
   const regionCards = [
-    { id: "toshkent", name: "Toshkent", displayName: "Toshkent viloyati" },
-    {
-      id: "qashqadaryo",
-      name: "Qashqadaryo",
-      displayName: "Qashqadaryo viloyati",
-    },
-    { id: "samarqand", name: "Samarqand", displayName: "Samarqand viloyati" },
-    { id: "navoiy", name: "Navoiy", displayName: "Navoiy viloyati" },
-    { id: "andijon", name: "Andijon", displayName: "Andijon viloyati" },
-    { id: "fargona", name: "Farg'ona", displayName: "Farg'ona viloyati" },
-    { id: "namangan", name: "Namangan", displayName: "Namangan viloyati" },
-    {
-      id: "surxondaryo",
-      name: "Surxondaryo",
-      displayName: "Surxondaryo viloyati",
-    },
-    { id: "sirdaryo", name: "Sirdaryo", displayName: "Sirdaryo viloyati" },
-    { id: "jizzax", name: "Jizzax", displayName: "Jizzax viloyati" },
-    { id: "buxoro", name: "Buxoro", displayName: "Buxoro viloyati" },
-    { id: "xorazm", name: "Xorazm", displayName: "Xorazm viloyati" },
-    {
-      id: "qoraqalpogiston",
-      name: "Qoraqalpog'iston",
-      displayName: "Qoraqalpog'iston Respublikasi",
-    },
+    { id: "toshkent", name: "Toshkent" },
+    { id: "qashqadaryo", name: "Qashqadaryo" },
+    { id: "samarqand", name: "Samarqand" },
+    { id: "navoiy", name: "Navoiy" },
+    { id: "andijon", name: "Andijon" },
+    { id: "fargona", name: "Farg'ona" },
+    { id: "namangan", name: "Namangan" },
+    { id: "surxondaryo", name: "Surxondaryo" },
+    { id: "sirdaryo", name: "Sirdaryo" },
+    { id: "jizzax", name: "Jizzax" },
+    { id: "buxoro", name: "Buxoro" },
+    { id: "xorazm", name: "Xorazm" },
+    { id: "qoraqalpogiston", name: "Qoraqalpog'iston" },
   ];
 
   const handleRegionSelect = (regionId) => {
@@ -59,10 +47,10 @@ const RegionsPage = () => {
             </Button>
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                Hududiy bosh boshqarmalar
+                {t("jobs.regional_management")}
               </h1>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
-                Hududiy boshqarmalar bo'limlari va vakansiyalari
+                {t("jobs.regional_management_description")}
               </p>
             </div>
           </div>
@@ -87,10 +75,10 @@ const RegionsPage = () => {
                 {/* Content */}
                 <div className="space-y-3 pr-16">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                    {region.displayName}
+                    {t(`jobs.regions.${region.id}`)}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {region.displayName} vakansiyalari
+                    {t(`jobs.regions.${region.id}`)} {t("jobs.vacancies_title").toLowerCase()}
                   </p>
                 </div>
 

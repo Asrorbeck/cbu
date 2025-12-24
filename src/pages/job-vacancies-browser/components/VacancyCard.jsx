@@ -40,6 +40,24 @@ const VacancyCard = ({ vacancy, onSelect }) => {
   const isVacancyClosed = isDeadlinePassed();
   const isUrgent = daysRemaining <= 7 && daysRemaining > 0;
 
+  // Format location to show translated "Markaziy Apparat" based on current language
+  const getFormattedLocation = () => {
+    const location = vacancy?.location;
+    if (!location) return t("jobs.central_apparatus");
+    
+    // Check if location is "Markaziy Apparat" in any form (Latin, Cyrillic, or Russian)
+    const locationLower = location.toLowerCase().trim();
+    if (
+      locationLower === "markaziy apparat" ||
+      locationLower === "марказий аппарат" ||
+      locationLower === "центральный аппарат"
+    ) {
+      return t("jobs.central_apparatus");
+    }
+    
+    return location;
+  };
+
   const handleCardClick = () => {
     // Use onSelect prop if provided (for DepartmentPage), otherwise use default navigation
     if (onSelect) {
@@ -148,7 +166,7 @@ const VacancyCard = ({ vacancy, onSelect }) => {
           <div className="flex items-center space-x-2">
             <Icon name="MapPin" size={14} className="text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              {vacancy?.location}
+              {getFormattedLocation()}
             </span>
           </div>
           <div className="flex items-center space-x-2 text-primary opacity-100 group-hover:opacity-100 transition-opacity duration-300">

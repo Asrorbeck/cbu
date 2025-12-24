@@ -8,7 +8,8 @@ const DepartmentCard = ({ department }) => {
   const { t } = useTranslation();
 
   const handleCardClick = () => {
-    navigate(`/departments/${department?.id}`);
+    // Navigate to department page with central prefix
+    navigate(`/departments/central/${department?.id}`);
   };
 
   return (

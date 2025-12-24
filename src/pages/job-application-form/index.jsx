@@ -45,8 +45,8 @@ const JobApplicationForm = () => {
         const transformedVacancy = {
           id: vacancyData.id.toString(),
           title: vacancyData.title,
-          department: vacancyData.management?.name || "Markaziy apparat",
-          location: vacancyData.management?.name || "Markaziy apparat",
+          department: vacancyData.management?.name || t("jobs.central_apparatus"),
+          location: vacancyData.management?.name || t("jobs.central_apparatus"),
           type: "Full-time",
           deadline: vacancyData.application_deadline,
           testDeadline: vacancyData.application_deadline,
@@ -234,16 +234,70 @@ const JobApplicationForm = () => {
     return cleaned;
   };
 
-  // Validate JShShIR (must be exactly 14 digits)
+  // Validate phone number completeness for +998
+  const isPhoneComplete = (phone) => {
+    if (!phone) return false;
+    // If starts with +998, check if it's complete: +998 XX XXX XX XX (17 characters)
+    if (phone.startsWith("+998")) {
+      // Remove spaces to count digits
+      const digits = phone.replace(/\D/g, "");
+      // Should have +998 (3 digits) + 9 digits after = 12 total digits, formatted should be exactly 17 characters
+      // Format: +998 XX XXX XX XX = 4 + 1 + 2 + 1 + 3 + 1 + 2 + 1 + 2 = 17 characters
+      return phone.length === 17 && digits.length === 12;
+    }
+    // For other formats, consider complete if has reasonable length
+    return phone.length >= 10;
+  };
+
+  // Validate JShShIR (must be exactly 14 digits with advanced validation)
   const validateJShShIR = (value) => {
     if (!value || value.trim().length === 0) {
-      return "JShShIR kiritilishi shart";
+      return t("jobs.application.form.jshshir_required");
     }
     
     // Remove spaces and check if it's exactly 14 digits
     const cleaned = value.replace(/\D/g, "");
     if (cleaned.length !== 14) {
-      return "JShShIR 14 ta raqamdan iborat bo'lishi kerak";
+      return t("jobs.application.form.jshshir_length_error");
+    }
+    
+    // Check if all digits are the same (e.g., 11111111111111, 22222222222222)
+    const allSame = /^(\d)\1{13}$/.test(cleaned);
+    if (allSame) {
+      return t("jobs.application.form.jshshir_same_digits_error");
+    }
+    
+    // Check for simple patterns like 12121212121212
+    const simplePattern = /^(\d{1,2})\1{6,}$/.test(cleaned);
+    if (simplePattern) {
+      return t("jobs.application.form.jshshir_pattern_error");
+    }
+    
+    // Validate date logic: first digit, then date (DDMMYY format)
+    // Example: 51007021111111 where 100702 = July 10, 2002 (DD=10, MM=07, YY=02)
+    const firstDigit = parseInt(cleaned[0]);
+    const datePart = cleaned.substring(1, 7); // Next 6 digits: DDMMYY
+    const day = parseInt(datePart.substring(0, 2));
+    const month = parseInt(datePart.substring(2, 4));
+    const year = parseInt(datePart.substring(4, 6));
+    
+    // Validate month (1-12)
+    if (month < 1 || month > 12) {
+      return t("jobs.application.form.jshshir_invalid");
+    }
+    
+    // Validate day (1-31, but we'll check more precisely)
+    if (day < 1 || day > 31) {
+      return t("jobs.application.form.jshshir_invalid");
+    }
+    
+    // Check if date is valid (considering leap years, etc.)
+    // Full year: if first digit is 5, it's 20XX, if 4, it's 19XX
+    const fullYear = firstDigit === 5 ? 2000 + year : (firstDigit === 4 ? 1900 + year : 2000 + year);
+    const date = new Date(fullYear, month - 1, day);
+    
+    if (date.getFullYear() !== fullYear || date.getMonth() !== month - 1 || date.getDate() !== day) {
+      return t("jobs.application.form.jshshir_invalid");
     }
     
     return null; // Validation passed
@@ -498,6 +552,10 @@ const JobApplicationForm = () => {
         if (endMonth < startMonth) {
           updatedEducation[index].endMonth = "";
         }
+        // If same year and same month, clear end month (cannot be same month)
+        if (endMonth === startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
       }
     }
 
@@ -509,6 +567,38 @@ const JobApplicationForm = () => {
         const startMonth = parseInt(value || "1");
         const endMonth = parseInt(updatedEducation[index].endMonth);
         if (endMonth < startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
+        // If same month, clear end month (cannot be same month)
+        if (endMonth === startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
+      }
+    }
+
+    // If end year changes and same as start year, check month
+    if (field === "endYear" && updatedEducation[index].startYear) {
+      const startYear = parseInt(updatedEducation[index].startYear);
+      const endYear = parseInt(value);
+      if (endYear === startYear && updatedEducation[index].endMonth && updatedEducation[index].startMonth) {
+        const startMonth = parseInt(updatedEducation[index].startMonth);
+        const endMonth = parseInt(updatedEducation[index].endMonth);
+        // If same month, clear end month (cannot be same month)
+        if (endMonth === startMonth) {
+          updatedEducation[index].endMonth = "";
+        }
+      }
+    }
+
+    // If end month changes and same year and month as start, clear it
+    if (field === "endMonth" && updatedEducation[index].startYear && updatedEducation[index].endYear) {
+      const startYear = parseInt(updatedEducation[index].startYear);
+      const endYear = parseInt(updatedEducation[index].endYear);
+      if (startYear === endYear && updatedEducation[index].startMonth) {
+        const startMonth = parseInt(updatedEducation[index].startMonth);
+        const endMonth = parseInt(value);
+        // If same month, clear end month (cannot be same month)
+        if (endMonth === startMonth) {
           updatedEducation[index].endMonth = "";
         }
       }
@@ -565,6 +655,19 @@ const JobApplicationForm = () => {
         education: updatedEducation,
       }));
     }
+  };
+
+  // Check if work experience entry has any field filled
+  const isWorkExperienceEntryStarted = (work) => {
+    return !!(
+      work.startYear ||
+      work.startMonth ||
+      work.endYear ||
+      work.endMonth ||
+      work.company ||
+      work.position ||
+      work.isCurrent
+    );
   };
 
   // Handle work experience changes
@@ -680,29 +783,102 @@ const JobApplicationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate fullName before submission
-    const fullNameError = validateFullName(formData.fullName);
-    if (fullNameError) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        fullName: fullNameError,
-      }));
-      toast.error("Iltimos, to'liq ism-familiyani to'g'ri formatda kiriting", {
-        duration: 4000,
-        position: "top-center",
-      });
-      setIsSubmitting(false);
-      return;
+    // Collect all errors first, don't return early
+    const errors = {};
+
+    // Validate phone number (required)
+    if (!formData.phone || formData.phone.trim() === "") {
+      errors.phone = "Telefon raqami kiritilishi shart";
+    } else if (formData.phone.startsWith("+998") && !isPhoneComplete(formData.phone)) {
+      errors.phone = "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)";
     }
 
-    // Validate JShShIR before submission
+    // Validate birth date (required)
+    if (!formData.birthDate || formData.birthDate.trim() === "") {
+      errors.birthDate = "Tug'ilgan sana kiritilishi shart";
+    }
+
+    // Validate fullName
+    const fullNameError = validateFullName(formData.fullName);
+    if (fullNameError) {
+      errors.fullName = fullNameError;
+    }
+
+    // Validate JShShIR
     const jshshirError = validateJShShIR(formData.jshshir);
     if (jshshirError) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        jshshir: jshshirError,
-      }));
-      toast.error("Iltimos, JShShIR ni to'g'ri kiriting (14 ta raqam)", {
+      errors.jshshir = jshshirError;
+    }
+
+    // Validate languages (all required)
+    if (!formData.languages.uzbek) {
+      errors.languages_uzbek = "Tilni tanlash majburiy";
+    }
+    if (!formData.languages.russian) {
+      errors.languages_russian = "Tilni tanlash majburiy";
+    }
+    if (!formData.languages.english) {
+      errors.languages_english = "Tilni tanlash majburiy";
+    }
+
+    // Validate expected salary
+    if (!formData.expectedSalary || formData.expectedSalary.trim() === "") {
+      errors.expectedSalary = "Kutayotgan oylik kiritilishi shart";
+    }
+
+    // Validate business trip ready
+    if (!formData.businessTripReady || formData.businessTripReady.trim() === "") {
+      errors.businessTripReady = "Xizmat safarlariga borishni tanlash majburiy";
+    }
+
+    // Validate education: institution and specialty required, and period validation
+    for (let i = 0; i < formData.education.length; i++) {
+      const edu = formData.education[i];
+      if (edu.startYear || edu.startMonth || edu.endYear || edu.endMonth || edu.institution || edu.degree || edu.specialty) {
+        if (!edu.institution || edu.institution.trim() === "") {
+          errors[`education_${i}_institution`] = "Muassasa nomi kiritilishi shart";
+        }
+        if (!edu.specialty || edu.specialty.trim() === "") {
+          errors[`education_${i}_specialty`] = "Mutaxassislik kiritilishi shart";
+        }
+        // Validate that start and end are not in the same month
+        if (!edu.isCurrent && edu.startYear && edu.startMonth && edu.endYear && edu.endMonth) {
+          const startYear = parseInt(edu.startYear);
+          const endYear = parseInt(edu.endYear);
+          const startMonth = parseInt(edu.startMonth);
+          const endMonth = parseInt(edu.endMonth);
+          if (startYear === endYear && startMonth === endMonth) {
+            errors[`education_${i}_period`] = "Boshlanish va tugash oyi bir xil bo'lishi mumkin emas";
+          }
+        }
+      }
+    }
+
+    // Validate work experience: if any field is filled, all fields required
+    if (!formData.neverWorked) {
+      for (let i = 0; i < formData.workExperience.length; i++) {
+        const work = formData.workExperience[i];
+        if (isWorkExperienceEntryStarted(work)) {
+          if (!work.startYear || !work.startMonth) {
+            errors[`workExperience_${i}_startDate`] = "Boshlanish sanasi kiritilishi shart";
+          }
+          if (!work.isCurrent && (!work.endYear || !work.endMonth)) {
+            errors[`workExperience_${i}_endDate`] = "Tugash sanasi kiritilishi shart";
+          }
+          if (!work.company || work.company.trim() === "") {
+            errors[`workExperience_${i}_company`] = "Kompaniya nomi kiritilishi shart";
+          }
+          if (!work.position || work.position.trim() === "") {
+            errors[`workExperience_${i}_position`] = "Lavozim kiritilishi shart";
+          }
+        }
+      }
+    }
+
+    // If there are any errors, set them all and show toast, then return
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring", {
         duration: 4000,
         position: "top-center",
       });
@@ -1260,6 +1436,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.birth_date")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <Input
                         type="date"
@@ -1267,6 +1444,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         onChange={(e) =>
                           handleInputChange("birthDate", e.target.value)
                         }
+                        max={new Date().toISOString().split("T")[0]}
                         required
                       />
                       {fieldErrors.birthDate && (
@@ -1280,10 +1458,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.phone_number")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <Input
                         type="tel"
-                        placeholder="+998 XX XXX XX XX yoki +7 XXX XXX XX XX"
+                        placeholder="+998 XX XXX XX XX"
                         value={formData.phone}
                         onChange={(e) => {
                           let value = e.target.value;
@@ -1293,6 +1472,47 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           const formatted = formatPhoneNumber(value, previousValue);
                           
                           handleInputChange("phone", formatted);
+                          
+                          // Clear error when user starts typing
+                          if (fieldErrors.phone) {
+                            setFieldErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.phone;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const phoneValue = e.target.value;
+                          // Validate phone completeness if starts with +998
+                          if (phoneValue && phoneValue.startsWith("+998")) {
+                            if (!isPhoneComplete(phoneValue)) {
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                phone: "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)",
+                              }));
+                            } else {
+                              // Clear error if phone is complete
+                              setFieldErrors((prev) => {
+                                const newErrors = { ...prev };
+                                delete newErrors.phone;
+                                return newErrors;
+                              });
+                            }
+                          } else if (phoneValue && phoneValue.startsWith("+") && phoneValue.length < 4) {
+                            // If user only typed + or incomplete country code
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              phone: "Telefon raqami to'liq kiritilishi shart",
+                            }));
+                          } else if (phoneValue && phoneValue.trim() !== "") {
+                            // Clear error for other valid formats
+                            setFieldErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.phone;
+                              return newErrors;
+                            });
+                          }
                         }}
                         required
                       />
@@ -1474,6 +1694,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               {t("jobs.application.form.institution")}
+                              <span className="text-red-500 ml-1">*</span>
                             </label>
                             <Input
                               type="text"
@@ -1518,6 +1739,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               {t("jobs.application.form.specialty")}
+                              <span className="text-red-500 ml-1">*</span>
                             </label>
                             <Input
                               type="text"
@@ -1644,7 +1866,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     placeholder={t(
                                       "jobs.application.form.select_year"
                                     )}
-                                    required
+                                    required={isWorkExperienceEntryStarted(work)}
                                   />
                                   <Select
                                     value={work.startMonth}
@@ -1657,7 +1879,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     }
                                     options={monthOptions}
                                     placeholder="Oy"
-                                    required
+                                    required={isWorkExperienceEntryStarted(work)}
                                   />
                                 </div>
                               </div>
@@ -1682,7 +1904,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                         "jobs.application.form.select_year"
                                       )}
                                       disabled={work.isCurrent}
-                                      required={!work.isCurrent}
+                                      required={!work.isCurrent && isWorkExperienceEntryStarted(work)}
                                     />
                                     <Select
                                       value={work.endMonth}
@@ -1696,7 +1918,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       options={monthOptions}
                                       placeholder="Oy"
                                       disabled={work.isCurrent}
-                                      required={!work.isCurrent}
+                                      required={!work.isCurrent && isWorkExperienceEntryStarted(work)}
                                     />
                                   </div>
                                   <div className="flex items-center">
@@ -1740,7 +1962,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       e.target.value
                                     )
                                   }
-                                  required
+                                  required={isWorkExperienceEntryStarted(work)}
                                 />
                                 {fieldErrors[
                                   `workExperience_${index}_company`
@@ -1773,7 +1995,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       e.target.value
                                     )
                                   }
-                                  required
+                                  required={isWorkExperienceEntryStarted(work)}
                                 />
                                 {fieldErrors[
                                   `workExperience_${index}_position`
@@ -1815,6 +2037,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.uzbek_language")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                         {languageLevels.map((level) => (
@@ -1831,6 +2054,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 handleLanguageChange("uzbek", e.target.value)
                               }
                               className="text-blue-600"
+                              required
                             />
                             <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               {level.label}
@@ -1849,6 +2073,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.russian_language")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                         {languageLevels.map((level) => (
@@ -1867,6 +2092,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 handleLanguageChange("russian", e.target.value)
                               }
                               className="text-blue-600"
+                              required
                             />
                             <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               {level.label}
@@ -1885,6 +2111,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.english_language")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                         {languageLevels.map((level) => (
@@ -1903,6 +2130,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 handleLanguageChange("english", e.target.value)
                               }
                               className="text-blue-600"
+                              required
                             />
                             <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               {level.label}
@@ -1957,6 +2185,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.expected_salary")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="relative">
                         <Input
@@ -1975,17 +2204,25 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             handleInputChange("expectedSalary", value);
                           }}
                           className="pr-12"
+                          required
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-600 dark:text-gray-400 pointer-events-none">
                           {formData.expectedSalary ? "so'm" : ""}
                         </span>
                       </div>
+                      {fieldErrors.expectedSalary && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.expectedSalary}
+                        </p>
+                      )}
                     </div>
 
                     {/* Business Trip Ready */}
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.business_trip_ready")}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-2 sm:gap-4">
                         <label className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
@@ -2001,6 +2238,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               )
                             }
                             className="text-blue-600"
+                            required
                           />
                           <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                             {t("jobs.application.form.yes")}
@@ -2019,12 +2257,19 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               )
                             }
                             className="text-blue-600"
+                            required
                           />
                           <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                             {t("jobs.application.form.no")}
                           </span>
                         </label>
                       </div>
+                      {fieldErrors.businessTripReady && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                          <Icon name="AlertCircle" size={16} />
+                          {fieldErrors.businessTripReady}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2094,7 +2339,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   </button>
                   <Button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (formData.phone.startsWith("+998") && !isPhoneComplete(formData.phone))}
                     className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
