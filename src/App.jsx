@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import Routes from "./Routes";
 import migrateDates from "./utils/migrateDates";
 import { chatsAPI } from "./services/api";
+import SnowEffect from "./components/SnowEffect";
 
 function App() {
   // Run date migration on app load (only once per version)
@@ -93,6 +94,7 @@ function App() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
+      <SnowEffect />
       <Routes />
       <Toaster
         position="top-center"
