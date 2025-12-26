@@ -11,6 +11,7 @@ const RegionsPage = () => {
 
   // Region cards data
   const regionCards = [
+    { id: "toshkent_city", name: "Toshkent shahri" },
     { id: "toshkent", name: "Toshkent" },
     { id: "qashqadaryo", name: "Qashqadaryo" },
     { id: "samarqand", name: "Samarqand" },
@@ -78,7 +79,8 @@ const RegionsPage = () => {
                     {t(`jobs.regions.${region.id}`)}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {t(`jobs.regions.${region.id}`)} {t("jobs.vacancies_title").toLowerCase()}
+                    {t(`jobs.regions.${region.id}`)}{" "}
+                    {t("jobs.vacancies_title").toLowerCase()}
                   </p>
                 </div>
 

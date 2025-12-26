@@ -282,6 +282,7 @@ const resources = {
         regional_management: "Hududiy bosh boshqarmalar",
         regional_management_description: "Hududiy boshqarmalar bo'limlari va vakansiyalari",
         regions: {
+          toshkent_city: "Toshkent shahri",
           toshkent: "Toshkent viloyati",
           qashqadaryo: "Qashqadaryo viloyati",
           samarqand: "Samarqand viloyati",
@@ -930,6 +931,7 @@ const resources = {
         regional_management: "Ҳудудий бош бошқармалар",
         regional_management_description: "Ҳудудий бошқармалар бўлимлари ва вакансиялари",
         regions: {
+          toshkent_city: "Тошкент шаҳри",
           toshkent: "Тошкент вилояти",
           qashqadaryo: "Қашқадарё вилояти",
           samarqand: "Самарқанд вилояти",
@@ -1530,6 +1532,7 @@ const resources = {
         regional_management: "Региональные управления",
         regional_management_description: "Отделы и вакансии региональных управлений",
         regions: {
+          toshkent_city: "Город Ташкент",
           toshkent: "Ташкентская область",
           qashqadaryo: "Кашкадарьинская область",
           samarqand: "Самаркандская область",
@@ -1592,6 +1595,7 @@ const resources = {
         regional_management: "Региональные управления",
         regional_management_description: "Отделы и вакансии региональных управлений",
         regions: {
+          toshkent_city: "Город Ташкент",
           toshkent: "Ташкентская область",
           qashqadaryo: "Кашкадарьинская область",
           samarqand: "Самаркандская область",

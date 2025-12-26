@@ -76,12 +76,12 @@ const RegionPage = () => {
   // Helper function to format location based on branch_type
   const formatLocation = (vacancy) => {
     if (vacancy.branch_type === "central") {
-      return vacancy.branch_type_display || t("jobs.central_apparatus");
+      return t("jobs.central_apparatus");
     } else if (vacancy.branch_type === "regional") {
       return formatRegionName(vacancy.region);
     }
     // Fallback
-    return vacancy.branch_type_display || t("jobs.central_apparatus");
+    return t("jobs.central_apparatus");
   };
 
   // Helper function to parse requirements (can be string or JSON)

@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 const SnowEffect = () => {
   useEffect(() => {
     const CONFIG = {
-      count: 120,
+      count: 60,
       color: "#fff",
       minSize: 1,
       maxSize: 4,
@@ -14,7 +14,9 @@ const SnowEffect = () => {
       zIndex: 9999,
     };
 
-    let container, styleEl, snowflakes = [];
+    let container,
+      styleEl,
+      snowflakes = [];
 
     function createStyle() {
       styleEl = document.createElement("style");
@@ -108,4 +110,3 @@ const SnowEffect = () => {
 };
 
 export default SnowEffect;
-

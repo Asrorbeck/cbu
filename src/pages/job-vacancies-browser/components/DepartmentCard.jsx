@@ -31,12 +31,9 @@ const DepartmentCard = ({ department }) => {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
           {department?.name}
         </h3>
-        {department?.active_vacancies_count !== undefined &&
-          department?.active_vacancies_count > 0 && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t("jobs.active_vacancies")}: {department.active_vacancies_count}
-            </p>
-          )}
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("jobs.active_vacancies")}: {department?.active_vacancies_count ?? 0}
+        </p>
         {department?.description && (
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             {department?.description}

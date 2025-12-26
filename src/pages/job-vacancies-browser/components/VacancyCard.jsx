@@ -44,7 +44,7 @@ const VacancyCard = ({ vacancy, onSelect }) => {
   const getFormattedLocation = () => {
     const location = vacancy?.location;
     if (!location) return t("jobs.central_apparatus");
-    
+
     // Check if location is "Markaziy Apparat" in any form (Latin, Cyrillic, or Russian)
     const locationLower = location.toLowerCase().trim();
     if (
@@ -54,8 +54,22 @@ const VacancyCard = ({ vacancy, onSelect }) => {
     ) {
       return t("jobs.central_apparatus");
     }
-    
+
     return location;
+  };
+
+  // Check if vacancy is regional (not central)
+  const isRegional = () => {
+    const location = vacancy?.location;
+    if (!location) return false;
+
+    const locationLower = location.toLowerCase().trim();
+    return !(
+      locationLower === "markaziy apparat" ||
+      locationLower === "марказий аппарат" ||
+      locationLower === "центральный аппарат" ||
+      locationLower === t("jobs.central_apparatus").toLowerCase()
+    );
   };
 
   const handleCardClick = () => {
@@ -98,10 +112,12 @@ const VacancyCard = ({ vacancy, onSelect }) => {
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-          {vacancy?.description}
-        </p>
+        {/* Description - Only show for central (non-regional) vacancies */}
+        {!isRegional() && vacancy?.description && (
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+            {vacancy?.description}
+          </p>
+        )}
 
         {/* Deadlines */}
         <div className="space-y-2">

@@ -51,11 +51,11 @@ const VacancyDetailPage = () => {
           if (!region) return "";
 
           const regionLower = region.toLowerCase().trim();
-          
+
           // Use translation for region name
           const regionKey = `jobs.regions.${regionLower}`;
           const translatedName = t(regionKey);
-          
+
           // If translation exists and is different from the key, use it
           if (translatedName && translatedName !== regionKey) {
             return translatedName;
@@ -64,7 +64,7 @@ const VacancyDetailPage = () => {
           // Fallback: capitalize first letter and add "viloyati" for Latin
           const currentLanguage =
             i18n.language || localStorage.getItem("language") || "uz-Latn";
-          
+
           if (currentLanguage === "ru") {
             // For Russian, add "ская область" or "Республика"
             if (regionLower === "qoraqalpogiston") {
@@ -95,12 +95,12 @@ const VacancyDetailPage = () => {
         // Helper function to format location based on branch_type
         const formatLocation = (vacancyData) => {
           if (vacancyData.branch_type === "central") {
-            return vacancyData.branch_type_display || t("jobs.central_apparatus");
+            return t("jobs.central_apparatus");
           } else if (vacancyData.branch_type === "regional") {
             return formatRegionName(vacancyData.region);
           }
           // Fallback
-          return vacancyData.branch_type_display || t("jobs.central_apparatus");
+          return t("jobs.central_apparatus");
         };
 
         // Get language-specific fields
@@ -140,7 +140,7 @@ const VacancyDetailPage = () => {
         let departmentName = "";
         if (vacancyData.management_details?.department) {
           // If department is an object with name fields
-          if (typeof vacancyData.management_details.department === 'object') {
+          if (typeof vacancyData.management_details.department === "object") {
             departmentName =
               vacancyData.management_details.department[departmentNameField] ||
               vacancyData.management_details.department.name_uz ||
@@ -151,13 +151,19 @@ const VacancyDetailPage = () => {
         }
 
         // Format department name: "department_name - management_name" or just management_name
+        // If it's a regional route, don't use "Markaziy apparat" as fallback
         let formattedDepartmentName = "";
         if (departmentName && managementName) {
           formattedDepartmentName = `${departmentName} - ${managementName}`;
         } else if (managementName) {
           formattedDepartmentName = managementName;
         } else {
-          formattedDepartmentName = t("jobs.central_apparatus");
+          // Only use "Markaziy apparat" as fallback if it's NOT a regional route
+          if (regionName && vacancyData.branch_type === "regional") {
+            formattedDepartmentName = ""; // Empty for regional routes
+          } else {
+            formattedDepartmentName = t("jobs.central_apparatus");
+          }
         }
 
         // Get requirements based on current language
