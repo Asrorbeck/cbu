@@ -136,6 +136,21 @@ const RegionPage = () => {
     return [];
   };
 
+  // Helper function to format region name for API
+  const formatRegionNameForAPI = (region) => {
+    if (!region) return "";
+    
+    const regionLower = region.toLowerCase().trim();
+    
+    // Special case: Toshkent shahar should be "toshkent shahar"
+    if (regionLower === "toshkent_shahar" || regionLower === "toshkent-shahar") {
+      return "toshkent shahar";
+    }
+    
+    // For other regions, return as is (including "toshkent" for Toshkent viloyati)
+    return regionLower;
+  };
+
   // Fetch vacancies by region
   useEffect(() => {
     const fetchVacancies = async () => {
@@ -145,9 +160,12 @@ const RegionPage = () => {
       setApiError(null);
 
       try {
+        // Format region name for API (e.g., "toshkent" -> "toshkent shahar")
+        const apiRegionName = formatRegionNameForAPI(regionName);
+        
         // Fetch vacancies data
         const vacanciesResponse = await vacanciesAPI.getVacanciesByRegion(
-          regionName,
+          apiRegionName,
           "regional"
         );
         // Handle paginated response structure: { count, next, previous, results: [...] }

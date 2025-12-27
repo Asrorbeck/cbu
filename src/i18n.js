@@ -282,7 +282,7 @@ const resources = {
         regional_management: "Hududiy bosh boshqarmalar",
         regional_management_description: "Hududiy boshqarmalar bo'limlari va vakansiyalari",
         regions: {
-          toshkent_city: "Toshkent shahri",
+          toshkent_shahar: "Toshkent shahri",
           toshkent: "Toshkent viloyati",
           qashqadaryo: "Qashqadaryo viloyati",
           samarqand: "Samarqand viloyati",

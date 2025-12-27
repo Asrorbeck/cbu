@@ -11,7 +11,7 @@ const RegionsPage = () => {
 
   // Region cards data
   const regionCards = [
-    { id: "toshkent_city", name: "Toshkent shahri" },
+    { id: "toshkent_shahar", name: "Toshkent shahri" },
     { id: "toshkent", name: "Toshkent" },
     { id: "qashqadaryo", name: "Qashqadaryo" },
     { id: "samarqand", name: "Samarqand" },

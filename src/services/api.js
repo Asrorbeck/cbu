@@ -117,8 +117,10 @@ export const vacanciesAPI = {
   // Get vacancies by region and branch type
   getVacanciesByRegion: async (region, branchType = "regional") => {
     try {
+      // Encode region name for URL (e.g., "toshkent shahar" -> "toshkent%20shahar")
+      const encodedRegion = encodeURIComponent(region);
       const response = await apiClient.get(
-        `/vacancies/?region=${region}&branch_type=${branchType}`
+        `/vacancies/?region=${encodedRegion}&branch_type=${branchType}`
       );
       return response.data;
     } catch (error) {
