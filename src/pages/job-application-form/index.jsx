@@ -9,6 +9,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import { Checkbox } from "../../components/ui/Checkbox";
+import Modal from "../../components/ui/Modal";
 import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
 import { vacanciesAPI } from "../../services/api";
 import apiClient from "../../services/api";
@@ -22,6 +23,7 @@ const JobApplicationForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showJshshirInfoModal, setShowJshshirInfoModal] = useState(false);
 
   // Decode the vacancy ID from URL
   const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
@@ -1525,9 +1527,19 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        JShShIR
-                        <span className="text-red-500 ml-1">*</span>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <span>
+                          JShShIR
+                          <span className="text-red-500 ml-1">*</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowJshshirInfoModal(true)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                          aria-label="JShShIR haqida ma'lumot"
+                        >
+                          <Icon name="Info" size={18} />
+                        </button>
                       </label>
                       <Input
                         type="text"
@@ -1776,6 +1788,16 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       {t("jobs.application.form.add_education")}
                     </button>
                   </div>
+
+                  {/* Info note about education requirement */}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start gap-2">
+                      <Icon name="Info" size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>{t("jobs.application.form.note")}:</strong> {t("jobs.application.form.education_note")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Work Experience Section */}
@@ -2023,6 +2045,18 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           {t("jobs.application.form.add_work")}
                         </button>
                       </>
+                    )}
+
+                    {/* Info note about work experience requirement */}
+                    {!formData.neverWorked && (
+                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-start gap-2">
+                          <Icon name="Info" size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            <strong>{t("jobs.application.form.note")}:</strong> {t("jobs.application.form.work_experience_note")}
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -2357,6 +2391,63 @@ ${formData.additionalInfo || "Kiritilmagan"}
           </div>
         </div>
       </main>
+
+      {/* JShShIR Info Modal */}
+      <Modal
+        isOpen={showJshshirInfoModal}
+        onClose={() => setShowJshshirInfoModal(false)}
+        title={t("jobs.application.form.jshshir_modal_title")}
+        size="xl"
+      >
+        <div className="p-6">
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t("jobs.application.form.jshshir_modal_description")}
+            </p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <img
+                src="/assets/images/jshshir.jpg"
+                alt="JShShIR struktura tushuntirishi"
+                className="w-full h-auto rounded-lg"
+                onError={(e) => {
+                  // If image fails to load, show a placeholder with text explanation
+                  e.target.style.display = 'none';
+                  const parent = e.target.parentElement;
+                  if (!parent.querySelector('.jshshir-explanation')) {
+                    const explanation = document.createElement('div');
+                    explanation.className = 'jshshir-explanation p-4 bg-gray-50 dark:bg-gray-900 rounded-lg';
+                    const structureTitle = t("jobs.application.form.jshshir_modal_structure_title");
+                    const structure1 = t("jobs.application.form.jshshir_modal_structure_1");
+                    const structure2 = t("jobs.application.form.jshshir_modal_structure_2");
+                    const structure3 = t("jobs.application.form.jshshir_modal_structure_3");
+                    const structure4 = t("jobs.application.form.jshshir_modal_structure_4");
+                    const structure5 = t("jobs.application.form.jshshir_modal_structure_5");
+                    const exampleText = t("jobs.application.form.example");
+                    const exampleDesc = t("jobs.application.form.jshshir_modal_example");
+                    explanation.innerHTML = `
+                      <h3 class="font-semibold mb-3 text-gray-900 dark:text-white">${structureTitle}</h3>
+                      <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>${structure1}</strong></p>
+                        <p><strong>${structure2}</strong></p>
+                        <p><strong>${structure3}</strong></p>
+                        <p><strong>${structure4}</strong></p>
+                        <p><strong>${structure5}</strong></p>
+                      </div>
+                      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                        <p class="text-sm text-blue-800 dark:text-blue-300">
+                          <strong>${exampleText}:</strong> ${exampleDesc}
+                        </p>
+                      </div>
+                    `;
+                    parent.appendChild(explanation);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+        </div>
+      </Modal>
     </div>
   );
 };
