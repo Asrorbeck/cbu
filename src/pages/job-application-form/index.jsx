@@ -17,7 +17,7 @@ import apiClient from "../../services/api";
 const JobApplicationForm = () => {
   const { departmentId, regionName, vacancyId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1054,24 +1054,48 @@ const JobApplicationForm = () => {
       if (error.response?.data) {
         const backendErrors = error.response.data;
 
-        // Translate error messages to Uzbek
-        const translateError = (message) => {
+        // Translate error messages based on current language
+        const translateError = (message, fieldName = null) => {
+          const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
+          
+          // Handle JSHSHIR date format errors (e.g., "30.03.2026" - application deadline)
+          if (fieldName === "jshshir" && message && typeof message === "string") {
+            // Check if message is a date string (format: DD.MM.YYYY)
+            const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
+            const trimmedMessage = message.trim();
+            if (datePattern.test(trimmedMessage)) {
+              return t("jobs.application.form.jshshir_resubmission_date", { date: trimmedMessage });
+            }
+          }
+          
+          // Generic translations
           const translations = {
-            "This field may not be blank.":
-              "Ushbu maydon bo'sh bo'lishi mumkin emas.",
-            "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.":
-              "Sana noto'g'ri formatda yokida kiritilmagan",
-            '"" is not a valid choice.':
-              "Noto'g'ri tanlov. Iltimos, boshqa variantni tanlang.",
+            "uz-Latn": {
+              "This field may not be blank.": "Ushbu maydon bo'sh bo'lishi mumkin emas.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Sana noto'g'ri formatda yoki kiritilmagan",
+              '"" is not a valid choice.': "Noto'g'ri tanlov. Iltimos, boshqa variantni tanlang.",
+            },
+            "uz-Cyrl": {
+              "This field may not be blank.": "Ушбу майдон бўш бўлиши мумкин эмас.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Сана нотўғри форматда ёки киритилмаган",
+              '"" is not a valid choice.': "Нотўғри танлов. Илтимос, бошқа вариантни танланг.",
+            },
+            "ru": {
+              "This field may not be blank.": "Это поле не может быть пустым.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Неверный формат даты или дата не указана",
+              '"" is not a valid choice.': "Неверный выбор. Пожалуйста, выберите другой вариант.",
+            },
           };
 
+          const langTranslations = translations[currentLanguage] || translations["uz-Latn"];
+
           // Try exact match first
-          if (translations[message]) {
-            return translations[message];
+          if (langTranslations[message]) {
+            return langTranslations[message];
           }
 
           // Try partial match
-          for (const [key, value] of Object.entries(translations)) {
+          for (const [key, value] of Object.entries(langTranslations)) {
             if (message.includes(key)) {
               return value;
             }
@@ -1082,20 +1106,29 @@ const JobApplicationForm = () => {
 
         // Map backend field names to frontend field names
         if (backendErrors.full_name) {
-          errors.fullName = translateError(backendErrors.full_name[0]);
+          errors.fullName = translateError(backendErrors.full_name[0], "full_name");
         }
 
         if (backendErrors.data_of_birth) {
-          errors.birthDate = translateError(backendErrors.data_of_birth[0]);
+          errors.birthDate = translateError(backendErrors.data_of_birth[0], "data_of_birth");
         }
 
         if (backendErrors.phone) {
-          errors.phone = translateError(backendErrors.phone[0]);
+          errors.phone = translateError(backendErrors.phone[0], "phone");
+        }
+
+        if (backendErrors.jshshir) {
+          // Handle both array format ["30.03.2026"] and string format "30.03.2026"
+          const jshshirError = Array.isArray(backendErrors.jshshir) 
+            ? backendErrors.jshshir[0] 
+            : backendErrors.jshshir;
+          errors.jshshir = translateError(jshshirError, "jshshir");
         }
 
         if (backendErrors.additional_information) {
           errors.additionalInfo = translateError(
-            backendErrors.additional_information[0]
+            backendErrors.additional_information[0],
+            "additional_information"
           );
         }
 
@@ -1154,20 +1187,30 @@ const JobApplicationForm = () => {
       // Set field errors
       setFieldErrors(errors);
 
-      // Show toast only if there are no specific field errors
+      // Check if JSHSHIR error is a date (resubmission deadline)
+      const jshshirError = error.response?.data?.jshshir;
+      const jshshirErrorValue = Array.isArray(jshshirError) ? jshshirError[0] : jshshirError;
+      const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
+      const hasJshshirDateError = jshshirErrorValue && typeof jshshirErrorValue === "string" && datePattern.test(jshshirErrorValue.trim());
+
+      // Show toast messages
       if (Object.keys(errors).length === 0) {
         toast.error(t("jobs.application.form.error_message"), {
           duration: 5000,
           position: "top-center",
         });
+      } else if (hasJshshirDateError) {
+        // Show specific JSHSHIR date error toast
+        toast.error(t("jobs.application.form.jshshir_resubmission_date", { date: jshshirErrorValue.trim() }), {
+          duration: 6000,
+          position: "top-center",
+        });
       } else {
-        toast.error(
-          "Formani to'ldirishda xatolar topildi. Iltimos, quyidagi maydonlarni tekshiring.",
-          {
-            duration: 5000,
-            position: "top-center",
-          }
-        );
+        // Show generic errors toast
+        toast.error(t("jobs.application.form.form_errors_found"), {
+          duration: 5000,
+          position: "top-center",
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -2213,10 +2256,10 @@ ${formData.additionalInfo || "Kiritilmagan"}
                 </div>
 
                 {/* Expected Salary and Business Trip Ready Section (Frontend Only) */}
-                <div className="px-4 sm:px-6">
+                <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Expected Salary */}
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.expected_salary")}
                         <span className="text-red-500 ml-1">*</span>
@@ -2237,7 +2280,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             
                             handleInputChange("expectedSalary", value);
                           }}
-                          className="pr-12"
+                          className="pr-12 h-12 md:h-12"
                           required
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-600 dark:text-gray-400 pointer-events-none">
@@ -2253,13 +2296,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     </div>
 
                     {/* Business Trip Ready */}
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("jobs.application.form.business_trip_ready")}
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                        <label className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                        <label className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors h-12 md:h-12">
                           <input
                             type="radio"
                             name="businessTripReady"
@@ -2278,7 +2321,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             {t("jobs.application.form.yes")}
                           </span>
                         </label>
-                        <label className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                        <label className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors h-12 md:h-12">
                           <input
                             type="radio"
                             name="businessTripReady"
@@ -2363,7 +2406,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 pb-6 px-4 sm:px-6 border-t border-gray-100 dark:border-slate-700">
+                <div className="flex flex-row gap-3 sm:gap-4 pt-6 pb-6 px-4 sm:px-6 border-t border-gray-100 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={handleBack}
@@ -2374,7 +2417,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   <Button
                     type="submit"
                     disabled={isSubmitting || (formData.phone.startsWith("+998") && !isPhoneComplete(formData.phone))}
-                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
