@@ -94,7 +94,7 @@ function App() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SnowEffect />
+      {/* <SnowEffect /> */}
       <Routes />
       <Toaster
         position="top-center"

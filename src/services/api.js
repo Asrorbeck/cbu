@@ -75,7 +75,7 @@ export const departmentsAPI = {
   // Get all departments
   getDepartments: async () => {
     try {
-      const response = await apiClient.get("/departments/");
+      const response = await apiClient.get("/departments/?page_size=50");
       return response.data;
     } catch (error) {
       console.error("Error fetching departments:", error);
