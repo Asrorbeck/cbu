@@ -24,6 +24,7 @@ const JobApplicationForm = () => {
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [showJshshirInfoModal, setShowJshshirInfoModal] = useState(false);
+  const [fullNameScriptType, setFullNameScriptType] = useState(null); // 'latin' or 'cyrillic'
 
   // Decode the vacancy ID from URL
   const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
@@ -47,7 +48,8 @@ const JobApplicationForm = () => {
         const transformedVacancy = {
           id: vacancyData.id.toString(),
           title: vacancyData.title,
-          department: vacancyData.management?.name || t("jobs.central_apparatus"),
+          department:
+            vacancyData.management?.name || t("jobs.central_apparatus"),
           location: vacancyData.management?.name || t("jobs.central_apparatus"),
           type: "Full-time",
           deadline: vacancyData.application_deadline,
@@ -223,15 +225,15 @@ const JobApplicationForm = () => {
   // Format JShShIR (14 digits without spaces: 12345678901234)
   const formatJShShIR = (value) => {
     if (!value) return "";
-    
+
     // Remove all non-digit characters
     let cleaned = value.replace(/\D/g, "");
-    
+
     // Limit to 14 digits
     if (cleaned.length > 14) {
       cleaned = cleaned.substring(0, 14);
     }
-    
+
     // Return without formatting (just digits)
     return cleaned;
   };
@@ -256,25 +258,25 @@ const JobApplicationForm = () => {
     if (!value || value.trim().length === 0) {
       return t("jobs.application.form.jshshir_required");
     }
-    
+
     // Remove spaces and check if it's exactly 14 digits
     const cleaned = value.replace(/\D/g, "");
     if (cleaned.length !== 14) {
       return t("jobs.application.form.jshshir_length_error");
     }
-    
+
     // Check if all digits are the same (e.g., 11111111111111, 22222222222222)
     const allSame = /^(\d)\1{13}$/.test(cleaned);
     if (allSame) {
       return t("jobs.application.form.jshshir_same_digits_error");
     }
-    
+
     // Check for simple patterns like 12121212121212
     const simplePattern = /^(\d{1,2})\1{6,}$/.test(cleaned);
     if (simplePattern) {
       return t("jobs.application.form.jshshir_pattern_error");
     }
-    
+
     // Validate date logic: first digit, then date (DDMMYY format)
     // Example: 51007021111111 where 100702 = July 10, 2002 (DD=10, MM=07, YY=02)
     const firstDigit = parseInt(cleaned[0]);
@@ -282,39 +284,48 @@ const JobApplicationForm = () => {
     const day = parseInt(datePart.substring(0, 2));
     const month = parseInt(datePart.substring(2, 4));
     const year = parseInt(datePart.substring(4, 6));
-    
+
     // Validate month (1-12)
     if (month < 1 || month > 12) {
       return t("jobs.application.form.jshshir_invalid");
     }
-    
+
     // Validate day (1-31, but we'll check more precisely)
     if (day < 1 || day > 31) {
       return t("jobs.application.form.jshshir_invalid");
     }
-    
+
     // Check if date is valid (considering leap years, etc.)
     // Full year: if first digit is 5, it's 20XX, if 4, it's 19XX
-    const fullYear = firstDigit === 5 ? 2000 + year : (firstDigit === 4 ? 1900 + year : 2000 + year);
+    const fullYear =
+      firstDigit === 5
+        ? 2000 + year
+        : firstDigit === 4
+        ? 1900 + year
+        : 2000 + year;
     const date = new Date(fullYear, month - 1, day);
-    
-    if (date.getFullYear() !== fullYear || date.getMonth() !== month - 1 || date.getDate() !== day) {
+
+    if (
+      date.getFullYear() !== fullYear ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
       return t("jobs.application.form.jshshir_invalid");
     }
-    
+
     return null; // Validation passed
   };
 
   // Format salary number with spaces (1 000 000)
   const formatSalary = (value) => {
     if (!value) return "";
-    
+
     // Remove all non-digit characters
     let cleaned = value.replace(/\D/g, "");
-    
+
     // If empty, return empty
     if (!cleaned) return "";
-    
+
     // Format with spaces: 1 000 000
     return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   };
@@ -323,25 +334,25 @@ const JobApplicationForm = () => {
   const formatPhoneNumber = (value, previousValue = "") => {
     // If empty, return empty
     if (!value) return "";
-    
+
     // Remove all non-digit characters except +
     let cleaned = value.replace(/[^\d+]/g, "");
-    
+
     // If user is deleting, allow it
     if (value.length < previousValue.length) {
       return value;
     }
-    
+
     // If starts with +998
     if (cleaned.startsWith("+998")) {
       // Remove +998 prefix to get only digits
       let digits = cleaned.replace("+998", "");
-      
+
       // Limit to 9 digits (Uzbekistan format: +998 XX XXX XX XX)
       if (digits.length > 9) {
         digits = digits.substring(0, 9);
       }
-      
+
       // Format: +998 XX XXX XX XX
       if (digits.length === 0) {
         return "+998";
@@ -350,21 +361,27 @@ const JobApplicationForm = () => {
       } else if (digits.length <= 5) {
         return `+998 ${digits.substring(0, 2)} ${digits.substring(2)}`;
       } else if (digits.length <= 7) {
-        return `+998 ${digits.substring(0, 2)} ${digits.substring(2, 5)} ${digits.substring(5)}`;
+        return `+998 ${digits.substring(0, 2)} ${digits.substring(
+          2,
+          5
+        )} ${digits.substring(5)}`;
       } else {
-        return `+998 ${digits.substring(0, 2)} ${digits.substring(2, 5)} ${digits.substring(5, 7)} ${digits.substring(7)}`;
+        return `+998 ${digits.substring(0, 2)} ${digits.substring(
+          2,
+          5
+        )} ${digits.substring(5, 7)} ${digits.substring(7)}`;
       }
     }
     // If starts with +7
     else if (cleaned.startsWith("+7")) {
       // Remove +7 prefix to get only digits
       let digits = cleaned.replace("+7", "");
-      
+
       // Limit to 10 digits (Russia format: +7 XXX XXX XX XX)
       if (digits.length > 10) {
         digits = digits.substring(0, 10);
       }
-      
+
       // Format: +7 XXX XXX XX XX
       if (digits.length === 0) {
         return "+7";
@@ -373,9 +390,15 @@ const JobApplicationForm = () => {
       } else if (digits.length <= 6) {
         return `+7 ${digits.substring(0, 3)} ${digits.substring(3)}`;
       } else if (digits.length <= 8) {
-        return `+7 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}`;
+        return `+7 ${digits.substring(0, 3)} ${digits.substring(
+          3,
+          6
+        )} ${digits.substring(6)}`;
       } else {
-        return `+7 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6, 8)} ${digits.substring(8)}`;
+        return `+7 ${digits.substring(0, 3)} ${digits.substring(
+          3,
+          6
+        )} ${digits.substring(6, 8)} ${digits.substring(8)}`;
       }
     }
     // If starts with + but not +998 or +7, allow typing
@@ -390,7 +413,7 @@ const JobApplicationForm = () => {
       if (cleaned.length > 9) {
         cleaned = cleaned.substring(0, 9);
       }
-      
+
       // Format: +998 XX XXX XX XX
       if (cleaned.length === 0) {
         return "";
@@ -399,9 +422,15 @@ const JobApplicationForm = () => {
       } else if (cleaned.length <= 5) {
         return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2)}`;
       } else if (cleaned.length <= 7) {
-        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2, 5)} ${cleaned.substring(5)}`;
+        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(
+          2,
+          5
+        )} ${cleaned.substring(5)}`;
       } else {
-        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(2, 5)} ${cleaned.substring(5, 7)} ${cleaned.substring(7)}`;
+        return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(
+          2,
+          5
+        )} ${cleaned.substring(5, 7)} ${cleaned.substring(7)}`;
       }
     }
     // Otherwise, return as is
@@ -410,7 +439,169 @@ const JobApplicationForm = () => {
     }
   };
 
-  // Validate full name format: Familya Ism Otchestvo
+  // Helper function to detect if a character is Cyrillic
+  const isCyrillicChar = (char) => {
+    const code = char.charCodeAt(0);
+    // Cyrillic range: 0400-04FF (includes all Cyrillic characters)
+    return code >= 0x0400 && code <= 0x04ff;
+  };
+
+  // Helper function to detect if a character is Latin (including Uzbek Latin)
+  const isLatinChar = (char) => {
+    const code = char.charCodeAt(0);
+    // Basic Latin: 0000-007F, Latin Extended-A: 0080-017F, Latin Extended-B: 0180-024F
+    // Also include apostrophes and common punctuation that might be used
+    if (code >= 0x0000 && code <= 0x007f) {
+      // Basic ASCII - check if it's a letter
+      return /[a-zA-Z]/.test(char);
+    }
+    if (code >= 0x0080 && code <= 0x017f) {
+      // Latin Extended-A
+      return true;
+    }
+    if (code >= 0x0180 && code <= 0x024f) {
+      // Latin Extended-B
+      return true;
+    }
+    // Include various apostrophe types: ', ', ', `, ʻ (U+0027, U+2018, U+2019, U+0060, U+02BB)
+    if (
+      code === 0x0027 ||
+      code === 0x2018 ||
+      code === 0x2019 ||
+      code === 0x0060 ||
+      code === 0x02bb
+    ) {
+      return true; // Allow apostrophes in Latin text
+    }
+    return false;
+  };
+
+  // Check if a character is a letter (not space, punctuation, etc.)
+  const isLetter = (char) => {
+    return isCyrillicChar(char) || isLatinChar(char);
+  };
+
+  // Detect script type of text (Latin or Cyrillic) - more accurate
+  const detectScriptType = (text) => {
+    if (!text || text.trim().length === 0) return null;
+
+    let latinCount = 0;
+    let cyrillicCount = 0;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (isCyrillicChar(char)) {
+        cyrillicCount++;
+      } else if (isLatinChar(char)) {
+        latinCount++;
+      }
+    }
+
+    // If we have any Cyrillic letters and no Latin letters, it's Cyrillic
+    if (cyrillicCount > 0 && latinCount === 0) return "cyrillic";
+    // If we have any Latin letters and no Cyrillic letters, it's Latin
+    if (latinCount > 0 && cyrillicCount === 0) return "latin";
+    // If we have both, determine by majority
+    if (cyrillicCount > latinCount) return "cyrillic";
+    if (latinCount > cyrillicCount) return "latin";
+
+    return null;
+  };
+
+  // Check if a new character matches the current script type
+  const checkCharacterScript = (char, allowedScript) => {
+    if (!char || !allowedScript) return true; // Allow if no script set yet
+
+    // Allow spaces, punctuation, apostrophes (all types: ', ', ', `, ʻ)
+    if (!isLetter(char)) return true;
+
+    // Check apostrophes separately - they should be allowed in both scripts
+    const code = char.charCodeAt(0);
+    if (
+      code === 0x0027 ||
+      code === 0x2018 ||
+      code === 0x2019 ||
+      code === 0x0060 ||
+      code === 0x02bb
+    ) {
+      return true; // Allow all apostrophe types
+    }
+
+    if (allowedScript === "cyrillic") {
+      return isCyrillicChar(char);
+    } else if (allowedScript === "latin") {
+      return isLatinChar(char);
+    }
+
+    return true;
+  };
+
+  // Accept all suffix variants without normalization
+  // All variants are accepted as-is: ogli, o'g'li, o'g'li, угли, огли, ўғли, etc.
+  const normalizeSuffixes = (text, scriptType) => {
+    // Don't normalize anything - just accept all variants as-is
+    // This allows users to type: ogli, o'g'li, o'g'li, угли, огли, ўғли, etc.
+    return text;
+  };
+
+  // Filter input to enforce script consistency
+  const filterFullNameInput = (value, previousValue) => {
+    if (!value || value.trim().length === 0) {
+      setFullNameScriptType(null);
+      return value;
+    }
+
+    // Check each new character if script type is already set
+    if (fullNameScriptType && value.length > previousValue.length) {
+      // User is adding new characters - check each new character
+      const newChars = value.slice(previousValue.length);
+      for (let i = 0; i < newChars.length; i++) {
+        const char = newChars[i];
+        if (!checkCharacterScript(char, fullNameScriptType)) {
+          // Character doesn't match script type - reject input
+          return previousValue;
+        }
+      }
+    }
+
+    // Detect script type from the entire input
+    const detectedScript = detectScriptType(value);
+
+    // If we already have a script type set and detected script is different
+    if (
+      fullNameScriptType &&
+      detectedScript &&
+      detectedScript !== fullNameScriptType
+    ) {
+      // Reject the input - return previous value
+      return previousValue;
+    }
+
+    // If this is the first character or we're setting script type
+    if (!fullNameScriptType && detectedScript) {
+      setFullNameScriptType(detectedScript);
+    }
+
+    // If script type was cleared (user deleted everything), reset it
+    if (!detectedScript && value.length < previousValue.length) {
+      // Check if we should reset - only if all letters are removed
+      const remainingScript = detectScriptType(value);
+      if (!remainingScript) {
+        setFullNameScriptType(null);
+      }
+    }
+
+    // Normalize suffixes based on detected script type
+    const scriptToUse = detectedScript || fullNameScriptType;
+    if (scriptToUse) {
+      const normalized = normalizeSuffixes(value, scriptToUse);
+      return normalized;
+    }
+
+    return value;
+  };
+
+  // Validate full name format: Familya Ism Sharif
   const validateFullName = (name) => {
     if (!name || name.trim().length === 0) {
       return "To'liq ism-familiya kiritilishi shart";
@@ -419,9 +610,9 @@ const JobApplicationForm = () => {
     const trimmedName = name.trim();
     const words = trimmedName.split(/\s+/).filter((word) => word.length > 0);
 
-    // Minimum 3 so'z bo'lishi kerak (Familya, Ism, Otchestvo)
+    // Minimum 3 so'z bo'lishi kerak (Familya, Ism, Sharif)
     if (words.length < 3) {
-      return "Iltimos, to'liq ism-familiyani kiriting: Familya Ism Otchestvo";
+      return "Iltimos, to'liq ism-familiyani kiriting: Familya Ism Sharif";
     }
 
     // Familya birinchi so'z bo'lishi kerak
@@ -430,12 +621,32 @@ const JobApplicationForm = () => {
       return "Familya to'g'ri kiritilmagan";
     }
 
-    // Otchestvo validatsiyasi - oxirgi so'z(lar) tekshiriladi
-    // Barcha "ogli" variantlari: ogli, o'g'li, o'gli, og'li (apostrof bilan yoki apostrofsiz)
-    const validOgliVariants = ["ogli", "o'g'li", "o'gli", "og'li"];
+    // Sharif validatsiyasi - oxirgi so'z(lar) tekshiriladi
+    // Barcha "ogli" variantlari: ogli, o'g'li, o'gli, og'li, o'g'li, o'g'li (barcha apostrof turlari bilan)
+    const validOgliVariants = [
+      "ogli",
+      "o'g'li",
+      "o'gli",
+      "og'li",
+      "o'g'li", // U+2018
+      "o'g'li", // U+2019
+      "o`g`li", // backtick
+      "oʻgʻli", // U+02BB
+    ];
     // Barcha "qizi" variantlari
     const validQiziVariants = ["qizi", "qizzi"];
-    // Barcha "vich/vna" variantlari
+    // Barcha kirillcha "ogli" variantlari: угли, огли, ўғли
+    const validOgliCyrVariants = [
+      "угли",
+      "огли",
+      "ўғли",
+      "у'г'ли",
+      "о'г'ли",
+      "ў'ғ'ли",
+    ];
+    // Barcha kirillcha "qizi" variantlari
+    const validQiziCyrVariants = ["қизи", "қиззи"];
+    // Barcha "vich/vna" variantlari (lotincha va kirillcha)
     const validOtchestvoEndings = [
       "vich",
       "vna",
@@ -443,51 +654,101 @@ const JobApplicationForm = () => {
       "ovna",
       "evich",
       "evna",
+      "вич",
+      "вна",
+      "ович",
+      "овна",
+      "евич",
+      "евна",
     ];
 
-    const lastWord = words[words.length - 1].toLowerCase();
+    const lastWord = words[words.length - 1];
+    const lastWordLower = lastWord.toLowerCase();
     const secondLastWord =
       words.length > 3 ? words[words.length - 2].toLowerCase() : "";
 
-    // Apostrofni olib tashlab tekshirish funksiyasi
+    // Apostrofni olib tashlab tekshirish funksiyasi (barcha apostrof turlari: ', ', ', `, ʻ)
+    // Unicode apostrof belgilarini to'g'ri qamrab olish
     const normalizeForComparison = (word) => {
-      return word.replace(/[''`]/g, ""); // Barcha apostrof variantlarini olib tashlash
+      // Barcha apostrof turlarini olib tashlash: ', ', ', `, ʻ
+      // Pattern: [''] - standard apostrof va single quotes
+      // ['`] - backtick
+      // [ʻ] - modifier letter turned comma (U+02BB)
+      // Unicode ranges: \u0027 (apostrophe), \u2018-\u2019 (quotes), \u0060 (backtick), \u02BB (modifier)
+      return word.replace(/[''`ʻ\u0027\u2018\u2019\u0060\u02BB]/g, "");
     };
 
-    // Otchestvo 2 so'z bo'lishi mumkin: "Bahodir ogli" yoki "Bahodir qizi" (barcha variantlar bilan)
-    const normalizedLastWord = normalizeForComparison(lastWord);
-    const isOgliVariant = validOgliVariants.some((variant) => {
+    // Sharif 2 so'z bo'lishi mumkin: "Bahodir ogli" yoki "Bahodir qizi" (barcha variantlar bilan)
+    const normalizedLastWord = normalizeForComparison(lastWordLower);
+
+    // Tekshirish: asosiy logika - "ogli" asosida tekshirish (apostroflarni e'tiborsiz qoldirish)
+    // Faqat "ogli" so'zini tekshiramiz, apostrof turlarini e'tiborsiz qoldiramiz
+    const checkOgliPattern = (word) => {
+      const normalized = normalizeForComparison(word);
+      // "ogli" bilan tugashini tekshirish (apostroflar olib tashlanganidan keyin)
+      return normalized.endsWith("ogli");
+    };
+
+    // Tekshirish: lotincha variantlar - apostrof turlarini e'tiborsiz qoldirish
+    // "ogli", "o'g'li", "o'g'li", "o'g'li" va boshqa barcha variantlar qabul qilinadi
+    const isOgliVariant = checkOgliPattern(lastWordLower);
+
+    // Tekshirish: kirillcha variantlar - "угли", "огли", "ўғли" variantlarini tekshirish
+    const isOgliCyrVariant = validOgliCyrVariants.some((variant) => {
       const normalizedVariant = normalizeForComparison(variant);
-      return lastWord === variant || normalizedLastWord === normalizedVariant;
-    });
-    const isQiziVariant = validQiziVariants.some((variant) => {
-      const normalizedVariant = normalizeForComparison(variant);
-      return lastWord === variant || normalizedLastWord === normalizedVariant;
+      return (
+        normalizedLastWord === normalizedVariant ||
+        lastWordLower.endsWith("угли") ||
+        lastWordLower.endsWith("огли") ||
+        lastWordLower.endsWith("ўғли")
+      );
     });
 
-    if (isOgliVariant || isQiziVariant) {
-      // Agar oxirgi so'z "ogli" yoki "qizi" variantlaridan biri bo'lsa
+    // Tekshirish: qizi variantlar (lotincha)
+    const isQiziVariant = validQiziVariants.some((variant) => {
+      const normalizedVariant = normalizeForComparison(variant);
+      return (
+        lastWordLower === variant || normalizedLastWord === normalizedVariant
+      );
+    });
+
+    // Tekshirish: qizi variantlar (kirillcha)
+    const isQiziCyrVariant = validQiziCyrVariants.some((variant) => {
+      const normalizedVariant = normalizeForComparison(variant);
+      return (
+        lastWordLower === variant || normalizedLastWord === normalizedVariant
+      );
+    });
+
+    if (
+      isOgliVariant ||
+      isQiziVariant ||
+      isOgliCyrVariant ||
+      isQiziCyrVariant
+    ) {
+      // Agar oxirgi so'z "ogli", "o'g'li", "угли", "огли", "ўғли" yoki "qizi", "қизи" variantlaridan biri bo'lsa
       if (words.length < 4) {
-        return "Otchestvo to'liq kiritilmagan (masalan: Abdullayev Abdulaziz Abdullayevich)";
+        return "Sharif to'liq kiritilmagan";
       }
-      // Bu holat qabul qilinadi (masalan: Abdullayev Abdulaziz Abdullayevich)
+      // Bu holat qabul qilinadi
     }
-    // Otchestvo 1 so'z bo'lishi mumkin: "Bahodirovich", "Bahodirovna" va h.k.
+    // Sharif 1 so'z bo'lishi mumkin: "Bahodirovich", "Bahodirovna" va h.k.
     else {
       const hasValidEnding = validOtchestvoEndings.some(
-        (ending) => lastWord.endsWith(ending) && lastWord.length > ending.length
+        (ending) =>
+          lastWordLower.endsWith(ending) && lastWordLower.length > ending.length
       );
 
       if (!hasValidEnding) {
-        return "Otchestvo 'ogli', 'o'g'li', 'qizi', 'vich' yoki 'vna' bilan tugashi kerak (masalan: Abdullayev Abdulaziz Abdullayevich)";
+        return "Sharif 'ogli', 'qizi', 'vich' yoki 'vna' bilan tugashi kerak";
       }
     }
 
     // Ism 1 yoki 2 so'z bo'lishi mumkin
-    // Minimum 3 so'z: Familya Ism Otchestvo
-    // Maximum 5 so'z: Familya Ism1 Ism2 Otchestvo1 Otchestvo2
+    // Minimum 3 so'z: Familya Ism Sharif
+    // Maximum 5 so'z: Familya Ism1 Ism2 Sharif1 Sharif2
     if (words.length > 5) {
-      return "Ism-familiya juda uzun. Iltimos, to'g'ri formatda kiriting: Familya Ism Otchestvo";
+      return "Ism-familiya juda uzun. Iltimos, to'g'ri formatda kiriting: Familya Ism Sharif";
     }
 
     // Har bir so'z kamida 2 ta harfdan iborat bo'lishi kerak
@@ -502,14 +763,27 @@ const JobApplicationForm = () => {
 
   // Handle input changes
   const handleInputChange = (field, value) => {
+    let processedValue = value;
+
+    // Apply filters for fullName field
+    if (field === "fullName") {
+      const previousValue = formData.fullName;
+      processedValue = filterFullNameInput(value, previousValue);
+
+      // If input was rejected (script mixing), don't update
+      if (processedValue === previousValue && value !== previousValue) {
+        return; // Input rejected, don't update state
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: processedValue,
     }));
 
     // Validate fullName on change (but don't show error until blur)
-    if (field === "fullName" && value.trim().length > 0) {
-      const error = validateFullName(value);
+    if (field === "fullName" && processedValue.trim().length > 0) {
+      const error = validateFullName(processedValue);
       if (error) {
         setFieldErrors((prev) => ({
           ...prev,
@@ -562,7 +836,11 @@ const JobApplicationForm = () => {
     }
 
     // If start month changes and same year, check end month
-    if (field === "startMonth" && updatedEducation[index].startYear && updatedEducation[index].endYear) {
+    if (
+      field === "startMonth" &&
+      updatedEducation[index].startYear &&
+      updatedEducation[index].endYear
+    ) {
       const startYear = parseInt(updatedEducation[index].startYear);
       const endYear = parseInt(updatedEducation[index].endYear);
       if (startYear === endYear && updatedEducation[index].endMonth) {
@@ -582,7 +860,11 @@ const JobApplicationForm = () => {
     if (field === "endYear" && updatedEducation[index].startYear) {
       const startYear = parseInt(updatedEducation[index].startYear);
       const endYear = parseInt(value);
-      if (endYear === startYear && updatedEducation[index].endMonth && updatedEducation[index].startMonth) {
+      if (
+        endYear === startYear &&
+        updatedEducation[index].endMonth &&
+        updatedEducation[index].startMonth
+      ) {
         const startMonth = parseInt(updatedEducation[index].startMonth);
         const endMonth = parseInt(updatedEducation[index].endMonth);
         // If same month, clear end month (cannot be same month)
@@ -593,7 +875,11 @@ const JobApplicationForm = () => {
     }
 
     // If end month changes and same year and month as start, clear it
-    if (field === "endMonth" && updatedEducation[index].startYear && updatedEducation[index].endYear) {
+    if (
+      field === "endMonth" &&
+      updatedEducation[index].startYear &&
+      updatedEducation[index].endYear
+    ) {
       const startYear = parseInt(updatedEducation[index].startYear);
       const endYear = parseInt(updatedEducation[index].endYear);
       if (startYear === endYear && updatedEducation[index].startMonth) {
@@ -684,9 +970,14 @@ const JobApplicationForm = () => {
       if (endYear < startYear) {
         updatedWorkExperience[index].endYear = "";
         updatedWorkExperience[index].endMonth = "";
-      } else if (endYear === startYear && updatedWorkExperience[index].endMonth) {
+      } else if (
+        endYear === startYear &&
+        updatedWorkExperience[index].endMonth
+      ) {
         // If same year, check if end month is before start month
-        const startMonth = parseInt(updatedWorkExperience[index].startMonth || "1");
+        const startMonth = parseInt(
+          updatedWorkExperience[index].startMonth || "1"
+        );
         const endMonth = parseInt(updatedWorkExperience[index].endMonth);
         if (endMonth < startMonth) {
           updatedWorkExperience[index].endMonth = "";
@@ -695,7 +986,11 @@ const JobApplicationForm = () => {
     }
 
     // If start month changes and same year, check end month
-    if (field === "startMonth" && updatedWorkExperience[index].startYear && updatedWorkExperience[index].endYear) {
+    if (
+      field === "startMonth" &&
+      updatedWorkExperience[index].startYear &&
+      updatedWorkExperience[index].endYear
+    ) {
       const startYear = parseInt(updatedWorkExperience[index].startYear);
       const endYear = parseInt(updatedWorkExperience[index].endYear);
       if (startYear === endYear && updatedWorkExperience[index].endMonth) {
@@ -791,8 +1086,12 @@ const JobApplicationForm = () => {
     // Validate phone number (required)
     if (!formData.phone || formData.phone.trim() === "") {
       errors.phone = "Telefon raqami kiritilishi shart";
-    } else if (formData.phone.startsWith("+998") && !isPhoneComplete(formData.phone)) {
-      errors.phone = "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)";
+    } else if (
+      formData.phone.startsWith("+998") &&
+      !isPhoneComplete(formData.phone)
+    ) {
+      errors.phone =
+        "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)";
     }
 
     // Validate birth date (required)
@@ -829,28 +1128,48 @@ const JobApplicationForm = () => {
     }
 
     // Validate business trip ready
-    if (!formData.businessTripReady || formData.businessTripReady.trim() === "") {
+    if (
+      !formData.businessTripReady ||
+      formData.businessTripReady.trim() === ""
+    ) {
       errors.businessTripReady = "Xizmat safarlariga borishni tanlash majburiy";
     }
 
     // Validate education: institution and specialty required, and period validation
     for (let i = 0; i < formData.education.length; i++) {
       const edu = formData.education[i];
-      if (edu.startYear || edu.startMonth || edu.endYear || edu.endMonth || edu.institution || edu.degree || edu.specialty) {
+      if (
+        edu.startYear ||
+        edu.startMonth ||
+        edu.endYear ||
+        edu.endMonth ||
+        edu.institution ||
+        edu.degree ||
+        edu.specialty
+      ) {
         if (!edu.institution || edu.institution.trim() === "") {
-          errors[`education_${i}_institution`] = "Muassasa nomi kiritilishi shart";
+          errors[`education_${i}_institution`] =
+            "Muassasa nomi kiritilishi shart";
         }
         if (!edu.specialty || edu.specialty.trim() === "") {
-          errors[`education_${i}_specialty`] = "Mutaxassislik kiritilishi shart";
+          errors[`education_${i}_specialty`] =
+            "Mutaxassislik kiritilishi shart";
         }
         // Validate that start and end are not in the same month
-        if (!edu.isCurrent && edu.startYear && edu.startMonth && edu.endYear && edu.endMonth) {
+        if (
+          !edu.isCurrent &&
+          edu.startYear &&
+          edu.startMonth &&
+          edu.endYear &&
+          edu.endMonth
+        ) {
           const startYear = parseInt(edu.startYear);
           const endYear = parseInt(edu.endYear);
           const startMonth = parseInt(edu.startMonth);
           const endMonth = parseInt(edu.endMonth);
           if (startYear === endYear && startMonth === endMonth) {
-            errors[`education_${i}_period`] = "Boshlanish va tugash oyi bir xil bo'lishi mumkin emas";
+            errors[`education_${i}_period`] =
+              "Boshlanish va tugash oyi bir xil bo'lishi mumkin emas";
           }
         }
       }
@@ -862,16 +1181,20 @@ const JobApplicationForm = () => {
         const work = formData.workExperience[i];
         if (isWorkExperienceEntryStarted(work)) {
           if (!work.startYear || !work.startMonth) {
-            errors[`workExperience_${i}_startDate`] = "Boshlanish sanasi kiritilishi shart";
+            errors[`workExperience_${i}_startDate`] =
+              "Boshlanish sanasi kiritilishi shart";
           }
           if (!work.isCurrent && (!work.endYear || !work.endMonth)) {
-            errors[`workExperience_${i}_endDate`] = "Tugash sanasi kiritilishi shart";
+            errors[`workExperience_${i}_endDate`] =
+              "Tugash sanasi kiritilishi shart";
           }
           if (!work.company || work.company.trim() === "") {
-            errors[`workExperience_${i}_company`] = "Kompaniya nomi kiritilishi shart";
+            errors[`workExperience_${i}_company`] =
+              "Kompaniya nomi kiritilishi shart";
           }
           if (!work.position || work.position.trim() === "") {
-            errors[`workExperience_${i}_position`] = "Lavozim kiritilishi shart";
+            errors[`workExperience_${i}_position`] =
+              "Lavozim kiritilishi shart";
           }
         }
       }
@@ -901,11 +1224,13 @@ const JobApplicationForm = () => {
     const yearMonthToDate = (year, month, isEndDate = false) => {
       if (!year) return "";
       const yearNum = parseInt(year);
-      const monthNum = month ? parseInt(month) : (isEndDate ? 12 : 1);
-      
+      const monthNum = month ? parseInt(month) : isEndDate ? 12 : 1;
+
       if (isEndDate) {
         const lastDay = getLastDayOfMonth(yearNum, monthNum);
-        return `${yearNum}-${String(monthNum).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+        return `${yearNum}-${String(monthNum).padStart(2, "0")}-${String(
+          lastDay
+        ).padStart(2, "0")}`;
       } else {
         // Start date: first day of month
         return `${yearNum}-${String(monthNum).padStart(2, "0")}-01`;
@@ -920,7 +1245,7 @@ const JobApplicationForm = () => {
 
     // Clean phone number (remove spaces)
     const cleanPhone = formData.phone ? formData.phone.replace(/\s/g, "") : "";
-    
+
     // Filter and map graduations - only include entries with required fields
     const graduations = formData.education
       .filter((edu) => {
@@ -971,7 +1296,7 @@ const JobApplicationForm = () => {
             organization_name: work.company,
             position: work.position,
           }));
-    
+
     // Prepare languages array - filter out empty languages and map to correct format
     const languagesArray = Object.entries(formData.languages)
       .filter(([_, level]) => level && level.trim() !== "") // Filter out empty languages
@@ -1056,38 +1381,54 @@ const JobApplicationForm = () => {
 
         // Translate error messages based on current language
         const translateError = (message, fieldName = null) => {
-          const currentLanguage = i18n.language || localStorage.getItem("language") || "uz-Latn";
-          
+          const currentLanguage =
+            i18n.language || localStorage.getItem("language") || "uz-Latn";
+
           // Handle JSHSHIR date format errors (e.g., "30.03.2026" - application deadline)
-          if (fieldName === "jshshir" && message && typeof message === "string") {
+          if (
+            fieldName === "jshshir" &&
+            message &&
+            typeof message === "string"
+          ) {
             // Check if message is a date string (format: DD.MM.YYYY)
             const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
             const trimmedMessage = message.trim();
             if (datePattern.test(trimmedMessage)) {
-              return t("jobs.application.form.jshshir_resubmission_date", { date: trimmedMessage });
+              return t("jobs.application.form.jshshir_resubmission_date", {
+                date: trimmedMessage,
+              });
             }
           }
-          
+
           // Generic translations
           const translations = {
             "uz-Latn": {
-              "This field may not be blank.": "Ushbu maydon bo'sh bo'lishi mumkin emas.",
-              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Sana noto'g'ri formatda yoki kiritilmagan",
-              '"" is not a valid choice.': "Noto'g'ri tanlov. Iltimos, boshqa variantni tanlang.",
+              "This field may not be blank.":
+                "Ushbu maydon bo'sh bo'lishi mumkin emas.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.":
+                "Sana noto'g'ri formatda yoki kiritilmagan",
+              '"" is not a valid choice.':
+                "Noto'g'ri tanlov. Iltimos, boshqa variantni tanlang.",
             },
             "uz-Cyrl": {
-              "This field may not be blank.": "Ушбу майдон бўш бўлиши мумкин эмас.",
-              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Сана нотўғри форматда ёки киритилмаган",
-              '"" is not a valid choice.': "Нотўғри танлов. Илтимос, бошқа вариантни танланг.",
+              "This field may not be blank.":
+                "Ушбу майдон бўш бўлиши мумкин эмас.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.":
+                "Сана нотўғри форматда ёки киритилмаган",
+              '"" is not a valid choice.':
+                "Нотўғри танлов. Илтимос, бошқа вариантни танланг.",
             },
-            "ru": {
+            ru: {
               "This field may not be blank.": "Это поле не может быть пустым.",
-              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.": "Неверный формат даты или дата не указана",
-              '"" is not a valid choice.': "Неверный выбор. Пожалуйста, выберите другой вариант.",
+              "Date has wrong format. Use one of these formats instead: YYYY-MM-DD.":
+                "Неверный формат даты или дата не указана",
+              '"" is not a valid choice.':
+                "Неверный выбор. Пожалуйста, выберите другой вариант.",
             },
           };
 
-          const langTranslations = translations[currentLanguage] || translations["uz-Latn"];
+          const langTranslations =
+            translations[currentLanguage] || translations["uz-Latn"];
 
           // Try exact match first
           if (langTranslations[message]) {
@@ -1106,11 +1447,17 @@ const JobApplicationForm = () => {
 
         // Map backend field names to frontend field names
         if (backendErrors.full_name) {
-          errors.fullName = translateError(backendErrors.full_name[0], "full_name");
+          errors.fullName = translateError(
+            backendErrors.full_name[0],
+            "full_name"
+          );
         }
 
         if (backendErrors.data_of_birth) {
-          errors.birthDate = translateError(backendErrors.data_of_birth[0], "data_of_birth");
+          errors.birthDate = translateError(
+            backendErrors.data_of_birth[0],
+            "data_of_birth"
+          );
         }
 
         if (backendErrors.phone) {
@@ -1119,8 +1466,8 @@ const JobApplicationForm = () => {
 
         if (backendErrors.jshshir) {
           // Handle both array format ["30.03.2026"] and string format "30.03.2026"
-          const jshshirError = Array.isArray(backendErrors.jshshir) 
-            ? backendErrors.jshshir[0] 
+          const jshshirError = Array.isArray(backendErrors.jshshir)
+            ? backendErrors.jshshir[0]
             : backendErrors.jshshir;
           errors.jshshir = translateError(jshshirError, "jshshir");
         }
@@ -1189,9 +1536,14 @@ const JobApplicationForm = () => {
 
       // Check if JSHSHIR error is a date (resubmission deadline)
       const jshshirError = error.response?.data?.jshshir;
-      const jshshirErrorValue = Array.isArray(jshshirError) ? jshshirError[0] : jshshirError;
+      const jshshirErrorValue = Array.isArray(jshshirError)
+        ? jshshirError[0]
+        : jshshirError;
       const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
-      const hasJshshirDateError = jshshirErrorValue && typeof jshshirErrorValue === "string" && datePattern.test(jshshirErrorValue.trim());
+      const hasJshshirDateError =
+        jshshirErrorValue &&
+        typeof jshshirErrorValue === "string" &&
+        datePattern.test(jshshirErrorValue.trim());
 
       // Show toast messages
       if (Object.keys(errors).length === 0) {
@@ -1201,10 +1553,15 @@ const JobApplicationForm = () => {
         });
       } else if (hasJshshirDateError) {
         // Show specific JSHSHIR date error toast
-        toast.error(t("jobs.application.form.jshshir_resubmission_date", { date: jshshirErrorValue.trim() }), {
-          duration: 6000,
-          position: "top-center",
-        });
+        toast.error(
+          t("jobs.application.form.jshshir_resubmission_date", {
+            date: jshshirErrorValue.trim(),
+          }),
+          {
+            duration: 6000,
+            position: "top-center",
+          }
+        );
       } else {
         // Show generic errors toast
         toast.error(t("jobs.application.form.form_errors_found"), {
@@ -1512,12 +1869,15 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         onChange={(e) => {
                           let value = e.target.value;
                           const previousValue = formData.phone;
-                          
+
                           // Format phone number with mask
-                          const formatted = formatPhoneNumber(value, previousValue);
-                          
+                          const formatted = formatPhoneNumber(
+                            value,
+                            previousValue
+                          );
+
                           handleInputChange("phone", formatted);
-                          
+
                           // Clear error when user starts typing
                           if (fieldErrors.phone) {
                             setFieldErrors((prev) => {
@@ -1534,7 +1894,8 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             if (!isPhoneComplete(phoneValue)) {
                               setFieldErrors((prev) => ({
                                 ...prev,
-                                phone: "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)",
+                                phone:
+                                  "Telefon raqami to'liq kiritilishi shart (+998 XX XXX XX XX)",
                               }));
                             } else {
                               // Clear error if phone is complete
@@ -1544,7 +1905,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 return newErrors;
                               });
                             }
-                          } else if (phoneValue && phoneValue.startsWith("+") && phoneValue.length < 4) {
+                          } else if (
+                            phoneValue &&
+                            phoneValue.startsWith("+") &&
+                            phoneValue.length < 4
+                          ) {
                             // If user only typed + or incomplete country code
                             setFieldErrors((prev) => ({
                               ...prev,
@@ -1588,18 +1953,22 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         type="text"
                         inputMode="numeric"
                         placeholder="12345678901234"
-                        value={formData.jshshir ? formatJShShIR(formData.jshshir) : ""}
+                        value={
+                          formData.jshshir
+                            ? formatJShShIR(formData.jshshir)
+                            : ""
+                        }
                         onChange={(e) => {
                           let value = e.target.value;
-                          
+
                           // Remove all non-digit characters
                           value = value.replace(/\D/g, "");
-                          
+
                           // Limit to 14 digits
                           if (value.length > 14) {
                             value = value.substring(0, 14);
                           }
-                          
+
                           handleInputChange("jshshir", value);
                         }}
                         onBlur={(e) => {
@@ -1626,7 +1995,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         </p>
                       )}
                     </div>
-
                   </div>
                 </div>
 
@@ -1671,7 +2039,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               <Select
                                 value={edu.startYear}
                                 onChange={(value) =>
-                                  handleEducationChange(index, "startYear", value)
+                                  handleEducationChange(
+                                    index,
+                                    "startYear",
+                                    value
+                                  )
                                 }
                                 options={yearOptions}
                                 placeholder={t(
@@ -1682,7 +2054,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               <Select
                                 value={edu.startMonth}
                                 onChange={(value) =>
-                                  handleEducationChange(index, "startMonth", value)
+                                  handleEducationChange(
+                                    index,
+                                    "startMonth",
+                                    value
+                                  )
                                 }
                                 options={monthOptions}
                                 placeholder="Oy"
@@ -1700,7 +2076,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 <Select
                                   value={edu.endYear}
                                   onChange={(value) =>
-                                    handleEducationChange(index, "endYear", value)
+                                    handleEducationChange(
+                                      index,
+                                      "endYear",
+                                      value
+                                    )
                                   }
                                   options={getEndYearOptions(edu.startYear)}
                                   placeholder={t(
@@ -1712,7 +2092,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 <Select
                                   value={edu.endMonth}
                                   onChange={(value) =>
-                                    handleEducationChange(index, "endMonth", value)
+                                    handleEducationChange(
+                                      index,
+                                      "endMonth",
+                                      value
+                                    )
                                   }
                                   options={monthOptions}
                                   placeholder="Oy"
@@ -1835,9 +2219,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   {/* Info note about education requirement */}
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="flex items-start gap-2">
-                      <Icon name="Info" size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <Icon
+                        name="Info"
+                        size={18}
+                        className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+                      />
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>{t("jobs.application.form.note")}:</strong> {t("jobs.application.form.education_note")}
+                        <strong>{t("jobs.application.form.note")}:</strong>{" "}
+                        {t("jobs.application.form.education_note")}
                       </p>
                     </div>
                   </div>
@@ -1931,7 +2320,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     placeholder={t(
                                       "jobs.application.form.select_year"
                                     )}
-                                    required={isWorkExperienceEntryStarted(work)}
+                                    required={isWorkExperienceEntryStarted(
+                                      work
+                                    )}
                                   />
                                   <Select
                                     value={work.startMonth}
@@ -1944,7 +2335,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     }
                                     options={monthOptions}
                                     placeholder="Oy"
-                                    required={isWorkExperienceEntryStarted(work)}
+                                    required={isWorkExperienceEntryStarted(
+                                      work
+                                    )}
                                   />
                                 </div>
                               </div>
@@ -1964,12 +2357,17 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                           value
                                         )
                                       }
-                                      options={getEndYearOptions(work.startYear)}
+                                      options={getEndYearOptions(
+                                        work.startYear
+                                      )}
                                       placeholder={t(
                                         "jobs.application.form.select_year"
                                       )}
                                       disabled={work.isCurrent}
-                                      required={!work.isCurrent && isWorkExperienceEntryStarted(work)}
+                                      required={
+                                        !work.isCurrent &&
+                                        isWorkExperienceEntryStarted(work)
+                                      }
                                     />
                                     <Select
                                       value={work.endMonth}
@@ -1983,7 +2381,10 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       options={monthOptions}
                                       placeholder="Oy"
                                       disabled={work.isCurrent}
-                                      required={!work.isCurrent && isWorkExperienceEntryStarted(work)}
+                                      required={
+                                        !work.isCurrent &&
+                                        isWorkExperienceEntryStarted(work)
+                                      }
                                     />
                                   </div>
                                   <div className="flex items-center">
@@ -2094,9 +2495,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     {!formData.neverWorked && (
                       <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div className="flex items-start gap-2">
-                          <Icon name="Info" size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <Icon
+                            name="Info"
+                            size={18}
+                            className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+                          />
                           <p className="text-sm text-blue-800 dark:text-blue-200">
-                            <strong>{t("jobs.application.form.note")}:</strong> {t("jobs.application.form.work_experience_note")}
+                            <strong>{t("jobs.application.form.note")}:</strong>{" "}
+                            {t("jobs.application.form.work_experience_note")}
                           </p>
                         </div>
                       </div>
@@ -2271,13 +2677,17 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           placeholder={t(
                             "jobs.application.form.expected_salary_placeholder"
                           )}
-                          value={formData.expectedSalary ? formatSalary(formData.expectedSalary) : ""}
+                          value={
+                            formData.expectedSalary
+                              ? formatSalary(formData.expectedSalary)
+                              : ""
+                          }
                           onChange={(e) => {
                             let value = e.target.value;
-                            
+
                             // Remove all non-digit characters
                             value = value.replace(/\D/g, "");
-                            
+
                             handleInputChange("expectedSalary", value);
                           }}
                           className="pr-12 h-12 md:h-12"
@@ -2416,8 +2826,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   </button>
                   <Button
                     type="submit"
-                    disabled={isSubmitting || (formData.phone.startsWith("+998") && !isPhoneComplete(formData.phone))}
-                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled={
+                      isSubmitting ||
+                      (formData.phone.startsWith("+998") &&
+                        !isPhoneComplete(formData.phone))
+                    }
+                    className="flex-1 h-12 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
@@ -2454,19 +2868,34 @@ ${formData.additionalInfo || "Kiritilmagan"}
                 className="w-full h-auto rounded-lg"
                 onError={(e) => {
                   // If image fails to load, show a placeholder with text explanation
-                  e.target.style.display = 'none';
+                  e.target.style.display = "none";
                   const parent = e.target.parentElement;
-                  if (!parent.querySelector('.jshshir-explanation')) {
-                    const explanation = document.createElement('div');
-                    explanation.className = 'jshshir-explanation p-4 bg-gray-50 dark:bg-gray-900 rounded-lg';
-                    const structureTitle = t("jobs.application.form.jshshir_modal_structure_title");
-                    const structure1 = t("jobs.application.form.jshshir_modal_structure_1");
-                    const structure2 = t("jobs.application.form.jshshir_modal_structure_2");
-                    const structure3 = t("jobs.application.form.jshshir_modal_structure_3");
-                    const structure4 = t("jobs.application.form.jshshir_modal_structure_4");
-                    const structure5 = t("jobs.application.form.jshshir_modal_structure_5");
+                  if (!parent.querySelector(".jshshir-explanation")) {
+                    const explanation = document.createElement("div");
+                    explanation.className =
+                      "jshshir-explanation p-4 bg-gray-50 dark:bg-gray-900 rounded-lg";
+                    const structureTitle = t(
+                      "jobs.application.form.jshshir_modal_structure_title"
+                    );
+                    const structure1 = t(
+                      "jobs.application.form.jshshir_modal_structure_1"
+                    );
+                    const structure2 = t(
+                      "jobs.application.form.jshshir_modal_structure_2"
+                    );
+                    const structure3 = t(
+                      "jobs.application.form.jshshir_modal_structure_3"
+                    );
+                    const structure4 = t(
+                      "jobs.application.form.jshshir_modal_structure_4"
+                    );
+                    const structure5 = t(
+                      "jobs.application.form.jshshir_modal_structure_5"
+                    );
                     const exampleText = t("jobs.application.form.example");
-                    const exampleDesc = t("jobs.application.form.jshshir_modal_example");
+                    const exampleDesc = t(
+                      "jobs.application.form.jshshir_modal_example"
+                    );
                     explanation.innerHTML = `
                       <h3 class="font-semibold mb-3 text-gray-900 dark:text-white">${structureTitle}</h3>
                       <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2488,7 +2917,6 @@ ${formData.additionalInfo || "Kiritilmagan"}
               />
             </div>
           </div>
-          
         </div>
       </Modal>
     </div>
