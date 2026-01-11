@@ -520,6 +520,18 @@ const resources = {
         vacancy_not_found: "Vakansiya topilmadi",
         leave_warning:
           "Testni tark etsangiz, javoblaringiz saqlanmaydi. Davom etasizmi?",
+        leave_modal: {
+          title: "Testdan chiqish",
+          subtitle: "Muhim ogohlantirish",
+          warning_title: "Diqqat!",
+          warning_message:
+            "Agar siz testdan chiqmoqchi bo'lsangiz, test yakunlanadi va qayta topshira olmaysiz.",
+          restriction_title: "90 kunlik cheklov",
+          restriction_message:
+            "Testdan chiqish natijasida sizga 90 kunlik cheklov o'rnatiladi. Bu vaqt davomida testni qayta topshira olmaysiz.",
+          cancel_button: "Bekor qilish",
+          confirm_button: "Testdan chiqish",
+        },
         unanswered_warning:
           "{{count}} ta savolga javob berilmadi. Testni yakunlashni xohlaysizmi?",
         success_message: "Test muvaffaqiyatli topshirildi!",
@@ -534,6 +546,13 @@ const resources = {
           fullscreen_exit_warning:
             "Ogohlantirish: To'liq ekran rejimidan chiqdingiz!",
           devtools_detected: "Dasturchi vositalari aniqlandi! Iltimos, yoping.",
+          screenshot_blocked_title: "Skrinshot olish taqiqlangan",
+          screenshot_blocked_message:
+            "Test davomida skrinshot olish qat'iyan taqiqlanadi. Skrinshot olishga urinish test qoidalarini buzish hisoblanadi.",
+          screenshot_note_title: "Diqqat:",
+          screenshot_note_message:
+            "Skrinshot olishga urinish test natijalaringizni bekor qilishi mumkin. Iltimos, test qoidalariga rioya qiling.",
+          screenshot_understood: "Tushundim",
           page_leave_warning:
             "Test davom etmoqda! Sahifadan chiqsangiz, barcha javoblaringiz yo'qoladi!",
           violation_warning:
@@ -1185,6 +1204,18 @@ const resources = {
         vacancy_not_found: "Вакансия топилмади",
         leave_warning:
           "Тестни тарк етсангиз, жавобларингиз сақланмайди. Давом етасизми?",
+        leave_modal: {
+          title: "Тестдан чиқиш",
+          subtitle: "Муҳим огоҳлантириш",
+          warning_title: "Диққат!",
+          warning_message:
+            "Агар сиз тестдан чиқмоқчи бўлсангиз, тест якунланади ва қайта топшира олмайсиз.",
+          restriction_title: "90 кунлик чеклов",
+          restriction_message:
+            "Тестдан чиқиш натижасида сизга 90 кунлик чеклов ўрнатилади. Бу вақт давомида тестни қайта топшира олмайсиз.",
+          cancel_button: "Бекор қилиш",
+          confirm_button: "Тестдан чиқиш",
+        },
         unanswered_warning:
           "{{count}} та саволга жавоб берилмади. Тестни якунлашни хоҳлайсизми?",
         success_message: "Тест муваффақиятли топширилди!",
@@ -1199,6 +1230,13 @@ const resources = {
           fullscreen_exit_warning:
             "Огоҳлантириш: Тўлиқ екран режимидан чиқдингиз!",
           devtools_detected: "Дастурчи воситалари аниқланди! Илтимос, ёпинг.",
+          screenshot_blocked_title: "Скриншот олиш тақиқланган",
+          screenshot_blocked_message:
+            "Тест давомида скриншот олиш қатъиян тақиқланади. Скриншот олишга уриниш тест қоидаларини бузиш ҳисобланади.",
+          screenshot_note_title: "Диққат:",
+          screenshot_note_message:
+            "Скриншот олишга уриниш тест натижаларингизни бекор қилиши мумкин. Илтимос, тест қоидаларига риоя қилинг.",
+          screenshot_understood: "Тушундим",
           page_leave_warning:
             "Тест давом етмоқда! Саҳифадан чиқсангиз, барча жавобларингиз йўқолади!",
           violation_warning:
@@ -1867,6 +1905,18 @@ const resources = {
         vacancy_not_found: "Вакансия не найдена",
         leave_warning:
           "Если вы покинете тест, ваши ответы не сохранятся. Продолжить?",
+        leave_modal: {
+          title: "Выход из теста",
+          subtitle: "Важное предупреждение",
+          warning_title: "Внимание!",
+          warning_message:
+            "Если вы хотите выйти из теста, тест будет завершен и вы не сможете пройти его повторно.",
+          restriction_title: "90-дневное ограничение",
+          restriction_message:
+            "В результате выхода из теста вам будет установлено 90-дневное ограничение. В течение этого времени вы не сможете пройти тест повторно.",
+          cancel_button: "Отмена",
+          confirm_button: "Выйти из теста",
+        },
         unanswered_warning:
           "На {{count}} вопросов не дан ответ. Завершить тест?",
         success_message: "Тест успешно завершен!",
@@ -1883,6 +1933,13 @@ const resources = {
             "Предупреждение: Вы вышли из полноэкранного режима!",
           devtools_detected:
             "Обнаружены инструменты разработчика! Пожалуйста, закройте их.",
+          screenshot_blocked_title: "Скриншот запрещен",
+          screenshot_blocked_message:
+            "Скриншот во время теста строго запрещен. Попытка сделать скриншот считается нарушением правил теста.",
+          screenshot_note_title: "Внимание:",
+          screenshot_note_message:
+            "Попытка сделать скриншот может привести к аннулированию результатов теста. Пожалуйста, соблюдайте правила теста.",
+          screenshot_understood: "Понятно",
           page_leave_warning:
             "Тест продолжается! Если вы покинете страницу, все ответы будут потеряны!",
           violation_warning:
