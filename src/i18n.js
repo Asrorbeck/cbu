@@ -41,6 +41,7 @@ const resources = {
             description:
               "Bank so'rovnomalarida qatnashing va fikringizni bildiring",
           },
+          coming_soon: "Tez orada ishga tushadi",
           access_service: "Xizmatga kirish",
         },
         quick_actions: {
@@ -738,6 +739,7 @@ const resources = {
             description:
               "Банк сўровномаларида қатнашинг ва фикрингизни билдиринг",
           },
+          coming_soon: "Тез орада ишга тушади",
           access_service: "Хизматга кириш",
         },
         quick_actions: {
@@ -1425,6 +1427,12 @@ const resources = {
             title: "Обращения",
             description: "Отправьте новое обращение в банк",
           },
+          surveys: {
+            title: "Опросы",
+            description:
+              "Примите участие в опросах банка и поделитесь своим мнением",
+          },
+          coming_soon: "Скоро будет доступно",
           news: {
             title: "Новости и обновления",
             description:

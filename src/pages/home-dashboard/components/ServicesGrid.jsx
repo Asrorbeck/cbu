@@ -31,6 +31,8 @@ const ServicesGrid = () => {
       path: "/submissions",
       color: "text-icon",
       bgColor: "bg-secondary/20",
+      disabled: true,
+      disabledMessage: t("home.services.coming_soon") || "Tez orada ishga tushadi",
     },
     {
       id: "surveys",
@@ -40,6 +42,8 @@ const ServicesGrid = () => {
       path: "/surveys",
       color: "text-icon",
       bgColor: "bg-secondary/20",
+      disabled: true,
+      disabledMessage: t("home.services.coming_soon") || "Tez orada ishga tushadi",
     },
   ];
 
