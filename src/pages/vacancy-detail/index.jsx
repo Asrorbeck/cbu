@@ -308,6 +308,29 @@ const VacancyDetailPage = () => {
     });
   };
 
+  // Format test deadline with date and time
+  const formatTestDeadline = (deadline) => {
+    if (!deadline) return "";
+    try {
+      const date = new Date(deadline);
+      if (isNaN(date.getTime())) return "";
+      
+      // Format date: DD.MM.YYYY
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      
+      // Format time: HH:MM
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      
+      return `${day}.${month}.${year} ${hours}:${minutes}`;
+    } catch (error) {
+      console.error("Error formatting test deadline:", error);
+      return "";
+    }
+  };
+
   const getDaysRemaining = (deadline) => {
     const today = new Date();
     const deadlineDate = new Date(deadline);
@@ -457,7 +480,7 @@ const VacancyDetailPage = () => {
                         </span>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm font-semibold text-green-800 dark:text-green-200">
-                            {formatDeadline(vacancy?.testDeadline)}
+                            {formatTestDeadline(vacancy?.testDeadline)}
                           </span>
                           {testDaysRemaining !== null &&
                             testDaysRemaining >= 0 && (

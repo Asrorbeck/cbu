@@ -2663,7 +2663,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
 
                 {/* Expected Salary and Business Trip Ready Section (Frontend Only) */}
                 <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 sm:px-6">
                     {/* Expected Salary */}
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
