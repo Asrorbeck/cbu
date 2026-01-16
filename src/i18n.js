@@ -557,6 +557,14 @@ const resources = {
             "Test davom etmoqda! Sahifadan chiqsangiz, barcha javoblaringiz yo'qoladi!",
           violation_warning:
             "Ogohlantirish! Qoidabuzarlik {{count}}/5. {{remaining}} ta imkoniyat qoldi!",
+          official_warning: "Rasmiy ogohlantirish",
+          violation_warning_title: "Qoida buzarlik qilmang",
+          violation_warning_message:
+            "Test davomida qoida buzarlik qilish qat'iyan taqiqlanadi. Skrinshot olish, ekran yozib olish yoki boshqa noqonuniy harakatlar test qoidalarini buzish hisoblanadi va test natijalaringiz bekor qilinishi mumkin.",
+          violation_note_title: "Diqqat:",
+          violation_note_message:
+            "Qoida buzarlik qilish test natijalaringizni bekor qilishi va testdan chetlashtirilishingizga olib kelishi mumkin. Iltimos, test qoidalariga rioya qiling va halollik bilan test topshiring.",
+          violation_understood: "Tushundim, qoidalarga rioya qilaman",
           blocked_title: "TESTDAN CHETLATISH",
           blocked_subtitle: "O'zbekiston Respublikasi Markaziy Banki",
           blocked_description:
@@ -592,6 +600,7 @@ const resources = {
           failed: "O'TKAZILMADI",
         },
         result: {
+          title: "Test natijalari",
           passed_title: "Tabriklaymiz! Testdan o'tdingiz",
           failed_title: "Afsuski, testdan o'ta olmadingiz",
           passed_message: "Siz testni muvaffaqiyatli topshirdingiz!",
@@ -1241,6 +1250,14 @@ const resources = {
             "Тест давом етмоқда! Саҳифадан чиқсангиз, барча жавобларингиз йўқолади!",
           violation_warning:
             "Огоҳлантириш! Қоидабузарлик {{count}}/5. {{remaining}} та имконият қолди!",
+          official_warning: "Расмий огоҳлантириш",
+          violation_warning_title: "Қоида бузарлик қилманг",
+          violation_warning_message:
+            "Тест давомида қоида бузарлик қилиш қатъиян тақиқланади. Скриншот олиш, екран ёзиб олиш ёки бошқа ноқонуний ҳаракатлар тест қоидаларини бузиш ҳисобланади ва тест натижаларингиз бекор қилиниши мумкин.",
+          violation_note_title: "Диққат:",
+          violation_note_message:
+            "Қоида бузарлик қилиш тест натижаларингизни бекор қилиши ва тестдан четлаштирилишингизга олиб келиши мумкин. Илтимос, тест қоидаларига риоя қилинг ва ҳалоллик билан тест топширинг.",
+          violation_understood: "Тушундим, қоидаларга риоя қиламан",
           blocked_title: "ТЕСТДАН ЧЕТЛАТИШ",
           blocked_subtitle: "Ўзбекистон Республикаси Марказий Банки",
           blocked_description:
@@ -1276,6 +1293,7 @@ const resources = {
           failed: "ЎТКАЗИЛМАДИ",
         },
         result: {
+          title: "Тест натижалари",
           passed_title: "Табриклаймиз! Тестдан ўтдингиз",
           failed_title: "Афсуски, тестдан ўта олмадингиз",
           passed_message: "Сиз тестни муваффақиятли топширдингиз!",
@@ -1944,6 +1962,14 @@ const resources = {
             "Тест продолжается! Если вы покинете страницу, все ответы будут потеряны!",
           violation_warning:
             "Предупреждение! Нарушение {{count}}/5. Осталось {{remaining}} попытки!",
+          official_warning: "Официальное предупреждение",
+          violation_warning_title: "Не нарушайте правила",
+          violation_warning_message:
+            "Нарушение правил во время теста строго запрещено. Попытка сделать скриншот, запись экрана или другие незаконные действия считаются нарушением правил теста и могут привести к аннулированию результатов теста.",
+          violation_note_title: "Внимание:",
+          violation_note_message:
+            "Нарушение правил может привести к аннулированию результатов теста и вашему отстранению от теста. Пожалуйста, соблюдайте правила теста и проходите тест честно.",
+          violation_understood: "Понятно, буду соблюдать правила",
           blocked_title: "ОТСТРАНЕНИЕ ОТ ТЕСТА",
           blocked_subtitle: "Центральный Банк Республики Узбекистан",
           blocked_description:
@@ -1978,6 +2004,7 @@ const resources = {
           failed: "НЕ ПРОЙДЕН",
         },
         result: {
+          title: "Результаты теста",
           passed_title: "Поздравляем! Вы прошли тест",
           failed_title: "К сожалению, вы не прошли тест",
           passed_message: "Вы успешно сдали тест!",
