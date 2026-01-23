@@ -45,12 +45,13 @@ const ConsumerRightsSubmission = () => {
             items: activeItems,
           });
         } else {
+          // If no active category found, use fallback
           setFaqData(null);
         }
       } catch (error) {
         console.error("Error fetching FAQ data:", error);
-        setFaqError("FAQ ma'lumotlarini yuklashda xatolik yuz berdi");
-        // Fallback to empty state, will show default message
+        setFaqError("FAQ ma'lumotlarini yuklashda xatolik yuz berdi. Statik savollar ko'rsatilmoqda.");
+        // Fallback to static FAQs
         setFaqData(null);
       } finally {
         setIsLoadingFaq(false);
@@ -120,8 +121,10 @@ const ConsumerRightsSubmission = () => {
     },
   ];
 
-  // Use backend data if available, otherwise use fallback
-  const faqs = faqData?.items || fallbackFaqs;
+  // Use backend data if available, otherwise use fallback static FAQs
+  // If backend data exists but is empty, also use fallback
+  const backendFaqs = faqData?.items || [];
+  const faqs = backendFaqs.length > 0 ? backendFaqs : fallbackFaqs;
   const faqTitle = faqData?.name || "Tez-tez so'raladigan savollar";
   const faqDescription = faqData?.description || "Iste'molchi huquqlari bo'yicha eng ko'p beriladigan savollarga javoblar";
 
@@ -216,8 +219,8 @@ const ConsumerRightsSubmission = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-3 text-muted-foreground">Yuklanmoqda...</span>
               </div>
-            ) : faqError ? (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+            ) : faqError && faqs.length === 0 ? (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800 mb-4">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   {faqError}
                 </p>

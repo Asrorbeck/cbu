@@ -1472,12 +1472,13 @@ const JobApplicationForm = () => {
           errors.jshshir = translateError(jshshirError, "jshshir");
         }
 
-        if (backendErrors.additional_information) {
-          errors.additionalInfo = translateError(
-            backendErrors.additional_information[0],
-            "additional_information"
-          );
-        }
+        // Additional information is optional, so we ignore backend errors for it
+        // if (backendErrors.additional_information) {
+        //   errors.additionalInfo = translateError(
+        //     backendErrors.additional_information[0],
+        //     "additional_information"
+        //   );
+        // }
 
         // Handle graduations errors
         if (
