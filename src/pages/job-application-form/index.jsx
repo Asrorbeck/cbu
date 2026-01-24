@@ -145,6 +145,7 @@ const JobApplicationForm = () => {
     convictionDetails: "",
     expectedSalary: "",
     businessTripReady: "",
+    resume: null,
   });
 
   // Get user ID from Telegram Web App or use default
@@ -1135,6 +1136,20 @@ const JobApplicationForm = () => {
       errors.businessTripReady = "Xizmat safarlariga borishni tanlash majburiy";
     }
 
+    // Validate resume (required, Word format only)
+    if (!formData.resume) {
+      errors.resume = t("jobs.application.form.resume_required");
+    } else {
+      const allowedExtensions = [".doc", ".docx"];
+      const fileName = formData.resume.name.toLowerCase();
+      const hasValidExtension = allowedExtensions.some((ext) =>
+        fileName.endsWith(ext)
+      );
+      if (!hasValidExtension) {
+        errors.resume = t("jobs.application.form.resume_format_error");
+      }
+    }
+
     // Validate education: institution and specialty required, and period validation
     for (let i = 0; i < formData.education.length; i++) {
       const edu = formData.education[i];
@@ -1305,33 +1320,39 @@ const JobApplicationForm = () => {
         degree: level,
       }));
 
-    // Prepare data in JSON format (as backend expects)
-    const formDataToSend = {
-      job: parseInt(decodedVacancyId),
-      user_id: getUserId(),
-      full_name: formData.fullName,
-      data_of_birth: formData.birthDate,
-      phone: cleanPhone,
-      jshshir: formData.jshshir,
-      additional_information: formData.additionalInfo || "",
-      graduations: graduations,
-      employments: employments,
-      languages: languagesArray,
-    };
+    // Prepare FormData for multipart/form-data submission
+    const formDataToSend = new FormData();
+    formDataToSend.append("job", parseInt(decodedVacancyId));
+    formDataToSend.append("user_id", getUserId());
+    formDataToSend.append("full_name", formData.fullName);
+    formDataToSend.append("data_of_birth", formData.birthDate);
+    formDataToSend.append("phone", cleanPhone);
+    formDataToSend.append("jshshir", formData.jshshir);
+    formDataToSend.append("additional_information", formData.additionalInfo || "");
+    
+    // Stringify arrays for backend
+    formDataToSend.append("graduations", JSON.stringify(graduations));
+    formDataToSend.append("employments", JSON.stringify(employments));
+    formDataToSend.append("languages", JSON.stringify(languagesArray));
+    
+    // Add resume file
+    if (formData.resume) {
+      formDataToSend.append("resume", formData.resume);
+    }
 
     // Add monthly_salary only if it exists
     if (formData.expectedSalary && formData.expectedSalary.trim() !== "") {
       const salaryValue = parseInt(formData.expectedSalary.replace(/\s/g, ""));
       if (!isNaN(salaryValue) && salaryValue > 0) {
-        formDataToSend.monthly_salary = salaryValue;
+        formDataToSend.append("monthly_salary", salaryValue);
       }
     }
 
     try {
-      // Send to API using apiClient with JSON format
+      // Send to API using apiClient with FormData (multipart/form-data)
       const response = await apiClient.post("/apply-jobs/", formDataToSend, {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -1697,6 +1718,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
       expectedSalary: "",
       businessTripReady: "",
       jshshir: "",
+      resume: null,
     });
     setFieldErrors({});
   };
@@ -2639,9 +2661,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   </h2>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("jobs.application.form.additional_info")}
-                    </label>
+                    
                     <textarea
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows={4}
@@ -2813,6 +2833,72 @@ ${formData.additionalInfo || "Kiritilmagan"}
                         </p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Resume Upload */}
+                <div className="px-4 sm:px-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                    {t("jobs.application.form.resume")}
+                    <span className="text-red-500 ml-1">*</span>
+                  </h2>
+
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const allowedExtensions = [".doc", ".docx"];
+                            const fileName = file.name.toLowerCase();
+                            const hasValidExtension = allowedExtensions.some((ext) =>
+                              fileName.endsWith(ext)
+                            );
+                            if (hasValidExtension) {
+                              handleInputChange("resume", file);
+                              setFieldErrors((prev) => {
+                                const newErrors = { ...prev };
+                                delete newErrors.resume;
+                                return newErrors;
+                              });
+                            } else {
+                              setFieldErrors((prev) => ({
+                                ...prev,
+                                resume: t("jobs.application.form.resume_format_error"),
+                              }));
+                              e.target.value = "";
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300"
+                      />
+                      {formData.resume && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                          <Icon name="CheckCircle" size={16} />
+                          <span>{formData.resume.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleInputChange("resume", null);
+                            }}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <Icon name="X" size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {fieldErrors.resume && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                        <Icon name="AlertCircle" size={16} />
+                        {fieldErrors.resume}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {t("jobs.application.form.resume_file_note")}
+                    </p>
                   </div>
                 </div>
 
