@@ -134,11 +134,18 @@ const resources = {
           },
 
           language_error: {
-            title: "Imloviy xatoliklar bo'yicha",
+            title: "Davlat tili bo'yicha",
             description:
-              "Tashkilot saytlarida, xabarlarida yoki harakatlarida topilgan o'zbek tilidagi xatoliklarni yuboring",
+              "Markaziy bank va tijorat banklari tomonidan davlat tili ustuvorligi ta'minlanmagan holatlar yuzasidan shikoyat yuborish",
           },
 
+        },
+        language_error_submission: {
+          page_title: "Davlat tili bilan bog'liq masalalarda shikoyat yo'llash",
+          subtitle:
+            "Markaziy bank va tijorat banklari tomonidan davlat tili ustuvorligi ta'minlanmagan holatlar yuzasidan shikoyat yuborish",
+          phone_label: "Bog'lanish uchun telefon raqam",
+          faq_subtitle: "Davlat tili bilan bog'liq masalalarda shikoyat yo'llash bo'yicha savollarga javoblar",
         },
         form: {
           personal_info: "Shaxsiy ma'lumotlar",
@@ -836,11 +843,18 @@ const resources = {
           },
 
           language_error: {
-            title: "Имловий хатоликлар бўйича",
+            title: "Давлат тили бўйича",
             description:
-              "Ташкилот сайтларида, хабарларида ёки ҳаракатларида топилган ўзбек тилидаги хатоликларни юборинг",
+              "Марказий банк ва тижорат банклари томонидан давлат тили устунлиги таъминланмаган ҳолатлар юзасидан шикоят юбориш",
           },
 
+        },
+        language_error_submission: {
+          page_title: "Давлат тили билан боглик масалаларда шикоят йўллаш",
+          subtitle:
+            "Марказий банк ва тижорат банклари томонидан давлат тили устунлиги таъминланмаган ҳолатлар юзасидан шикоят юбориш",
+          phone_label: "Богланиш учун телефон рақам",
+          faq_subtitle: "Давлат тили билан боглик масалаларда шикоят йўллаш бўйича саволларга жавоблар",
         },
         form: {
           personal_info: "Шахсий маълумотлар",
@@ -1536,11 +1550,18 @@ const resources = {
             description: "Сообщите о случаях коррупции",
           },
           language_error: {
-            title: "По орфографическим ошибкам",
+            title: "По государственному языку",
             description:
-              "Отправьте орфографические ошибки узбекского языка, обнаруженные на сайтах, в сообщениях или действиях организации",
+              "Подача жалобы на случаи, когда Центральный банк и коммерческие банки не обеспечили приоритет государственного языка",
           },
 
+        },
+        language_error_submission: {
+          page_title: "Подача жалобы по вопросам государственного языка",
+          subtitle:
+            "Подача жалобы на случаи, когда Центральный банк и коммерческие банки не обеспечили приоритет государственного языка",
+          phone_label: "Номер телефона для связи",
+          faq_subtitle: "Ответы на вопросы по подаче жалоб по вопросам государственного языка",
         },
         form: {
           personal_info: "Личная информация",

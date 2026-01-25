@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
 import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
@@ -10,6 +11,7 @@ import { spellingReportsAPI } from "../../services/api";
 
 const LanguageErrorSubmission = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -94,7 +96,15 @@ const LanguageErrorSubmission = () => {
         [name]: formatted,
       }));
     } else if (files && files.length > 0) {
-      setSelectedFile(files[0]);
+      const file = files[0];
+      const maxSize = 50 * 1024 * 1024; // 50 MB
+      
+      if (file.size > maxSize) {
+        toast.error("Fayl hajmi 50 MB dan katta bo'lishi mumkin emas");
+        return;
+      }
+      
+      setSelectedFile(file);
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -114,9 +124,7 @@ const LanguageErrorSubmission = () => {
     return (
       formData.fullName.trim() !== "" &&
       phoneDigits.length === 9 &&
-      formData.description.trim().length >= 20 &&
-      formData.textSnippet.trim().length >= 5 &&
-      formData.sourceUrl.trim() !== ""
+      formData.description.trim().length >= 20
     );
   };
 
@@ -139,8 +147,12 @@ const LanguageErrorSubmission = () => {
       payload.append("full_name", formData.fullName.trim());
       payload.append("phone_number", cleanPhone);
       payload.append("error_type", "spelling");
-      payload.append("text_snippet", formData.textSnippet.trim());
-      payload.append("source_url", formData.sourceUrl.trim());
+      if (formData.textSnippet.trim()) {
+        payload.append("text_snippet", formData.textSnippet.trim());
+      }
+      if (formData.sourceUrl.trim()) {
+        payload.append("source_url", formData.sourceUrl.trim());
+      }
       payload.append("description", formData.description.trim());
 
       if (selectedFile) {
@@ -290,11 +302,10 @@ const LanguageErrorSubmission = () => {
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              O'zbek tilidagi xatoliklar haqida xabar berish
+              {t("submissions.language_error_submission.page_title")}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Tashkilot saytlarida, xabarlarida yoki harakatlarida topilgan
-              o'zbek tilidagi xatoliklarni yuboring
+              {t("submissions.language_error_submission.subtitle")}
             </p>
           </div>
 
@@ -313,7 +324,7 @@ const LanguageErrorSubmission = () => {
 
               {/* Phone Number */}
               <Input
-                label="Bog'lanish uchun telefon nomeri"
+                label={t("submissions.language_error_submission.phone_label")}
                 name="phone"
                 type="tel"
                 value={formData.phone}
@@ -354,23 +365,6 @@ const LanguageErrorSubmission = () => {
                 </div>
               </div>
 
-              {/* Text snippet */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Xatolik aniqlangan matn parchasini kiriting{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="textSnippet"
-                  value={formData.textSnippet}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200"
-                  placeholder="Xatolik uchragan matnni shu yerga kiriting..."
-                  required
-                />
-              </div>
-
               {/* Source URL */}
               <Input
                 label="Manba havolasi (URL)"
@@ -379,7 +373,6 @@ const LanguageErrorSubmission = () => {
                 value={formData.sourceUrl}
                 onChange={handleInputChange}
                 placeholder="https://..."
-                required
               />
 
               {/* File Upload */}
@@ -401,7 +394,9 @@ const LanguageErrorSubmission = () => {
                             {selectedFile.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {(selectedFile.size / 1024).toFixed(2)} KB
+                            {selectedFile.size > 1024 * 1024
+                              ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
+                              : `${(selectedFile.size / 1024).toFixed(2)} KB`}
                           </p>
                         </div>
                       </div>
@@ -429,14 +424,14 @@ const LanguageErrorSubmission = () => {
                           bu yerga sudrab tashlang
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          PNG, JPG, PDF (MAX. 10MB)
+                          PNG, JPG, PDF, HEIC, MP3, MP4, DNG, MOV va boshqalar (MAX. 50MB)
                         </p>
                       </div>
                       <input
                         type="file"
                         className="hidden"
                         onChange={handleInputChange}
-                        accept="image/*,.pdf"
+                        accept="image/*,.pdf,.heic,.heif,.mp3,.mp4,.dng,.mov,.avi,.mkv,.wav,.m4a"
                       />
                     </label>
                   )}
@@ -491,7 +486,7 @@ const LanguageErrorSubmission = () => {
                 Tez-tez so'raladigan savollar
               </h2>
               <p className="text-sm text-muted-foreground">
-                Til xatolari haqida xabar berish bo'yicha savollarga javoblar
+                {t("submissions.language_error_submission.faq_subtitle")}
               </p>
             </div>
 
