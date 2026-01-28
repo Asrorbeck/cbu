@@ -19,6 +19,8 @@ const JobApplicationForm = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingSampleResume, setIsDownloadingSampleResume] =
+    useState(false);
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,6 +99,58 @@ const JobApplicationForm = () => {
     }
 
     return [];
+  };
+
+  const downloadSampleResume = async () => {
+    if (isDownloadingSampleResume) return;
+    setIsDownloadingSampleResume(true);
+
+    try {
+      // Prefer apiClient so baseURL/env config is respected
+      const response = await apiClient.get("/apply-jobs/sample-resume/", {
+        responseType: "blob",
+      });
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Try to respect filename from the API, fallback to a sensible default
+      const contentDisposition =
+        response.headers?.["content-disposition"] ||
+        response.headers?.["Content-Disposition"];
+      const match = contentDisposition?.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/);
+      const filename = decodeURIComponent(match?.[1] || match?.[2] || "").trim();
+      link.download = filename || "resume-namuna.docx";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      // Fallback to direct fetch for setups that proxy /api/...
+      try {
+        const res = await fetch("/api/v1/apply-jobs/sample-resume/");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "resume-namuna.docx";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        toast.error(
+          t("jobs.application.form.sample_resume_download_error") ||
+            "Namuna rezyumeni yuklab bo‘lmadi. Keyinroq urinib ko‘ring."
+        );
+      }
+    } finally {
+      setIsDownloadingSampleResume(false);
+    }
   };
 
   // Get the specific vacancy based on API data
@@ -2838,10 +2892,24 @@ ${formData.additionalInfo || "Kiritilmagan"}
 
                 {/* Resume Upload */}
                 <div className="px-4 sm:px-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    {t("jobs.application.form.resume")}
-                    <span className="text-red-500 ml-1">*</span>
-                  </h2>
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                      {t("jobs.application.form.resume")}
+                      <span className="text-red-500 ml-1">*</span>
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={downloadSampleResume}
+                      disabled={isDownloadingSampleResume}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {isDownloadingSampleResume
+                        ? (t("jobs.application.form.downloading") ||
+                          "Yuklanmoqda…")
+                        : (t("jobs.application.form.sample_resume") ||
+                          "Namuna rezyume")}
+                    </button>
+                  </div>
 
                   <div>
                     <div className="relative">

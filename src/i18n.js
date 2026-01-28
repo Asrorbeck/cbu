@@ -511,6 +511,10 @@ const resources = {
             resume_file_note: "Faqat Microsoft Word formatidagi fayllar (.doc, .docx) qabul qilinadi",
             resume_required: "Rezyume fayli yuklanishi shart",
             resume_format_error: "Faqat Word formatidagi fayllar (.doc, .docx) qabul qilinadi",
+            sample_resume: "Namuna rezyume",
+            downloading: "Yuklanmoqda...",
+            sample_resume_download_error:
+              "Namuna rezyumeni yuklab bo‘lmadi. Keyinroq urinib ko‘ring.",
           },
         },
       },
@@ -1216,6 +1220,10 @@ const resources = {
             resume_file_note: "Фақат Microsoft Word форматидаги файллар (.doc, .docx) қабул қилинади",
             resume_required: "Резюме файли юкланиши шарт",
             resume_format_error: "Фақат Word форматидаги файллар (.doc, .docx) қабул қилинади",
+            sample_resume: "Намуна резюме",
+            downloading: "Юкланмоқда...",
+            sample_resume_download_error:
+              "Намуна резюме юклаб бўлмади. Кейинроқ уриниб кўринг.",
           },
         },
       },
@@ -1943,6 +1951,10 @@ const resources = {
             resume_file_note: "Принимаются только файлы в формате Microsoft Word (.doc, .docx)",
             resume_required: "Необходимо загрузить файл резюме",
             resume_format_error: "Принимаются только файлы в формате Word (.doc, .docx)",
+            sample_resume: "Образец резюме",
+            downloading: "Скачивается...",
+            sample_resume_download_error:
+              "Не удалось скачать образец резюме. Пожалуйста, попробуйте позже.",
           },
         },
       },
