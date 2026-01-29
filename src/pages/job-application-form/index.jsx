@@ -122,12 +122,19 @@ const JobApplicationForm = () => {
         response.headers?.["Content-Disposition"];
       const match = contentDisposition?.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/);
       const filename = decodeURIComponent(match?.[1] || match?.[2] || "").trim();
-      link.download = filename || "resume-namuna.docx";
+      link.download = filename || "malumotnoma-namuna.docx";
 
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
+      // Ochish: yangi tabda ochib beramiz (brauzer .docx ni ko‘rsatsa ochiladi, bo‘lmasa yuklab oladi)
+      window.open(url, "_blank");
+      toast.success(
+        t("jobs.application.form.sample_downloaded_success") ||
+          "Ma'lumotnoma yuklab olindi"
+      );
+      // Blob URL yangi tabda ishlatilishi uchun biroz keyin bekor qilamiz
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
     } catch (e) {
       // Fallback to direct fetch for setups that proxy /api/...
       try {
@@ -137,15 +144,20 @@ const JobApplicationForm = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "resume-namuna.docx";
+        link.download = "malumotnoma-namuna.docx";
         document.body.appendChild(link);
         link.click();
         link.remove();
-        window.URL.revokeObjectURL(url);
+        window.open(url, "_blank");
+        toast.success(
+          t("jobs.application.form.sample_downloaded_success") ||
+            "Ma'lumotnoma yuklab olindi"
+        );
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
       } catch (err) {
         toast.error(
           t("jobs.application.form.sample_resume_download_error") ||
-            "Namuna rezyumeni yuklab bo‘lmadi. Keyinroq urinib ko‘ring."
+            "Namuna ma'lumotnomani yuklab bo‘lmadi. Keyinroq urinib ko‘ring."
         );
       }
     } finally {
