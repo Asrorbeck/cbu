@@ -31,6 +31,55 @@ const JobApplicationForm = () => {
   // Decode the vacancy ID from URL
   const decodedVacancyId = vacancyId ? atob(vacancyId) : null;
 
+  // localStorage draft key (per vacancy)
+  const DRAFT_STORAGE_KEY = "job-application-draft";
+
+  const getDraftKey = () =>
+    decodedVacancyId ? `${DRAFT_STORAGE_KEY}-${decodedVacancyId}` : null;
+
+  // Default form state (for init and clearForm)
+  const DEFAULT_FORM_DATA = {
+    fullName: "",
+    birthDate: "",
+    phone: "",
+    jshshir: "",
+    education: [
+      {
+        startYear: "",
+        startMonth: "",
+        endYear: "",
+        endMonth: "",
+        isCurrent: false,
+        institution: "",
+        degree: "",
+        specialty: "",
+      },
+    ],
+    workExperience: [
+      {
+        startYear: "",
+        startMonth: "",
+        endYear: "",
+        endMonth: "",
+        isCurrent: false,
+        company: "",
+        position: "",
+      },
+    ],
+    languages: {
+      uzbek: "",
+      russian: "",
+      english: "",
+    },
+    additionalInfo: "",
+    neverWorked: false,
+    convicted: false,
+    convictionDetails: "",
+    expectedSalary: "",
+    businessTripReady: "",
+    resume: null,
+  };
+
   // Fetch vacancy data from API
   useEffect(() => {
     const fetchVacancyData = async () => {
@@ -171,48 +220,31 @@ const JobApplicationForm = () => {
     department: "Loading...",
   };
 
-  // Form state
-  const [formData, setFormData] = useState({
-    fullName: "",
-    birthDate: "",
-    phone: "",
-    jshshir: "",
-    education: [
-      {
-        startYear: "",
-        startMonth: "",
-        endYear: "",
-        endMonth: "",
-        isCurrent: false,
-        institution: "",
-        degree: "",
-        specialty: "",
-      },
-    ],
-    workExperience: [
-      {
-        startYear: "",
-        startMonth: "",
-        endYear: "",
-        endMonth: "",
-        isCurrent: false,
-        company: "",
-        position: "",
-      },
-    ],
-    languages: {
-      uzbek: "",
-      russian: "",
-      english: "",
-    },
-    additionalInfo: "",
-    neverWorked: false,
-    convicted: false,
-    convictionDetails: "",
-    expectedSalary: "",
-    businessTripReady: "",
-    resume: null,
+  // Form state: restore from localStorage draft for this vacancy (resume cannot be restored)
+  const [formData, setFormData] = useState(() => {
+    const key = getDraftKey();
+    if (!key) return DEFAULT_FORM_DATA;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return DEFAULT_FORM_DATA;
+      const saved = JSON.parse(raw);
+      return { ...DEFAULT_FORM_DATA, ...saved, resume: null };
+    } catch {
+      return DEFAULT_FORM_DATA;
+    }
   });
+
+  // Persist form draft to localStorage on change (resume excluded — cannot serialize File)
+  useEffect(() => {
+    const key = getDraftKey();
+    if (!key) return;
+    try {
+      const toSave = { ...formData, resume: null };
+      localStorage.setItem(key, JSON.stringify(toSave));
+    } catch {
+      // ignore quota / parse errors
+    }
+  }, [formData, decodedVacancyId]);
 
   // Get user ID from Telegram Web App or use default
   const getUserId = () => {
@@ -1743,50 +1775,18 @@ ${formData.additionalInfo || "Kiritilmagan"}
     navigate(-1);
   };
 
-  // Clear form function
+  // Clear form function (also clears draft from localStorage)
   const clearForm = () => {
-    setFormData({
-      fullName: "",
-      birthDate: "",
-      phone: "",
-      education: [
-        {
-          startYear: "",
-          startMonth: "",
-          endYear: "",
-          endMonth: "",
-          isCurrent: false,
-          institution: "",
-          degree: "",
-          specialty: "",
-        },
-      ],
-      workExperience: [
-        {
-          startYear: "",
-          startMonth: "",
-          endYear: "",
-          endMonth: "",
-          isCurrent: false,
-          company: "",
-          position: "",
-        },
-      ],
-      languages: {
-        uzbek: "",
-        russian: "",
-        english: "",
-      },
-      additionalInfo: "",
-      neverWorked: false,
-      convicted: false,
-      convictionDetails: "",
-      expectedSalary: "",
-      businessTripReady: "",
-      jshshir: "",
-      resume: null,
-    });
+    setFormData(DEFAULT_FORM_DATA);
     setFieldErrors({});
+    const key = getDraftKey();
+    if (key) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // ignore
+      }
+    }
   };
 
   // Show loading state
