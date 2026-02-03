@@ -176,14 +176,11 @@ const JobApplicationForm = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      // Ochish: yangi tabda ochib beramiz (brauzer .docx ni ko‘rsatsa ochiladi, bo‘lmasa yuklab oladi)
-      window.open(url, "_blank");
       toast.success(
         t("jobs.application.form.sample_downloaded_success") ||
           "Ma'lumotnoma yuklab olindi"
       );
-      // Blob URL yangi tabda ishlatilishi uchun biroz keyin bekor qilamiz
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
     } catch (e) {
       // Fallback to direct fetch for setups that proxy /api/...
       try {
@@ -197,12 +194,11 @@ const JobApplicationForm = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
-        window.open(url, "_blank");
         toast.success(
           t("jobs.application.form.sample_downloaded_success") ||
             "Ma'lumotnoma yuklab olindi"
         );
-        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        setTimeout(() => window.URL.revokeObjectURL(url), 2000);
       } catch (err) {
         toast.error(
           t("jobs.application.form.sample_resume_download_error") ||
