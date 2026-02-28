@@ -151,7 +151,7 @@ const CentralDepartmentsPage = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("jobs.search_departments")}
+                  {t("jobs.search_departments")} 
                 </h2>
                 {searchQuery && (
                   <button

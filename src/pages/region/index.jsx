@@ -385,7 +385,7 @@ const RegionPage = () => {
                   {t("jobs.no_vacancies_available")}
                 </h3>
                 <p className="text-muted-foreground">
-                  {t("jobs.no_vacancies_available_desc")}
+                  {t("jobs.no_vacancies_available_region")}
                 </p>
               </div>
             )}

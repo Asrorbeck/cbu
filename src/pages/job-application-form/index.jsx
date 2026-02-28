@@ -2043,7 +2043,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                            {t("jobs.application.form.education")} #{index + 1}
+                            {t("jobs.application.form.education_details")} №{index + 1}
                           </h3>
                           {formData.education.length > 1 && (
                             <button
@@ -2313,7 +2313,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           >
                             <div className="flex justify-between items-center">
                               <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                                {t("jobs.application.form.work_experience")} #
+                                {t("jobs.application.form.work_experience")} №
                                 {index + 1}
                               </h3>
                               {formData.workExperience.length > 1 && (
