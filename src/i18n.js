@@ -618,6 +618,24 @@ const resources = {
           passed: "O'TKAZILDI",
           failed: "O'TKAZILMADI",
         },
+        status_page: {
+          time_up_title: "Test vaqti tugadi",
+          time_up_subtitle: "Test vaqti tugagani uchun avtomatik yakunlandi",
+          time_up_description:
+            "Test vaqti tugagani uchun test avtomatik yakunlandi.",
+          time_up_info_title: "Vaqt tugadi",
+          time_up_info_text:
+            "Test vaqti tugagani uchun test avtomatik yakunlandi. Hozirgi holatdagi javoblar backendga yuborildi.",
+          generic_subtitle: "Test holati",
+          already_completed_title: "Siz bu testni allaqachon topshirgansiz",
+          already_completed_description:
+            "Siz bu testni allaqachon ishlagansiz. Qayta testga kirish faqat cheklov muddati tugagach yoki ruxsat etilganda mumkin.",
+          already_completed_description_with_date:
+            "Siz avval bu testni ishlagansiz. Qayta testga kirish {{date}} sanadan keyin mumkin.",
+          generic_info_title: "Ma'lumot",
+          generic_info_text:
+            "Iltimos, test natijalaringizni ko'rmoqchi bo'lsangiz, boshqa testni tanlang yoki bosh sahifaga qayting.",
+        },
         result: {
           title: "Test natijalari",
           passed_title: "Tabriklaymiz! Testdan o'tdingiz",
@@ -633,6 +651,10 @@ const resources = {
             "Siz kamida 50% to'g'ri javob berdingiz va testdan muvaffaqiyatli o'tdingiz!",
           fail_info:
             "Testdan o'tish uchun kamida 50% to'g'ri javob berish kerak edi.",
+          pass_detail:
+            "Siz {{percentage}}% ball to'pladingiz va {{correctCount}} ta to'g'ri javob berdingiz.",
+          fail_detail:
+            "Siz {{percentage}}% ball to'pladingiz. Testdan o'tish uchun kamida {{passingScore}}% ball kerak.",
           go_home: "Bosh sahifaga qaytish",
         },
         questions: {
@@ -1330,6 +1352,24 @@ const resources = {
           passed: "ЎТКАЗИЛДИ",
           failed: "ЎТКАЗИЛМАДИ",
         },
+        status_page: {
+          time_up_title: "Тест вақти тугади",
+          time_up_subtitle: "Тест вақти тугагани учун автоматик якунланди",
+          time_up_description:
+            "Тест вақти тугагани учун тест автоматик якунланди.",
+          time_up_info_title: "Вақт тугади",
+          time_up_info_text:
+            "Тест вақти тугагани учун тест автоматик якунланди. Жорий ҳолатдаги жавоблар backend'га юборилди.",
+          generic_subtitle: "Тест ҳолати",
+          already_completed_title: "Сиз бу тестни аллақачон топширгансиз",
+          already_completed_description:
+            "Сиз бу тестни аввал ишлагансиз. Қайта тестга кириш фақат чеклов муддати тугагач ёки рухсат этилганда мумкин.",
+          already_completed_description_with_date:
+            "Сиз аввал бу тестни ишлагансиз. Қайта тестга кириш {{date}} санадан кейин мумкин.",
+          generic_info_title: "Маълумот",
+          generic_info_text:
+            "Илтимос, тест натижаларингизни кўрмоқчи бўлсангиз, бошқа тестни танланг ёки бош саҳифага қайтинг.",
+        },
         result: {
           title: "Тест натижалари",
           passed_title: "Табриклаймиз! Тестдан ўтдингиз",
@@ -1345,6 +1385,10 @@ const resources = {
             "Сиз камида 50% тўғри жавоб бердингиз ва тестдан муваффақиятли ўтдингиз!",
           fail_info:
             "Тестдан ўтиш учун камида 50% тўғри жавоб бериш керак еди.",
+          pass_detail:
+            "Сиз {{percentage}}% балл тўпладингиз ва {{correctCount}} та тўғри жавоб бердингиз.",
+          fail_detail:
+            "Сиз {{percentage}}% балл тўпладингиз. Тестдан ўтиш учун камида {{passingScore}}% балл керак.",
           go_home: "Бош саҳифага қайтиш",
         },
         questions: {
@@ -2065,6 +2109,25 @@ const resources = {
           passed: "ПРОЙДЕН",
           failed: "НЕ ПРОЙДЕН",
         },
+        status_page: {
+          time_up_title: "Время теста истекло",
+          time_up_subtitle:
+            "Из-за истечения времени тест был автоматически завершен",
+          time_up_description:
+            "Из-за истечения времени тест был автоматически завершен.",
+          time_up_info_title: "Время истекло",
+          time_up_info_text:
+            "Из-за истечения времени тест был автоматически завершен. Текущие ответы были отправлены на сервер.",
+          generic_subtitle: "Статус теста",
+          already_completed_title: "Вы уже проходили этот тест",
+          already_completed_description:
+            "Вы уже проходили этот тест. Повторный доступ возможен только после окончания ограничения или при отдельном разрешении.",
+          already_completed_description_with_date:
+            "Вы уже проходили этот тест. Повторный доступ возможен после {{date}}.",
+          generic_info_title: "Информация",
+          generic_info_text:
+            "Если вы хотите просмотреть свои результаты, выберите другой тест или вернитесь на главную страницу.",
+        },
         result: {
           title: "Результаты теста",
           passed_title: "Поздравляем! Вы прошли тест",
@@ -2080,6 +2143,10 @@ const resources = {
             "Вы дали не менее 50% правильных ответов и успешно прошли тест!",
           fail_info:
             "Для прохождения теста необходимо было дать не менее 50% правильных ответов.",
+          pass_detail:
+            "Вы набрали {{percentage}}% баллов и дали {{correctCount}} правильных ответов.",
+          fail_detail:
+            "Вы набрали {{percentage}}% баллов. Для прохождения теста необходимо не менее {{passingScore}}%.",
           go_home: "Вернуться на главную",
         },
         questions: {

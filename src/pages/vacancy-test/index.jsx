@@ -264,93 +264,6 @@ const VacancyTest = () => {
     10: "b", // Xushmuomalalik va hurmat
   };
 
-  // Check if test is blocked or already submitted
-  useEffect(() => {
-    if (!activeTestId) return;
-
-    // Check if blocked
-    const blockedTests = JSON.parse(
-      localStorage.getItem("blockedTests") || "[]"
-    );
-    if (blockedTests.includes(activeTestId)) {
-      setIsBlocked(true);
-      setLoading(false);
-      return;
-    }
-
-    // Check if already submitted
-    const previousResult = localStorage.getItem(`test_result_${activeTestId}`);
-    if (previousResult) {
-      try {
-        const result = JSON.parse(previousResult);
-        setTestResult(result);
-        setAlreadySubmitted(true);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error loading previous result:", error);
-      }
-    }
-  }, [activeTestId]);
-
-  // Load saved test state from localStorage
-  useEffect(() => {
-    if (!activeTestId || isBlocked) return;
-
-    const savedState = localStorage.getItem(`test_state_${activeTestId}`);
-    if (savedState) {
-      try {
-        const state = JSON.parse(savedState);
-        setAnswers(state.answers || {});
-        const savedTime = state.timeRemaining || 30 * 60;
-        setTimeRemaining(savedTime);
-        setCurrentQuestion(state.currentQuestion || 0);
-        setViolations(state.violations || 0);
-        
-        // Update timer refs if we have saved time and last saved timestamp
-        // This ensures timer continues from where it left off
-        if (savedTime > 0 && state.lastSaved) {
-          const savedDate = new Date(state.lastSaved);
-          const now = Date.now();
-          const elapsedSinceSave = Math.floor((now - savedDate.getTime()) / 1000);
-          // Calculate what the initial time was when saved
-          const calculatedInitial = savedTime + elapsedSinceSave;
-          initialTimeRef.current = calculatedInitial;
-          // Set start time to account for elapsed time since save
-          startTimeRef.current = savedDate.getTime();
-        } else if (savedTime > 0) {
-          // If no lastSaved timestamp, just use saved time as initial
-          initialTimeRef.current = savedTime;
-          startTimeRef.current = Date.now();
-        }
-        console.log("Restored test state from localStorage");
-      } catch (error) {
-        console.error("Error loading test state:", error);
-      }
-    }
-  }, [activeTestId, isBlocked]);
-
-  // Save test state to localStorage
-  useEffect(() => {
-    if (!activeTestId || isBlocked) return;
-
-    const state = {
-      answers,
-      timeRemaining,
-      currentQuestion,
-      violations,
-      lastSaved: new Date().toISOString(),
-    };
-
-    localStorage.setItem(`test_state_${activeTestId}`, JSON.stringify(state));
-  }, [
-    answers,
-    timeRemaining,
-    currentQuestion,
-    violations,
-    activeTestId,
-    isBlocked,
-  ]);
-
   // Get max violations from API or default to 5
   const maxViolations = testData?.max_violations || 5;
 
@@ -873,41 +786,23 @@ const VacancyTest = () => {
       }
     };
 
-    // Detect DevTools opening - ACTIVE
+    // Detect DevTools opening - ACTIVE (blocks test while DevTools is open)
     const detectDevTools = () => {
       const threshold = 160;
       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
       const heightThreshold =
         window.outerHeight - window.innerHeight > threshold;
 
-      let isDevToolsOpen = false;
-
-      // Method 1: Window size difference
-      if (widthThreshold || heightThreshold) {
-        isDevToolsOpen = true;
-      }
-
-      // Method 2: Console detection using getter
-      try {
-        let devtoolsOpen = false;
-        const element = new Image();
-        Object.defineProperty(element, "id", {
-          get: function () {
-            devtoolsOpen = true;
-          },
-        });
-        console.log(element);
-        console.clear();
-        if (devtoolsOpen) {
-          isDevToolsOpen = true;
-        }
-      } catch (e) {
-        // Silent catch
-      }
+      const isDevToolsOpen = widthThreshold || heightThreshold;
 
       // Update state if devtools detected - BUT NOT if test is submitted
       if (isDevToolsOpen) {
-        if (!devToolsDetected && !testSubmitted && !alreadySubmitted && !showResultModal) {
+        if (
+          !devToolsDetected &&
+          !testSubmitted &&
+          !alreadySubmitted &&
+          !showResultModal
+        ) {
           setDevToolsDetected(true);
           setShowDevToolsModal(true);
         }
@@ -920,7 +815,6 @@ const VacancyTest = () => {
       }
     };
 
-    // Check DevTools every 500ms
     const devToolsInterval = setInterval(detectDevTools, 500);
 
     // Add event listeners
@@ -1127,15 +1021,6 @@ const VacancyTest = () => {
         timeSpent: (initialTimeRef.current || 30 * 60) - timeRemaining,
         success: finishResponse?.success || "Test muvaffaqiyatli yakunlandi",
       };
-
-      // Save to localStorage
-      localStorage.setItem(
-        `test_result_${activeTestId}`,
-        JSON.stringify(testResults)
-      );
-
-      // Clear test state from localStorage
-      localStorage.removeItem(`test_state_${activeTestId}`);
 
       // Disable all security checks after test submission
       setTestSubmitted(true);
@@ -1394,13 +1279,6 @@ const VacancyTest = () => {
                     </div>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => navigate("/")}
-                  className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white transition-colors uppercase tracking-wide"
-                >
-                  {t("test.security.go_home")}
-                </button>
               </div>
             </div>
           </div>
@@ -1538,13 +1416,6 @@ const VacancyTest = () => {
                     </div>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => navigate("/")}
-                  className="w-full py-3.5 px-6 rounded-md font-semibold text-base bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white transition-colors uppercase tracking-wide"
-                >
-                  Bosh sahifaga qaytish
-                </button>
               </div>
             </div>
           </div>
@@ -1556,6 +1427,15 @@ const VacancyTest = () => {
   // Show status message (time up, etc.)
   if (statusMessage && statusType) {
     const isTimeUp = statusType === "time_up";
+    const isAlreadyCompletedStatus =
+      !isTimeUp &&
+      statusMessage &&
+      (statusMessage.includes("Siz avval bu testni ishlagansiz") ||
+        statusMessage.toLowerCase().includes("already completed") ||
+        statusMessage.toLowerCase().includes("allaqachon yakunlagansiz"));
+    const restrictionDate = isAlreadyCompletedStatus
+      ? (statusMessage.match(/\b\d{2}\.\d{2}\.\d{4}\b/) || [null])[0]
+      : null;
     const iconName = isTimeUp ? "Clock" : "Info";
     const bgColor = isTimeUp
       ? "from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800"
@@ -1564,10 +1444,18 @@ const VacancyTest = () => {
       ? "border-blue-600 dark:border-blue-700"
       : "border-orange-600 dark:border-orange-700";
     const title = isTimeUp
-      ? "Test vaqti tugadi"
-      : statusMessage || "Test holati";
+      ? t("test.status_page.time_up_title")
+      : isAlreadyCompletedStatus
+      ? t("test.status_page.already_completed_title")
+      : statusMessage || t("test.status_page.generic_title");
     const description = isTimeUp
-      ? "Test vaqti tugagani uchun test avtomatik yakunlandi"
+      ? t("test.status_page.time_up_description")
+      : isAlreadyCompletedStatus
+      ? restrictionDate
+        ? t("test.status_page.already_completed_description_with_date", {
+            date: restrictionDate,
+          })
+        : t("test.status_page.already_completed_description")
       : statusMessage;
 
     return (
@@ -1590,8 +1478,10 @@ const VacancyTest = () => {
                     </h1>
                     <p className="text-white/90 text-sm mt-1">
                       {isTimeUp
-                        ? "Test vaqti tugagani uchun avtomatik yakunlandi"
-                        : "Test holati"}
+                        ? t("test.status_page.time_up_subtitle")
+                        : isAlreadyCompletedStatus
+                        ? t("test.status_page.generic_subtitle")
+                        : t("test.status_page.generic_subtitle")}
                     </p>
                   </div>
                 </div>
@@ -1611,40 +1501,33 @@ const VacancyTest = () => {
                   </p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-slate-900 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
-                  <div className="flex items-start space-x-3">
-                    <Icon
-                      name="AlertCircle"
-                      size={24}
-                      className={`${
-                        isTimeUp
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-orange-600 dark:text-orange-400"
-                      } flex-shrink-0 mt-0.5`}
-                    />
-                    <div>
-                      <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
-                        {isTimeUp ? "Vaqt tugadi" : "Ma'lumot"}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {isTimeUp
-                          ? "Test vaqti tugagani uchun test avtomatik yakunlandi. Hozirgi holatdagi javoblar backendga yuborildi."
-                          : "Iltimos, test natijalaringizni ko'rmoqchi bo'lsangiz, boshqa testni tanlang yoki bosh sahifaga qayting."}
-                      </p>
+                {!isAlreadyCompletedStatus && (
+                  <div className="bg-gray-50 dark:bg-slate-900 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
+                    <div className="flex items-start space-x-3">
+                      <Icon
+                        name="AlertCircle"
+                        size={24}
+                        className={`${
+                          isTimeUp
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-orange-600 dark:text-orange-400"
+                        } flex-shrink-0 mt-0.5`}
+                      />
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                          {isTimeUp
+                            ? t("test.status_page.time_up_info_title")
+                            : t("test.status_page.generic_info_title")}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {isTimeUp
+                            ? t("test.status_page.time_up_info_text")
+                            : t("test.status_page.generic_info_text")}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <button
-                  onClick={() => navigate("/")}
-                  className={`w-full py-3.5 px-6 rounded-md font-semibold text-base ${
-                    isTimeUp
-                      ? "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
-                      : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600"
-                  } text-white transition-colors uppercase tracking-wide`}
-                >
-                  {t("test.security.go_home") || "Markaziy Bank - Bosh Sahifa"}
-                </button>
+                )}
               </div>
             </div>
           </div>
@@ -2297,24 +2180,18 @@ const VacancyTest = () => {
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {testResult.isPassed
-                        ? `Siz ${testResult.percentage}% ball to'pladingiz va ${testResult.correctCount} ta to'g'ri javob berdingiz.`
-                        : `Siz ${testResult.percentage}% ball to'pladingiz. Testdan o'tish uchun kamida 60% ball kerak.`}
+                        ? t("test.result.pass_detail", {
+                            percentage: testResult.percentage,
+                            correctCount: testResult.correctCount,
+                          })
+                        : t("test.result.fail_detail", {
+                            percentage: testResult.percentage,
+                            passingScore: testData?.passing_score ?? 60,
+                          })}
                     </p>
                   </div>
                 </div>
               </div>
-
-              {/* Action Button */}
-              <button
-                onClick={handleCloseResultModal}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors mt-6 ${
-                  testResult.isPassed
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
-              >
-                {t("test.result.go_home")}
-              </button>
             </div>
           </div>
         </div>

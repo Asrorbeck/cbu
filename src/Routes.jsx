@@ -13,8 +13,8 @@ import NotFound from "pages/NotFound";
 // Component to conditionally show BottomNavigation
 const ConditionalBottomNavigation = () => {
   const location = useLocation();
-  // Hide BottomNavigation on test page
-  if (location.pathname.startsWith("/test/")) {
+  // Hide BottomNavigation on test page (/test and /test/:test_id/:test_token)
+  if (location.pathname === "/test" || location.pathname.startsWith("/test/")) {
     return null;
   }
   return <BottomNavigation />;
