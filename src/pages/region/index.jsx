@@ -32,11 +32,11 @@ const RegionPage = () => {
     if (!region) return "";
 
     const regionLower = region.toLowerCase().trim();
-    
+
     // Use translation for region name
     const regionKey = `jobs.regions.${regionLower}`;
     const translatedName = t(regionKey);
-    
+
     // If translation exists and is different from the key, use it
     if (translatedName && translatedName !== regionKey) {
       return translatedName;
@@ -45,7 +45,7 @@ const RegionPage = () => {
     // Fallback: capitalize first letter and add "viloyati" for Latin
     const currentLanguage =
       i18n.language || localStorage.getItem("language") || "uz-Latn";
-    
+
     if (currentLanguage === "ru") {
       // For Russian, add "ская область" or "Республика"
       if (regionLower === "qoraqalpogiston") {
@@ -139,14 +139,17 @@ const RegionPage = () => {
   // Helper function to format region name for API
   const formatRegionNameForAPI = (region) => {
     if (!region) return "";
-    
+
     const regionLower = region.toLowerCase().trim();
-    
+
     // Special case: Toshkent shahar should be "toshkent shahar"
-    if (regionLower === "toshkent_shahar" || regionLower === "toshkent-shahar") {
+    if (
+      regionLower === "toshkent_shahar" ||
+      regionLower === "toshkent-shahar"
+    ) {
       return "toshkent shahar";
     }
-    
+
     // For other regions, return as is (including "toshkent" for Toshkent viloyati)
     return regionLower;
   };
@@ -162,11 +165,11 @@ const RegionPage = () => {
       try {
         // Format region name for API (e.g., "toshkent" -> "toshkent shahar")
         const apiRegionName = formatRegionNameForAPI(regionName);
-        
+
         // Fetch vacancies data
         const vacanciesResponse = await vacanciesAPI.getVacanciesByRegion(
           apiRegionName,
-          "regional"
+          "regional",
         );
         // Handle paginated response structure: { count, next, previous, results: [...] }
         const vacanciesData = vacanciesResponse.results || vacanciesResponse;
@@ -177,7 +180,7 @@ const RegionPage = () => {
 
         // Filter only active vacancies (is_active: true)
         const activeVacancies = vacanciesArray.filter(
-          (vacancy) => vacancy.is_active === true
+          (vacancy) => vacancy.is_active === true,
         );
 
         // Get current language suffix

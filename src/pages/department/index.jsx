@@ -43,9 +43,8 @@ const DepartmentPage = () => {
 
       try {
         // Fetch department data
-        const departmentData = await departmentsAPI.getDepartmentById(
-          departmentId
-        );
+        const departmentData =
+          await departmentsAPI.getDepartmentById(departmentId);
 
         // Get current language suffix
         const currentLanguage =
@@ -72,7 +71,7 @@ const DepartmentPage = () => {
         // Ensure department_tasks is an array of objects with 'task' property
         const formattedTasks = Array.isArray(departmentTasks)
           ? departmentTasks.map((task) =>
-              typeof task === "string" ? { task } : task
+              typeof task === "string" ? { task } : task,
             )
           : [];
 
@@ -88,7 +87,7 @@ const DepartmentPage = () => {
         // Fetch vacancies data with branch_type=central for central departments
         const vacanciesResponse = await vacanciesAPI.getVacanciesByDepartment(
           departmentId,
-          "central"
+          "central",
         );
         // Handle paginated response structure: { count, next, previous, results: [...] }
         const vacanciesData = vacanciesResponse.results || vacanciesResponse;
@@ -99,7 +98,7 @@ const DepartmentPage = () => {
 
         // Filter only active vacancies (is_active: true)
         const activeVacancies = vacanciesArray.filter(
-          (vacancy) => vacancy.is_active === true
+          (vacancy) => vacancy.is_active === true,
         );
 
         // Get language-specific fields for vacancies
@@ -193,11 +192,11 @@ const DepartmentPage = () => {
     if (!region) return "";
 
     const regionLower = region.toLowerCase().trim();
-    
+
     // Use translation for region name
     const regionKey = `jobs.regions.${regionLower}`;
     const translatedName = t(regionKey);
-    
+
     // If translation exists and is different from the key, use it
     if (translatedName && translatedName !== regionKey) {
       return translatedName;
@@ -206,7 +205,7 @@ const DepartmentPage = () => {
     // Fallback: capitalize first letter and add "viloyati" for Latin
     const currentLanguage =
       i18n.language || localStorage.getItem("language") || "uz-Latn";
-    
+
     if (currentLanguage === "ru") {
       // For Russian, add "ская область" or "Республика"
       if (regionLower === "qoraqalpogiston") {

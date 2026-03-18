@@ -79,7 +79,6 @@ const RegionsPage = () => {
                     {t(`jobs.regions.${region.id}`)}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    
                     {t("jobs.vacancies_title")}
                   </p>
                 </div>

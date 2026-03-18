@@ -346,6 +346,19 @@ export const faqAPI = {
       throw error;
     }
   },
+
+  // Get FAQ categories by category slug (e.g. "reports")
+  getFaqCategoriesByCategory: async (category) => {
+    try {
+      const response = await apiClient.get("/faq-categories/", {
+        params: { category },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching FAQ categories by category:", error);
+      throw error;
+    }
+  },
 };
 
 export const surveyAPI = {

@@ -337,8 +337,8 @@ const JobApplicationForm = () => {
       firstDigit === 5
         ? 2000 + year
         : firstDigit === 4
-        ? 1900 + year
-        : 2000 + year;
+          ? 1900 + year
+          : 2000 + year;
     const date = new Date(fullYear, month - 1, day);
 
     if (
@@ -399,12 +399,12 @@ const JobApplicationForm = () => {
       } else if (digits.length <= 7) {
         return `+998 ${digits.substring(0, 2)} ${digits.substring(
           2,
-          5
+          5,
         )} ${digits.substring(5)}`;
       } else {
         return `+998 ${digits.substring(0, 2)} ${digits.substring(
           2,
-          5
+          5,
         )} ${digits.substring(5, 7)} ${digits.substring(7)}`;
       }
     }
@@ -428,12 +428,12 @@ const JobApplicationForm = () => {
       } else if (digits.length <= 8) {
         return `+7 ${digits.substring(0, 3)} ${digits.substring(
           3,
-          6
+          6,
         )} ${digits.substring(6)}`;
       } else {
         return `+7 ${digits.substring(0, 3)} ${digits.substring(
           3,
-          6
+          6,
         )} ${digits.substring(6, 8)} ${digits.substring(8)}`;
       }
     }
@@ -460,12 +460,12 @@ const JobApplicationForm = () => {
       } else if (cleaned.length <= 7) {
         return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(
           2,
-          5
+          5,
         )} ${cleaned.substring(5)}`;
       } else {
         return `+998 ${cleaned.substring(0, 2)} ${cleaned.substring(
           2,
-          5
+          5,
         )} ${cleaned.substring(5, 7)} ${cleaned.substring(7)}`;
       }
     }
@@ -772,7 +772,8 @@ const JobApplicationForm = () => {
     else {
       const hasValidEnding = validOtchestvoEndings.some(
         (ending) =>
-          lastWordLower.endsWith(ending) && lastWordLower.length > ending.length
+          lastWordLower.endsWith(ending) &&
+          lastWordLower.length > ending.length,
       );
 
       if (!hasValidEnding) {
@@ -1012,7 +1013,7 @@ const JobApplicationForm = () => {
       ) {
         // If same year, check if end month is before start month
         const startMonth = parseInt(
-          updatedWorkExperience[index].startMonth || "1"
+          updatedWorkExperience[index].startMonth || "1",
         );
         const endMonth = parseInt(updatedWorkExperience[index].endMonth);
         if (endMonth < startMonth) {
@@ -1083,7 +1084,7 @@ const JobApplicationForm = () => {
   const removeWorkExperience = (index) => {
     if (formData.workExperience.length > 1) {
       const updatedWorkExperience = formData.workExperience.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       );
       setFormData((prev) => ({
         ...prev,
@@ -1178,7 +1179,7 @@ const JobApplicationForm = () => {
       const allowedExtensions = [".doc", ".docx"];
       const fileName = formData.resume.name.toLowerCase();
       const hasValidExtension = allowedExtensions.some((ext) =>
-        fileName.endsWith(ext)
+        fileName.endsWith(ext),
       );
       if (!hasValidExtension) {
         errors.resume = t("jobs.application.form.resume_format_error");
@@ -1279,7 +1280,7 @@ const JobApplicationForm = () => {
       if (isEndDate) {
         const lastDay = getLastDayOfMonth(yearNum, monthNum);
         return `${yearNum}-${String(monthNum).padStart(2, "0")}-${String(
-          lastDay
+          lastDay,
         ).padStart(2, "0")}`;
       } else {
         // Start date: first day of month
@@ -1363,13 +1364,16 @@ const JobApplicationForm = () => {
     formDataToSend.append("data_of_birth", formData.birthDate);
     formDataToSend.append("phone", cleanPhone);
     formDataToSend.append("jshshir", formData.jshshir);
-    formDataToSend.append("additional_information", formData.additionalInfo || "");
-    
+    formDataToSend.append(
+      "additional_information",
+      formData.additionalInfo || "",
+    );
+
     // Stringify arrays for backend
     formDataToSend.append("graduations", JSON.stringify(graduations));
     formDataToSend.append("employments", JSON.stringify(employments));
     formDataToSend.append("languages", JSON.stringify(languagesArray));
-    
+
     // Add resume file
     if (formData.resume) {
       formDataToSend.append("resume", formData.resume);
@@ -1409,12 +1413,12 @@ const JobApplicationForm = () => {
 
       // Get existing applications
       const existingApplications = JSON.parse(
-        localStorage.getItem("jobApplications") || "[]"
+        localStorage.getItem("jobApplications") || "[]",
       );
       existingApplications.push(applicationData);
       localStorage.setItem(
         "jobApplications",
-        JSON.stringify(existingApplications)
+        JSON.stringify(existingApplications),
       );
 
       // Clear form
@@ -1505,14 +1509,14 @@ const JobApplicationForm = () => {
         if (backendErrors.full_name) {
           errors.fullName = translateError(
             backendErrors.full_name[0],
-            "full_name"
+            "full_name",
           );
         }
 
         if (backendErrors.data_of_birth) {
           errors.birthDate = translateError(
             backendErrors.data_of_birth[0],
-            "data_of_birth"
+            "data_of_birth",
           );
         }
 
@@ -1544,12 +1548,12 @@ const JobApplicationForm = () => {
           backendErrors.graduations.forEach((gradError, index) => {
             if (gradError.university) {
               errors[`education_${index}_institution`] = translateError(
-                gradError.university[0]
+                gradError.university[0],
               );
             }
             if (gradError.specialization) {
               errors[`education_${index}_specialty`] = translateError(
-                gradError.specialization[0]
+                gradError.specialization[0],
               );
             }
           });
@@ -1563,12 +1567,12 @@ const JobApplicationForm = () => {
           backendErrors.employments.forEach((empError, index) => {
             if (empError.organization_name) {
               errors[`workExperience_${index}_company`] = translateError(
-                empError.organization_name[0]
+                empError.organization_name[0],
               );
             }
             if (empError.position) {
               errors[`workExperience_${index}_position`] = translateError(
-                empError.position[0]
+                empError.position[0],
               );
             }
           });
@@ -1581,7 +1585,7 @@ const JobApplicationForm = () => {
             if (langError.degree && index < languageKeys.length) {
               const langKey = languageKeys[index];
               errors[`languages_${langKey}`] = translateError(
-                langError.degree[0]
+                langError.degree[0],
               );
             }
           });
@@ -1617,7 +1621,7 @@ const JobApplicationForm = () => {
           {
             duration: 6000,
             position: "top-center",
-          }
+          },
         );
       } else {
         // Show generic errors toast
@@ -1652,7 +1656,7 @@ ${index + 1}. Davr: ${edu.period}
    Muassasa: ${edu.institution}
    Daraja: ${edu.degree}
    Mutaxassislik: ${edu.specialty}
-`
+`,
   )
   .join("")}
 
@@ -1663,7 +1667,7 @@ ${formData.workExperience
 ${index + 1}. Davr: ${work.period}
    Kompaniya: ${work.company}
    Lavozim: ${work.position}
-`
+`,
   )
   .join("")}
 
@@ -1696,14 +1700,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
           text: message,
           parse_mode: "Markdown",
         }),
-      }
+      },
     );
 
     const data = await response.json();
 
     if (!data.ok) {
       throw new Error(
-        `Telegram API error: ${data.description || "Unknown error"}`
+        `Telegram API error: ${data.description || "Unknown error"}`,
       );
     }
   };
@@ -1830,7 +1834,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       <Input
                         type="text"
                         placeholder={t(
-                          "jobs.application.form.full_name_placeholder"
+                          "jobs.application.form.full_name_placeholder",
                         )}
                         value={formData.fullName}
                         onChange={(e) =>
@@ -1899,7 +1903,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           // Format phone number with mask
                           const formatted = formatPhoneNumber(
                             value,
-                            previousValue
+                            previousValue,
                           );
 
                           handleInputChange("phone", formatted);
@@ -2043,7 +2047,8 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                            {t("jobs.application.form.education_details")} №{index + 1}
+                            {t("jobs.application.form.education_details")} №
+                            {index + 1}
                           </h3>
                           {formData.education.length > 1 && (
                             <button
@@ -2068,12 +2073,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                   handleEducationChange(
                                     index,
                                     "startYear",
-                                    value
+                                    value,
                                   )
                                 }
                                 options={yearOptions}
                                 placeholder={t(
-                                  "jobs.application.form.select_year"
+                                  "jobs.application.form.select_year",
                                 )}
                                 required
                               />
@@ -2083,7 +2088,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                   handleEducationChange(
                                     index,
                                     "startMonth",
-                                    value
+                                    value,
                                   )
                                 }
                                 options={monthOptions}
@@ -2105,12 +2110,12 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     handleEducationChange(
                                       index,
                                       "endYear",
-                                      value
+                                      value,
                                     )
                                   }
                                   options={getEndYearOptions(edu.startYear)}
                                   placeholder={t(
-                                    "jobs.application.form.select_year"
+                                    "jobs.application.form.select_year",
                                   )}
                                   disabled={edu.isCurrent}
                                   required={!edu.isCurrent}
@@ -2121,7 +2126,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     handleEducationChange(
                                       index,
                                       "endMonth",
-                                      value
+                                      value,
                                     )
                                   }
                                   options={monthOptions}
@@ -2139,7 +2144,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       handleEducationChange(
                                         index,
                                         "isCurrent",
-                                        checked
+                                        checked,
                                       )
                                     }
                                   />
@@ -2148,7 +2153,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                     className="ml-2 text-sm text-gray-600 dark:text-gray-400"
                                   >
                                     {t(
-                                      "jobs.application.form.currently_studying"
+                                      "jobs.application.form.currently_studying",
                                     )}
                                   </label>
                                 </div>
@@ -2164,14 +2169,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             <Input
                               type="text"
                               placeholder={t(
-                                "jobs.application.form.institution_placeholder"
+                                "jobs.application.form.institution_placeholder",
                               )}
                               value={edu.institution}
                               onChange={(e) =>
                                 handleEducationChange(
                                   index,
                                   "institution",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               required
@@ -2195,7 +2200,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                               }
                               options={degreeOptions}
                               placeholder={t(
-                                "jobs.application.form.degree_placeholder"
+                                "jobs.application.form.degree_placeholder",
                               )}
                               required
                             />
@@ -2209,14 +2214,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             <Input
                               type="text"
                               placeholder={t(
-                                "jobs.application.form.specialty_placeholder"
+                                "jobs.application.form.specialty_placeholder",
                               )}
                               value={edu.specialty}
                               onChange={(e) =>
                                 handleEducationChange(
                                   index,
                                   "specialty",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               required
@@ -2339,15 +2344,15 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       handleWorkExperienceChange(
                                         index,
                                         "startYear",
-                                        value
+                                        value,
                                       )
                                     }
                                     options={yearOptions}
                                     placeholder={t(
-                                      "jobs.application.form.select_year"
+                                      "jobs.application.form.select_year",
                                     )}
                                     required={isWorkExperienceEntryStarted(
-                                      work
+                                      work,
                                     )}
                                   />
                                   <Select
@@ -2356,13 +2361,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       handleWorkExperienceChange(
                                         index,
                                         "startMonth",
-                                        value
+                                        value,
                                       )
                                     }
                                     options={monthOptions}
                                     placeholder="Oy"
                                     required={isWorkExperienceEntryStarted(
-                                      work
+                                      work,
                                     )}
                                   />
                                 </div>
@@ -2380,14 +2385,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                         handleWorkExperienceChange(
                                           index,
                                           "endYear",
-                                          value
+                                          value,
                                         )
                                       }
                                       options={getEndYearOptions(
-                                        work.startYear
+                                        work.startYear,
                                       )}
                                       placeholder={t(
-                                        "jobs.application.form.select_year"
+                                        "jobs.application.form.select_year",
                                       )}
                                       disabled={work.isCurrent}
                                       required={
@@ -2401,7 +2406,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                         handleWorkExperienceChange(
                                           index,
                                           "endMonth",
-                                          value
+                                          value,
                                         )
                                       }
                                       options={monthOptions}
@@ -2421,7 +2426,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                         handleWorkExperienceChange(
                                           index,
                                           "isCurrent",
-                                          checked
+                                          checked,
                                         )
                                       }
                                     />
@@ -2430,7 +2435,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                       className="ml-2 text-sm text-gray-600 dark:text-gray-400"
                                     >
                                       {t(
-                                        "jobs.application.form.currently_working"
+                                        "jobs.application.form.currently_working",
                                       )}
                                     </label>
                                   </div>
@@ -2444,14 +2449,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 <Input
                                   type="text"
                                   placeholder={t(
-                                    "jobs.application.form.company_placeholder"
+                                    "jobs.application.form.company_placeholder",
                                   )}
                                   value={work.company}
                                   onChange={(e) =>
                                     handleWorkExperienceChange(
                                       index,
                                       "company",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   required={isWorkExperienceEntryStarted(work)}
@@ -2477,14 +2482,14 @@ ${formData.additionalInfo || "Kiritilmagan"}
                                 <Input
                                   type="text"
                                   placeholder={t(
-                                    "jobs.application.form.position_placeholder"
+                                    "jobs.application.form.position_placeholder",
                                   )}
                                   value={work.position}
                                   onChange={(e) =>
                                     handleWorkExperienceChange(
                                       index,
                                       "position",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   required={isWorkExperienceEntryStarted(work)}
@@ -2664,12 +2669,11 @@ ${formData.additionalInfo || "Kiritilmagan"}
                   </h2>
 
                   <div>
-                    
                     <textarea
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows={4}
                       placeholder={t(
-                        "jobs.application.form.additional_info_placeholder"
+                        "jobs.application.form.additional_info_placeholder",
                       )}
                       value={formData.additionalInfo}
                       onChange={(e) =>
@@ -2699,7 +2703,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           type="text"
                           inputMode="numeric"
                           placeholder={t(
-                            "jobs.application.form.expected_salary_placeholder"
+                            "jobs.application.form.expected_salary_placeholder",
                           )}
                           value={
                             formData.expectedSalary
@@ -2745,7 +2749,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             onChange={(e) =>
                               handleInputChange(
                                 "businessTripReady",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="text-blue-600"
@@ -2764,7 +2768,7 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             onChange={(e) =>
                               handleInputChange(
                                 "businessTripReady",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="text-blue-600"
@@ -2820,13 +2824,13 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm transition-all"
                           rows={5}
                           placeholder={t(
-                            "jobs.application.form.conviction_details_placeholder"
+                            "jobs.application.form.conviction_details_placeholder",
                           )}
                           value={formData.convictionDetails}
                           onChange={(e) =>
                             handleInputChange(
                               "convictionDetails",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                         />
@@ -2853,8 +2857,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                       rel="noopener noreferrer"
                       onClick={() =>
                         toast.success(
-                          t("jobs.application.form.sample_downloaded_success") ||
-                            "Ma'lumotnoma yuklab olindi"
+                          t(
+                            "jobs.application.form.sample_downloaded_success",
+                          ) || "Ma'lumotnoma yuklab olindi",
                         )
                       }
                       className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 whitespace-nowrap"
@@ -2874,8 +2879,8 @@ ${formData.additionalInfo || "Kiritilmagan"}
                           if (file) {
                             const allowedExtensions = [".doc", ".docx"];
                             const fileName = file.name.toLowerCase();
-                            const hasValidExtension = allowedExtensions.some((ext) =>
-                              fileName.endsWith(ext)
+                            const hasValidExtension = allowedExtensions.some(
+                              (ext) => fileName.endsWith(ext),
                             );
                             if (hasValidExtension) {
                               handleInputChange("resume", file);
@@ -2887,7 +2892,9 @@ ${formData.additionalInfo || "Kiritilmagan"}
                             } else {
                               setFieldErrors((prev) => ({
                                 ...prev,
-                                resume: t("jobs.application.form.resume_format_error"),
+                                resume: t(
+                                  "jobs.application.form.resume_format_error",
+                                ),
                               }));
                               e.target.value = "";
                             }
@@ -2983,26 +2990,26 @@ ${formData.additionalInfo || "Kiritilmagan"}
                     explanation.className =
                       "jshshir-explanation p-4 bg-gray-50 dark:bg-gray-900 rounded-lg";
                     const structureTitle = t(
-                      "jobs.application.form.jshshir_modal_structure_title"
+                      "jobs.application.form.jshshir_modal_structure_title",
                     );
                     const structure1 = t(
-                      "jobs.application.form.jshshir_modal_structure_1"
+                      "jobs.application.form.jshshir_modal_structure_1",
                     );
                     const structure2 = t(
-                      "jobs.application.form.jshshir_modal_structure_2"
+                      "jobs.application.form.jshshir_modal_structure_2",
                     );
                     const structure3 = t(
-                      "jobs.application.form.jshshir_modal_structure_3"
+                      "jobs.application.form.jshshir_modal_structure_3",
                     );
                     const structure4 = t(
-                      "jobs.application.form.jshshir_modal_structure_4"
+                      "jobs.application.form.jshshir_modal_structure_4",
                     );
                     const structure5 = t(
-                      "jobs.application.form.jshshir_modal_structure_5"
+                      "jobs.application.form.jshshir_modal_structure_5",
                     );
                     const exampleText = t("jobs.application.form.example");
                     const exampleDesc = t(
-                      "jobs.application.form.jshshir_modal_example"
+                      "jobs.application.form.jshshir_modal_example",
                     );
                     explanation.innerHTML = `
                       <h3 class="font-semibold mb-3 text-gray-900 dark:text-white">${structureTitle}</h3>

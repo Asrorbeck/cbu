@@ -65,7 +65,7 @@ const CentralDepartmentsPage = () => {
           // Ensure department_tasks is an array of objects with 'task' property
           const formattedTasks = Array.isArray(departmentTasks)
             ? departmentTasks.map((task) =>
-                typeof task === "string" ? { task } : task
+                typeof task === "string" ? { task } : task,
               )
             : [];
 
@@ -97,7 +97,7 @@ const CentralDepartmentsPage = () => {
   // Filter departments based on search query
   const filteredDepartments = departments.filter(
     (dept) =>
-      dept?.name && dept.name.toLowerCase().includes(searchQuery.toLowerCase())
+      dept?.name && dept.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -151,7 +151,7 @@ const CentralDepartmentsPage = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("jobs.search_departments")} 
+                  {t("jobs.search_departments")}
                 </h2>
                 {searchQuery && (
                   <button
@@ -209,4 +209,3 @@ const CentralDepartmentsPage = () => {
 };
 
 export default CentralDepartmentsPage;
-

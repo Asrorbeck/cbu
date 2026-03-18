@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -15,7 +21,7 @@ const decodeBase64Url = (value) => {
     const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(
       base64.length + ((4 - (base64.length % 4)) % 4),
-      "="
+      "=",
     );
     const decoded = atob(padded);
     try {
@@ -23,7 +29,7 @@ const decodeBase64Url = (value) => {
         decoded
           .split("")
           .map((char) => "%" + char.charCodeAt(0).toString(16).padStart(2, "0"))
-          .join("")
+          .join(""),
       );
     } catch (uriError) {
       return decoded;
@@ -88,7 +94,7 @@ const VacancyTest = () => {
   const [statusMessage, setStatusMessage] = useState(null); // For status messages like "Vaqt tugadi"
   const [statusType, setStatusType] = useState(null); // "time_up", "already_completed", "error", etc.
   const [testSubmitted, setTestSubmitted] = useState(false); // Track if test is submitted to disable security checks
-  
+
   // Refs for timer management
   const timerIntervalRef = useRef(null);
   const startTimeRef = useRef(null); // Store when timer started
@@ -98,7 +104,7 @@ const VacancyTest = () => {
   // Use test_id from URL params, fallback to decoded token if available
   const tokenPayload = useMemo(
     () => decodeJwtPayload(test_token),
-    [test_token]
+    [test_token],
   );
   const decodedTestId = tokenPayload?.test_id
     ? String(tokenPayload.test_id)
@@ -111,7 +117,7 @@ const VacancyTest = () => {
   useEffect(() => {
     if (!test_token || isFallbackTest) {
       console.warn(
-        "VacancyTest: using fallback test flow due to missing or invalid token."
+        "VacancyTest: using fallback test flow due to missing or invalid token.",
       );
       setError(null);
     }
@@ -126,21 +132,23 @@ const VacancyTest = () => {
   useEffect(() => {
     // If no test_id or test_token, use fallback demo test
     if (!test_id || !test_token) {
-      console.warn("VacancyTest: Missing test_id or test_token in URL - using fallback demo test");
-      
+      console.warn(
+        "VacancyTest: Missing test_id or test_token in URL - using fallback demo test",
+      );
+
       // Set default test data for demo
       setVacancy({
         id: "demo",
         title: "Umumiy bilim testi",
         description: "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
       });
-      
+
       // Set default time (30 minutes)
       const defaultTime = 30 * 60;
       setTimeRemaining(defaultTime);
       initialTimeRef.current = defaultTime;
       startTimeRef.current = Date.now();
-      
+
       // Set demo test data
       setTestData({
         id: "demo",
@@ -149,7 +157,7 @@ const VacancyTest = () => {
         max_violations: 5,
         passing_score: 60,
       });
-      
+
       setAttemptId("demo-attempt");
       setLoading(false);
       return;
@@ -188,7 +196,7 @@ const VacancyTest = () => {
         console.error("Error starting test session:", apiError);
         console.error(
           "API Error Details:",
-          apiError.response?.data || apiError.message
+          apiError.response?.data || apiError.message,
         );
 
         // Check for specific status messages
@@ -241,7 +249,7 @@ const VacancyTest = () => {
           errorMessage ||
             apiError.response?.data?.error ||
             apiError.response?.data?.message ||
-            "Failed to load test"
+            "Failed to load test",
         );
         setLoading(false);
       }
@@ -272,7 +280,14 @@ const VacancyTest = () => {
   useEffect(() => {
     const mainElement = document.querySelector("main");
     // Don't apply blur if error or status message is shown OR test is already submitted
-    if (error || statusMessage || testAlreadyCompleted || alreadySubmitted || showResultModal || testSubmitted) {
+    if (
+      error ||
+      statusMessage ||
+      testAlreadyCompleted ||
+      alreadySubmitted ||
+      showResultModal ||
+      testSubmitted
+    ) {
       // Remove blur when error/status is shown or test is submitted
       if (mainElement) {
         mainElement.style.filter = "";
@@ -318,7 +333,17 @@ const VacancyTest = () => {
       document.body.style.filter = "";
       document.body.style.transition = "";
     };
-  }, [showScreenshotModal, showDevToolsModal, devToolsDetected, error, statusMessage, testAlreadyCompleted, alreadySubmitted, showResultModal, testSubmitted]);
+  }, [
+    showScreenshotModal,
+    showDevToolsModal,
+    devToolsDetected,
+    error,
+    statusMessage,
+    testAlreadyCompleted,
+    alreadySubmitted,
+    showResultModal,
+    testSubmitted,
+  ]);
 
   // Handle violations - DISABLED (no API calls, no modals)
   const handleViolation = useCallback(async (type) => {
@@ -710,11 +735,22 @@ const VacancyTest = () => {
     // Detect page visibility change - Enhanced for screenshot detection
     const handleVisibilityChange = () => {
       // Don't apply blur if error or status message is shown OR test is submitted OR still loading
-      if (error || statusMessage || testAlreadyCompleted || testSubmitted || alreadySubmitted || showResultModal || loading) {
+      if (
+        error ||
+        statusMessage ||
+        testAlreadyCompleted ||
+        testSubmitted ||
+        alreadySubmitted ||
+        showResultModal ||
+        loading
+      ) {
         return;
       }
       // Don't trigger on page load (first 2 seconds)
-      if (pageLoadTimeRef.current && Date.now() - pageLoadTimeRef.current < 2000) {
+      if (
+        pageLoadTimeRef.current &&
+        Date.now() - pageLoadTimeRef.current < 2000
+      ) {
         return;
       }
       // Screenshot olishda page visibility o'zgarishi mumkin
@@ -746,11 +782,22 @@ const VacancyTest = () => {
     // Detect window blur - screenshot olishda window blur bo'lishi mumkin
     const handleWindowBlur = () => {
       // Don't apply blur if error or status message is shown OR test is submitted OR still loading
-      if (error || statusMessage || testAlreadyCompleted || testSubmitted || alreadySubmitted || showResultModal || loading) {
+      if (
+        error ||
+        statusMessage ||
+        testAlreadyCompleted ||
+        testSubmitted ||
+        alreadySubmitted ||
+        showResultModal ||
+        loading
+      ) {
         return;
       }
       // Don't trigger on page load (first 2 seconds)
-      if (pageLoadTimeRef.current && Date.now() - pageLoadTimeRef.current < 2000) {
+      if (
+        pageLoadTimeRef.current &&
+        Date.now() - pageLoadTimeRef.current < 2000
+      ) {
         return;
       }
       // Apply blur IMMEDIATELY to DOM (synchronous, before screenshot)
@@ -899,26 +946,27 @@ const VacancyTest = () => {
     if (devToolsDetected) {
       toast.error(
         t("test.security.devtools_blocked_submit") ||
-          "Dasturchi vositalari ochilgan. Testni topshirib bo'lmaydi."
+          "Dasturchi vositalari ochilgan. Testni topshirib bo'lmaydi.",
       );
       return;
     }
     // Check if all questions are answered
     const unansweredQuestions = testQuestions.filter(
-      (q) => !answers[q.id]
+      (q) => !answers[q.id],
     ).length;
 
     // For auto-submit on time up, skip confirmation
     const isAutoSubmit = timeRemaining <= 0;
     if (unansweredQuestions > 0 && !isAutoSubmit) {
       const confirmSubmit = window.confirm(
-        t("test.unanswered_warning", { count: unansweredQuestions })
+        t("test.unanswered_warning", { count: unansweredQuestions }),
       );
       if (!confirmSubmit) return;
     }
 
     // Check if this is a demo/fallback test
-    const isDemoTest = !test_token || !attemptId || !test_id || activeTestId === "demo";
+    const isDemoTest =
+      !test_token || !attemptId || !test_id || activeTestId === "demo";
 
     setIsSubmitting(true);
     // Don't set alreadySubmitted yet - wait until result modal is shown
@@ -932,25 +980,25 @@ const VacancyTest = () => {
       if (isDemoTest) {
         // Demo test - calculate results locally
         console.log("Demo test - calculating results locally");
-        
+
         const totalQuestions = testQuestions.length;
-        
+
         // Calculate correct answers using hardcoded correctAnswers
         correctCount = testQuestions.filter((q) => {
           const userAnswer = answers[q.id];
           const correctAnswer = correctAnswers[q.id];
           return userAnswer === correctAnswer;
         }).length;
-        
+
         // Calculate percentage
         if (totalQuestions > 0) {
           percentage = Math.round((correctCount / totalQuestions) * 100);
         }
-        
+
         // Determine if passed (60% passing score)
         const passingScore = testData?.passing_score || 60;
         isPassed = percentage >= passingScore;
-        
+
         finishResponse = {
           correct_answers: correctCount,
           score: percentage,
@@ -993,19 +1041,23 @@ const VacancyTest = () => {
         // Step 3: Calculate results - use backend data if available, otherwise calculate locally
         correctCount = finishResponse.correct_answers ?? 0;
         const totalQuestions = testQuestions.length;
-        
+
         // Calculate percentage from backend score or from correct answers
-        if (finishResponse.score !== undefined && finishResponse.score !== null) {
+        if (
+          finishResponse.score !== undefined &&
+          finishResponse.score !== null
+        ) {
           percentage = Math.round(Number(finishResponse.score));
         } else if (totalQuestions > 0) {
           percentage = Math.round((correctCount / totalQuestions) * 100);
         }
-        
+
         // Determine if passed - use backend value or calculate (assuming 60% is passing)
         const passingScore = testData?.passing_score || 60; // Default 60% passing score
-        isPassed = finishResponse.passed !== undefined 
-          ? Boolean(finishResponse.passed)
-          : percentage >= passingScore;
+        isPassed =
+          finishResponse.passed !== undefined
+            ? Boolean(finishResponse.passed)
+            : percentage >= passingScore;
       }
 
       // Step 4: Show results
@@ -1024,7 +1076,7 @@ const VacancyTest = () => {
 
       // Disable all security checks after test submission
       setTestSubmitted(true);
-      
+
       // Show result modal
       setTestResult(testResults);
       setShowResultModal(true);
@@ -1034,7 +1086,7 @@ const VacancyTest = () => {
         {
           duration: 3000,
           position: "top-center",
-        }
+        },
       );
     } catch (error) {
       console.error("Test submission error:", error);
@@ -1126,7 +1178,9 @@ const VacancyTest = () => {
 
         // Calculate time based on elapsed time from start (sync with backend time)
         if (initialTimeRef.current && startTimeRef.current) {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          const elapsed = Math.floor(
+            (Date.now() - startTimeRef.current) / 1000,
+          );
           const calculated = Math.max(0, initialTimeRef.current - elapsed);
           // Use calculated time to stay in sync with backend
           return calculated;
@@ -1446,17 +1500,17 @@ const VacancyTest = () => {
     const title = isTimeUp
       ? t("test.status_page.time_up_title")
       : isAlreadyCompletedStatus
-      ? t("test.status_page.already_completed_title")
-      : statusMessage || t("test.status_page.generic_title");
+        ? t("test.status_page.already_completed_title")
+        : statusMessage || t("test.status_page.generic_title");
     const description = isTimeUp
       ? t("test.status_page.time_up_description")
       : isAlreadyCompletedStatus
-      ? restrictionDate
-        ? t("test.status_page.already_completed_description_with_date", {
-            date: restrictionDate,
-          })
-        : t("test.status_page.already_completed_description")
-      : statusMessage;
+        ? restrictionDate
+          ? t("test.status_page.already_completed_description_with_date", {
+              date: restrictionDate,
+            })
+          : t("test.status_page.already_completed_description")
+        : statusMessage;
 
     return (
       <div className="min-h-screen bg-background">
@@ -1480,8 +1534,8 @@ const VacancyTest = () => {
                       {isTimeUp
                         ? t("test.status_page.time_up_subtitle")
                         : isAlreadyCompletedStatus
-                        ? t("test.status_page.generic_subtitle")
-                        : t("test.status_page.generic_subtitle")}
+                          ? t("test.status_page.generic_subtitle")
+                          : t("test.status_page.generic_subtitle")}
                     </p>
                   </div>
                 </div>
@@ -1796,8 +1850,8 @@ const VacancyTest = () => {
                     index === currentQuestion
                       ? "bg-blue-600 text-white"
                       : answers[q.id]
-                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-2 border-green-600"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border-2 border-green-600"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
                   {index + 1}
@@ -1965,12 +2019,13 @@ const VacancyTest = () => {
                     WebkitBackdropFilter: "none !important",
                   }}
                 >
-                  {t("test.security.violation_understood") || "Tushundim, qoidalarga rioya qilaman"}
+                  {t("test.security.violation_understood") ||
+                    "Tushundim, qoidalarga rioya qilaman"}
                 </button>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* DevTools Warning Modal - Cannot be closed while devtools is open */}
@@ -2078,8 +2133,8 @@ const VacancyTest = () => {
                   className="mx-auto mb-3 text-white"
                 />
                 <h2 className="text-xl font-bold text-white uppercase tracking-wide">
-                  {t("test.result.title") === "test.result.title" 
-                    ? "Test natijalari" 
+                  {t("test.result.title") === "test.result.title"
+                    ? "Test natijalari"
                     : t("test.result.title")}
                 </h2>
               </div>
@@ -2090,11 +2145,13 @@ const VacancyTest = () => {
               {/* Score Display - Prominent */}
               <div className="text-center mb-6">
                 <div className="inline-flex items-baseline space-x-2">
-                  <span className={`text-6xl font-bold ${
-                    testResult.isPassed
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
-                  }`}>
+                  <span
+                    className={`text-6xl font-bold ${
+                      testResult.isPassed
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
                     {testResult.percentage}%
                   </span>
                 </div>
@@ -2112,7 +2169,8 @@ const VacancyTest = () => {
                   >
                     {testResult.isPassed
                       ? t("test.result.passed_title") || "✅ Testdan o'tdingiz"
-                      : t("test.result.failed_title") || "❌ Testdan o'ta olmadingiz"}
+                      : t("test.result.failed_title") ||
+                        "❌ Testdan o'ta olmadingiz"}
                   </span>
                 </div>
               </div>
@@ -2175,8 +2233,10 @@ const VacancyTest = () => {
                       }`}
                     >
                       {testResult.isPassed
-                        ? t("test.result.pass_info") || "🎉 Tabriklaymiz! Siz testdan muvaffaqiyatli o'tdingiz!"
-                        : t("test.result.fail_info") || "😔 Afsuski, siz testdan o'ta olmadingiz. Keyingi safar omad!"}
+                        ? t("test.result.pass_info") ||
+                          "🎉 Tabriklaymiz! Siz testdan muvaffaqiyatli o'tdingiz!"
+                        : t("test.result.fail_info") ||
+                          "😔 Afsuski, siz testdan o'ta olmadingiz. Keyingi safar omad!"}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {testResult.isPassed

@@ -7,15 +7,18 @@ import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
-import { reportsAPI } from "../../services/api";
+import { reportsAPI, faqAPI } from "../../services/api";
 
 const CorruptionSubmission = () => {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [faqItems, setFaqItems] = useState([]);
+  const [isLoadingFaq, setIsLoadingFaq] = useState(true);
+  const [faqError, setFaqError] = useState(null);
   const [telegramUserId, setTelegramUserId] = useState(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -58,6 +61,34 @@ const CorruptionSubmission = () => {
 
     const timer = setTimeout(getTelegramUserId, 500);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch FAQ from backend (category=reports)
+  useEffect(() => {
+    const fetchFaq = async () => {
+      try {
+        setIsLoadingFaq(true);
+        setFaqError(null);
+        const data = await faqAPI.getFaqCategoriesByCategory("reports");
+        const results = data?.results || [];
+        const items = results.flatMap((cat) =>
+          (cat.items || [])
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .map((item) => ({
+              question: item.question,
+              answer: item.answer,
+            }))
+        );
+        setFaqItems(items);
+      } catch (error) {
+        console.error("Error fetching FAQ:", error);
+        setFaqError(true);
+        setFaqItems([]);
+      } finally {
+        setIsLoadingFaq(false);
+      }
+    };
+    fetchFaq();
   }, []);
 
   const formatPhoneNumber = (value) => {
@@ -162,7 +193,7 @@ const CorruptionSubmission = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid()) {
-      toast.error("Iltimos, barcha maydonlarni to'ldiring");
+      toast.error(t("submissions.corruption_submission.toast_fill_all"));
       return;
     }
 
@@ -272,12 +303,12 @@ const CorruptionSubmission = () => {
 
         if (hasFieldErrors) {
           setFieldErrors(parsedErrors);
-          toast.error("Iltimos, formadagi xatolarni tuzating");
+          toast.error(t("submissions.corruption_submission.toast_fix_errors"));
         } else {
           const errorMessage =
             backendErrors.message ||
             backendErrors.error ||
-            "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+            t("submissions.corruption_submission.toast_submit_error");
           toast.error(
             Array.isArray(errorMessage) ? errorMessage[0] : errorMessage
           );
@@ -287,7 +318,7 @@ const CorruptionSubmission = () => {
           error.response?.data?.message ||
           error.response?.data?.detail ||
           error.message ||
-          "Xabar yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.";
+          t("submissions.corruption_submission.toast_submit_error");
         toast.error(errorMessage);
       }
     } finally {
@@ -307,7 +338,7 @@ const CorruptionSubmission = () => {
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
-          <title>Xabar yuborildi - Markaziy Bank</title>
+          <title>{t("submissions.corruption_submission.meta_title_success")}</title>
         </Helmet>
         <Navbar />
         <main className="pt-20 pb-12">
@@ -323,24 +354,21 @@ const CorruptionSubmission = () => {
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-2xl font-bold text-foreground">
-                    Xabar muvaffaqiyatli yuborildi!
+                    {t("submissions.corruption_submission.success_title")}
                   </h2>
                   <p className="text-muted-foreground">
-                    Sizning xabaringiz maxfiy tarzda qabul qilindi va tezda
-                    tekshiriladi. Xabar holatini profilingizdagi "Arizalarim"
-                    bo'limidan kuzatishingiz mumkin.
+                    {t("submissions.corruption_submission.success_message")}
                   </p>
                 </div>
                 <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
                   <p className="text-sm text-muted-foreground mb-3 font-semibold">
-                    Maxfiy raqam
+                    {t("submissions.corruption_submission.reference_label")}
                   </p>
                   <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 tracking-wider font-mono">
                     {referenceNumber}
                   </p>
                   <p className="text-xs text-muted-foreground mt-3">
-                    Bu maxfiy raqamni saqlang. Xabar holatini tekshirish uchun
-                    foydalaning.
+                    {t("submissions.corruption_submission.reference_hint")}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
@@ -351,10 +379,10 @@ const CorruptionSubmission = () => {
                     iconPosition="left"
                     className="flex-1"
                   >
-                    Orqaga
+                    {t("submissions.corruption_submission.back")}
                   </Button>
                   <Button onClick={handleBackToDashboard} className="flex-1">
-                    Bosh sahifa
+                    {t("submissions.corruption_submission.back_to_dashboard")}
                   </Button>
                 </div>
               </div>
@@ -368,7 +396,7 @@ const CorruptionSubmission = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Korrupsiya haqida xabar berish - Markaziy Bank</title>
+        <title>{t("submissions.corruption_submission.meta_title_form")}</title>
       </Helmet>
       <Navbar />
       <main className="pt-20 pb-12">
@@ -382,17 +410,17 @@ const CorruptionSubmission = () => {
               iconPosition="left"
               className="text-muted-foreground hover:text-foreground"
             >
-              Orqaga
+              {t("submissions.corruption_submission.back")}
             </Button>
           </div>
 
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Korrupsiya haqida xabar berish
+              {t("submissions.corruption_submission.page_title")}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Korrupsiya haqidagi xabaringizni yuboring
+              {t("submissions.corruption_submission.subtitle")}
             </p>
           </div>
 
@@ -415,10 +443,10 @@ const CorruptionSubmission = () => {
                       htmlFor="isAnonymous"
                       className="cursor-pointer font-medium text-foreground"
                     >
-                      Anonim sorov
+                      {t("submissions.corruption_submission.anonymous_label")}
                     </label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Shaxsiy ma'lumotlaringiz ko'rsatilmaydi
+                      {t("submissions.corruption_submission.anonymous_hint")}
                     </p>
                   </div>
                 </div>
@@ -429,39 +457,39 @@ const CorruptionSubmission = () => {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-4">
-                      Shaxsiy ma'lumotlar
+                      {t("submissions.corruption_submission.personal_info")}
                     </h3>
                     <div className="space-y-4">
                       <Input
-                        label="F.I.SH (To'liq)"
+                        label={t("submissions.corruption_submission.full_name")}
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
-                        placeholder="Masalan: Karimov Karim Karimovich"
+                        placeholder={t("submissions.corruption_submission.full_name_placeholder")}
                         required
                         error={fieldErrors.fullName}
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
-                          label="Bog'lanish uchun telefon nomeri"
+                          label={t("submissions.corruption_submission.phone_label")}
                           name="phone"
                           type="tel"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          placeholder="+998 XX XXX XX XX"
+                          placeholder={t("submissions.corruption_submission.phone_placeholder")}
                           required
                           maxLength={17}
                           error={fieldErrors.phone}
                         />
 
                         <Input
-                          label="Elektron pochta manzili"
+                          label={t("submissions.corruption_submission.email_label")}
                           name="email"
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          placeholder="example@mail.com"
+                          placeholder={t("submissions.corruption_submission.email_placeholder")}
                           error={fieldErrors.email}
                         />
                       </div>
@@ -473,15 +501,15 @@ const CorruptionSubmission = () => {
               {/* Complaint Details */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-foreground">
-                  Murojaat tafsilotlari
+                  {t("submissions.corruption_submission.submission_details")}
                 </h3>
 
                 <Input
-                  label="Murojaatning qisqacha mazmuni"
+                  label={t("submissions.corruption_submission.subject_label")}
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  placeholder="Murojaat mavzusini qisqacha yozing"
+                  placeholder={t("submissions.corruption_submission.subject_placeholder")}
                   required
                   error={fieldErrors.subject}
                 />
@@ -494,7 +522,7 @@ const CorruptionSubmission = () => {
                         : "text-foreground"
                     }`}
                   >
-                    Murojaat matni <span className="text-red-500">*</span>
+                    {t("submissions.corruption_submission.description_label")} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="description"
@@ -506,7 +534,7 @@ const CorruptionSubmission = () => {
                         ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
                         : "border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                     }`}
-                    placeholder="Murojaatingizni batafsil va aniq yozing. Hodisani, shaxslarni, sanalarni va boshqa muhim tafsilotlarni ko'rsating..."
+                    placeholder={t("submissions.corruption_submission.description_placeholder")}
                     required
                   />
                   {fieldErrors.description ? (
@@ -516,7 +544,7 @@ const CorruptionSubmission = () => {
                   ) : (
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-xs text-muted-foreground">
-                        Minimum 50 belgi kerak
+                        {t("submissions.corruption_submission.min_chars")}
                       </p>
                       <p
                         className={`text-xs ${
@@ -542,11 +570,10 @@ const CorruptionSubmission = () => {
                   />
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-1">
-                      Maxfiylik kafolati
+                      {t("submissions.corruption_submission.privacy_title")}
                     </h4>
                     <p className="text-xs text-muted-foreground">
-                      Sizning shaxsiy ma'lumotlaringiz maxfiy saqlanadi va faqat
-                      tegishli bo'limlar tomonidan ko'rib chiqiladi.
+                      {t("submissions.corruption_submission.privacy_text")}
                     </p>
                   </div>
                 </div>
@@ -562,11 +589,10 @@ const CorruptionSubmission = () => {
                   />
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-1">
-                      Ogohlantirish
+                      {t("submissions.corruption_submission.warning_title")}
                     </h4>
                     <p className="text-xs text-muted-foreground">
-                      Yolg'on xabar berish qonunga xilof. Faqat haqiqiy va
-                      ishonchli ma'lumotlarni yuboring.
+                      {t("submissions.corruption_submission.warning_text")}
                     </p>
                   </div>
                 </div>
@@ -580,7 +606,7 @@ const CorruptionSubmission = () => {
                   onClick={handleBack}
                   className="flex-1"
                 >
-                  Bekor qilish
+                  {t("submissions.corruption_submission.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -589,96 +615,85 @@ const CorruptionSubmission = () => {
                   iconName="Send"
                   iconPosition="left"
                 >
-                  {isSubmitting ? "Yuborilmoqda..." : "Xabarni yuborish"}
+                  {isSubmitting ? t("submissions.corruption_submission.submitting") : t("submissions.corruption_submission.submit")}
                 </Button>
               </div>
             </form>
           </div>
 
-          {/* FAQ Section */}
+          {/* FAQ Section — only visible when loading or when backend returned items */}
+          {(isLoadingFaq || faqItems.length > 0) && (
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-slate-700">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Tez-tez so'raladigan savollar
+                {t("submissions.corruption_submission.faq_title")}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Korrupsiya haqida xabar berish bo'yicha savollarga javoblar
+                {t("submissions.corruption_submission.faq_subtitle")}
               </p>
             </div>
 
             <div className="space-y-3">
-              {[
-                {
-                  question: "Korrupsiya nima?",
-                  answer:
-                    "Korrupsiya - bu davlat xizmatchilari yoki mansabdor shaxslar tomonidan o'z lavozim vakolatlaridan shaxsiy manfaatlar uchun suiiste'mol qilish. Bu pora olish/berish, o'zlashtirish, vakolatdan suiiste'mol qilish va boshqa qonunga xilof harakatlarni o'z ichiga oladi.",
-                },
-                {
-                  question:
-                    "Mening xabarim qancha muddat ichida ko'rib chiqiladi?",
-                  answer:
-                    "Korrupsiya haqidagi xabarlar maxsus komissiya tomonidan 5-10 ish kuni ichida ko'rib chiqiladi. Murakkab holatlarda chuqurroq tekshiruv o'tkazilishi mumkin. Xabar holati haqida maxfiy raqamingiz orqali ma'lumot olishingiz mumkin.",
-                },
-                {
-                  question: "Xabarim maxfiy bo'ladimi?",
-                  answer:
-                    "Ha, sizning barcha ma'lumotlaringiz va xabar tafsilotlari to'liq maxfiy saqlanadi. Faqat maxsus vakolatli organlar xabarni ko'rib chiqadi. Hech qanday ma'lumot uchinchi shaxslarga yoki ommaga berilmaydi.",
-                },
-                {
-                  question: "Qanday dalillar kerak bo'ladi?",
-                  answer:
-                    "Agar mavjud bo'lsa: foto/video dalillar, audio yozuvlar, hujjat nusxalari, SMS/email xabarlar, guvohlar ma'lumotlari va boshqa dalillarni yuklashingiz mumkin. Dalillar bo'lmasa ham, batafsil tavsif asosida tekshiruv o'tkaziladi.",
-                },
-                {
-                  question: "Yolg'on xabar berish uchun javobgarlik bormi?",
-                  answer:
-                    "Ha, ataylab yolg'on xabar berish qonunga xilof va javobgarlikka tortilishi mumkin. Shuning uchun faqat haqiqiy va ishonchli ma'lumotlarni yuboring. Agar noaniq bo'lsangiz, mavjud ma'lumotlaringizni to'liq va aniq tasvirlab bering.",
-                },
-              ].map((faq, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newIndex = openFaqIndex === index ? null : index;
-                      setOpenFaqIndex(newIndex);
-                    }}
-                    className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200"
-                  >
-                    <span className="font-semibold text-foreground pr-4">
-                      {faq.question}
-                    </span>
-                    <Icon
-                      name={
-                        openFaqIndex === index ? "ChevronUp" : "ChevronDown"
-                      }
-                      size={20}
-                      className={`text-muted-foreground flex-shrink-0 transition-transform duration-300 ${
-                        openFaqIndex === index ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+              {isLoadingFaq ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 dark:border-slate-700 rounded-lg p-6 animate-pulse"
+                    >
+                      <div className="h-5 bg-gray-200 dark:bg-slate-600 rounded w-3/4 mb-3" />
+                      <div className="h-4 bg-gray-200 dark:bg-slate-600 rounded w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                faqItems.map((faq, index) => (
                   <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      openFaqIndex === index
-                        ? "grid-rows-[1fr] opacity-100"
-                        : "grid-rows-[0fr] opacity-0"
-                    }`}
+                    key={index}
+                    className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden"
                   >
-                    <div className="overflow-hidden">
-                      <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {faq.answer}
-                        </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newIndex = openFaqIndex === index ? null : index;
+                        setOpenFaqIndex(newIndex);
+                      }}
+                      className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200"
+                    >
+                      <span className="font-semibold text-foreground pr-4">
+                        {faq.question}
+                      </span>
+                      <Icon
+                        name={
+                          openFaqIndex === index ? "ChevronUp" : "ChevronDown"
+                        }
+                        size={20}
+                        className={`text-muted-foreground flex-shrink-0 transition-transform duration-300 ${
+                          openFaqIndex === index ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`grid transition-all duration-300 ease-in-out ${
+                        openFaqIndex === index
+                          ? "grid-rows-[1fr] opacity-100"
+                          : "grid-rows-[0fr] opacity-0"
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
+          )}
 
           {/* Warning Info */}
           <div className="mt-8 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-6 border border-orange-200 dark:border-orange-800">
@@ -690,14 +705,10 @@ const CorruptionSubmission = () => {
               />
               <div>
                 <h4 className="text-base font-semibold text-foreground mb-2">
-                  Muhim eslatma
+                  {t("submissions.corruption_submission.notice_title")}
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Korrupsiya haqidagi xabarlar jiddiy ko'rib chiqiladi. Yolg'on
-                  xabar berish qonunga xilof hisoblanadi. Agar yordam kerak
-                  bo'lsa:{" "}
-                  <span className="font-semibold">+998 71 123 45 67</span> yoki{" "}
-                  <span className="font-semibold">anticorruption@cbu.uz</span>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {t("submissions.corruption_submission.notice_text")}
                 </p>
               </div>
             </div>

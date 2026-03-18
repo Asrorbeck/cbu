@@ -116,21 +116,21 @@ const TermsAndConditionsPage = () => {
                       </h3>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_1_intro"
+                          "jobs.terms_conditions.contract_content.section_1_intro",
                         )}
                       </p>
                       <ul className="list-disc list-inside space-y-1 ml-4">
                         <li>
                           <strong>
                             {t(
-                              "jobs.terms_conditions.contract_content.telegram_bot"
+                              "jobs.terms_conditions.contract_content.telegram_bot",
                             )}
                           </strong>
                         </li>
                         <li>
                           <strong>
                             {t(
-                              "jobs.terms_conditions.contract_content.operator"
+                              "jobs.terms_conditions.contract_content.operator",
                             )}
                           </strong>
                         </li>
@@ -142,14 +142,14 @@ const TermsAndConditionsPage = () => {
                         <li>
                           <strong>
                             {t(
-                              "jobs.terms_conditions.contract_content.personal_data"
+                              "jobs.terms_conditions.contract_content.personal_data",
                             )}
                           </strong>
                         </li>
                         <li>
                           <strong>
                             {t(
-                              "jobs.terms_conditions.contract_content.contract_acceptance"
+                              "jobs.terms_conditions.contract_content.contract_acceptance",
                             )}
                           </strong>
                         </li>
@@ -162,17 +162,17 @@ const TermsAndConditionsPage = () => {
                       </h3>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_2_1"
+                          "jobs.terms_conditions.contract_content.section_2_1",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_2_2"
+                          "jobs.terms_conditions.contract_content.section_2_2",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_2_3"
+                          "jobs.terms_conditions.contract_content.section_2_3",
                         )}
                       </p>
                     </div>
@@ -183,17 +183,17 @@ const TermsAndConditionsPage = () => {
                       </h3>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_3_1"
+                          "jobs.terms_conditions.contract_content.section_3_1",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_3_1_1"
+                          "jobs.terms_conditions.contract_content.section_3_1_1",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_3_1_2"
+                          "jobs.terms_conditions.contract_content.section_3_1_2",
                         )}
                       </p>
                     </div>
@@ -204,28 +204,28 @@ const TermsAndConditionsPage = () => {
                       </h3>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_4_1"
+                          "jobs.terms_conditions.contract_content.section_4_1",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_4_2"
+                          "jobs.terms_conditions.contract_content.section_4_2",
                         )}
                       </p>
                       <ul className="list-disc list-inside space-y-1 ml-4">
                         <li>
                           {t(
-                            "jobs.terms_conditions.contract_content.section_4_2_1"
+                            "jobs.terms_conditions.contract_content.section_4_2_1",
                           )}
                         </li>
                         <li>
                           {t(
-                            "jobs.terms_conditions.contract_content.section_4_2_2"
+                            "jobs.terms_conditions.contract_content.section_4_2_2",
                           )}
                         </li>
                         <li>
                           {t(
-                            "jobs.terms_conditions.contract_content.section_4_2_3"
+                            "jobs.terms_conditions.contract_content.section_4_2_3",
                           )}
                         </li>
                       </ul>
@@ -237,22 +237,22 @@ const TermsAndConditionsPage = () => {
                       </h3>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_5_1"
+                          "jobs.terms_conditions.contract_content.section_5_1",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_5_2"
+                          "jobs.terms_conditions.contract_content.section_5_2",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_5_3"
+                          "jobs.terms_conditions.contract_content.section_5_3",
                         )}
                       </p>
                       <p className="mb-2">
                         {t(
-                          "jobs.terms_conditions.contract_content.section_5_4"
+                          "jobs.terms_conditions.contract_content.section_5_4",
                         )}
                       </p>
                     </div>
