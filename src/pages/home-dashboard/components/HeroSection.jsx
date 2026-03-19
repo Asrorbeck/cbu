@@ -12,14 +12,6 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
   // Quick action services
   const quickActions = [
     {
-      id: 1,
-      title: t("home.quick_actions.license.title"),
-      subtitle: t("home.quick_actions.license.subtitle"),
-      icon: "Shield",
-      color: "blue",
-      route: "/check-license",
-    },
-    {
       id: 2,
       title: t("home.quick_actions.vacancies.title"),
       subtitle: t("home.quick_actions.vacancies.subtitle"),
@@ -34,14 +26,6 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
       icon: "MessageSquare",
       color: "purple",
       route: "/feedback-submission",
-    },
-    {
-      id: 4,
-      title: t("home.quick_actions.news.title"),
-      subtitle: t("home.quick_actions.news.subtitle"),
-      icon: "Newspaper",
-      color: "orange",
-      route: "/news-articles-hub",
     },
     {
       id: 5,
