@@ -7,7 +7,8 @@ import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 
 const ConverterModal = ({ isOpen, onClose, currencies }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const numberLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "uz-UZ";
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("UZS");
   const [amount, setAmount] = useState("");
@@ -15,7 +16,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const currencyOptions = [
-    { value: "UZS", label: "Uzbekistan Som (UZS)", flag: "🇺🇿" },
+    { value: "UZS", label: t("currency.uzs_option_label"), flag: "🇺🇿" },
     ...currencies?.map((currency) => ({
       value: currency?.code,
       label: `${currency?.name} (${currency?.code})`,
@@ -128,7 +129,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
   };
 
   const formatResult = (value) => {
-    return new Intl.NumberFormat("uz-UZ", {
+    return new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     })?.format(value);
@@ -143,7 +144,12 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="sm" title="Konverter">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="sm"
+      title={t("currency.converter_modal_title")}
+    >
       <div className="bg-card rounded-xl">
         {/* Content */}
         <div className="p-3 md:p-6">
@@ -166,7 +172,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e?.target?.value)}
-                  placeholder="Son kiriting"
+                  placeholder={t("currency.amount_placeholder")}
                   min="0"
                   step="0.01"
                   className="text-lg md:text-xl font-semibold h-10 md:h-12 border-2 border-primary/20 focus:border-primary bg-background"
@@ -227,7 +233,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
                     }}
                   />
                   <span className="font-semibold text-card-foreground text-sm md:text-base">
-                    UZS
+                    {t("currency.code_uzs")}
                   </span>
                 </div>
               </div>
@@ -239,7 +245,8 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
                 <div className="text-center text-xs md:text-sm text-muted-foreground">
                   <span className="font-medium">
                     1 {fromCurrency} ={" "}
-                    {formatResult(result / parseFloat(amount || 1))} UZS
+                    {formatResult(result / parseFloat(amount || 1))}{" "}
+                    {t("currency.code_uzs")}
                   </span>
                 </div>
               </div>
@@ -251,9 +258,7 @@ const ConverterModal = ({ isOpen, onClose, currencies }) => {
         <div className="p-3 md:p-6 border-t border-border bg-muted/20">
           <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
             <Icon name="AlertCircle" size={12} className="md:w-3.5 md:h-3.5" />
-            <span className="text-xs">
-              Kurslar faqat ma'lumot uchun. Haqiqiy kurslar farq qilishi mumkin.
-            </span>
+            <span className="text-xs">{t("currency.rates_reference_only")}</span>
           </div>
         </div>
       </div>

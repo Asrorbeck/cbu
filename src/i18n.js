@@ -82,7 +82,7 @@ const resources = {
       }, 
       currency: {
         title: "Valyuta kurslari",
-        subtitle: "O'zbekiston Markaziy bankining rasmiy kunlik kurslari",
+        subtitle: "O'zbekiston Respublikasi Markaziy Bankining rasmiy kunlik kurslari",
         last_update: "17 Sentyabr, 2024 - 09:30",
         view_cards: "Karta ko'rinishi",
         view_table: "Jadval ko'rinishi",
@@ -101,10 +101,11 @@ const resources = {
         rates_updated: "Kurslar har 15 daqiqada yangilanadi",
         official_exchange_rates: "Rasmiy valyuta kurslari",
         rates_description:
-          "Barcha valyuta kurslari O'zbekiston Markaziy banki tomonidan taqdim etiladi va har kuni 09:30 da yangilanadi. Bu kurslar faqat ma'lumot uchun va haqiqiy tranzaksiya kurslari farq qilishi mumkin.",
+          "Barcha valyuta kurslari O'zbekiston Respublikasi Markaziy Banki tomonidan taqdim etiladi va har kuni 09:30 da yangilanadi. Bu kurslar faqat ma'lumot uchun va haqiqiy tranzaksiya kurslari farq qilishi mumkin.",
         updated_daily: "Har kuni yangilanadi",
         official_rates_text: "Rasmiy kurslar",
-        central_bank_verified: "Markaziy bank tasdiqlangan",
+        central_bank_verified:
+          "O'zbekiston Respublikasi Markaziy banki tomonidan tasdiqlangan",
         all_systems_operational: "Barcha tizimlar ishlamoqda",
         calculator_title: "Valyuta kalkulyatori",
         calculator_description:
@@ -117,6 +118,37 @@ const resources = {
         exchange_rate: "Valyuta kursi",
         rates_reference_only:
           "Kurslar faqat ma'lumot uchun. Haqiqiy kurslar farq qilishi mumkin.",
+        rate: "Kurs",
+        unit_uzs: "so'm",
+        code_uzs: "UZS",
+        change_up: "Oshdi",
+        change_down: "Kamaydi",
+        change_same: "O'zgarmadi",
+        updated_prefix: "Yangilangan:",
+        refresh: "Yangilash",
+        converter_short: "Konverter",
+        back: "Orqaga",
+        loading: "Yuklanmoqda...",
+        fetch_error: "Valyuta kurslarini yuklashda xatolik yuz berdi",
+        show_more_extra: "Ko'proq ko'rish ({{count}} ta qo'shimcha)",
+        show_more_extra_desktop:
+          "Ko'proq ko'rish ({{count}} ta qo'shimcha valyuta)",
+        show_less: "Kamroq ko'rish",
+        converter_modal_title: "Konverter",
+        amount_placeholder: "Miqdorni kiriting",
+        uzs_option_label: "O'zbekiston so'mi (UZS)",
+        month_1: "yanvar",
+        month_2: "fevral",
+        month_3: "mart",
+        month_4: "aprel",
+        month_5: "may",
+        month_6: "iyun",
+        month_7: "iyul",
+        month_8: "avgust",
+        month_9: "sentyabr",
+        month_10: "oktyabr",
+        month_11: "noyabr",
+        month_12: "dekabr",
       },
       submissions: {
         title: "Murojaatlar",
@@ -144,8 +176,101 @@ const resources = {
           page_title: "Davlat tili bilan bog'liq masalalarda shikoyat yo'llash",
           subtitle:
             "Markaziy bank va tijorat banklari tomonidan davlat tili ustuvorligi ta'minlanmagan holatlar yuzasidan shikoyat yuborish",
+          meta_title_form:
+            "Davlat tili bo'yicha shikoyat - O'zbekiston Respublikasi Markaziy Banki",
+          meta_title_success:
+            "Xabar yuborildi - O'zbekiston Respublikasi Markaziy Banki",
           phone_label: "Bog'lanish uchun telefon raqam",
-          faq_subtitle: "Davlat tili bilan bog'liq masalalarda shikoyat yo'llash bo'yicha savollarga javoblar",
+          phone_placeholder: "+998 XX XXX XX XX",
+          full_name_label: "F.I.SH (To'liq)",
+          full_name_placeholder: "Masalan: Karimov Karim Karimovich",
+          description_label: "Xatolik haqida batafsil ma'lumot",
+          description_placeholder:
+            "Xatolik qayerda topilgan, qanday xatolik ekanligi va to'g'ri variantini yozing...",
+          min_chars_hint: "Minimum {{min}} belgi kerak",
+          char_counter: "{{current}} / {{min}}",
+          source_url_label: "Manba havolasi (URL)",
+          source_url_placeholder: "https://...",
+          file_upload_label: "Fayl yuklash (ixtiyoriy)",
+          file_upload_action: "Fayl yuklash",
+          file_upload_or_drag: "yoki bu yerga sudrab tashlang",
+          file_formats_hint:
+            "PNG, JPG, PDF, HEIC, MP3, MP4, DNG, MOV va boshqalar (maks. 50 MB)",
+          file_remove: "Olib tashlash",
+          info_box_text:
+            "Iltimos, xatolikni batafsil va aniq tasvirlab bering. Qayerda topilgani, qanday xatolik ekanligi va to'g'ri variantini ko'rsating.",
+          submit: "Murojaatni yuborish",
+          submitting: "Yuborilmoqda...",
+          back: "Orqaga",
+          back_to_dashboard: "Bosh sahifa",
+          toast_file_too_large:
+            "Fayl hajmi 50 MB dan katta bo'lishi mumkin emas",
+          toast_fill_all: "Iltimos, barcha maydonlarni to'ldiring",
+          toast_success: "Murojaat muvaffaqiyatli yuborildi!",
+          toast_submit_error:
+            "Murojaat yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+          success_title: "Murojaat muvaffaqiyatli yuborildi!",
+          success_message:
+            "Sizning murojaatingiz qabul qilindi va tezda ko'rib chiqiladi. Murojaat holatini profilingizdagi «Arizalarim» bo'limidan kuzatishingiz mumkin.",
+          reference_label: "Murojaat raqami",
+          reference_hint:
+            "Bu raqamni saqlang. Murojaat holatini tekshirish uchun foydalaning.",
+          faq_title: "Tez-tez so'raladigan savollar",
+          faq_subtitle:
+            "Davlat tili bilan bog'liq masalalarda shikoyat yo'llash bo'yicha savollarga javoblar",
+          storage_type_label: "Davlat tili (til xatolari)",
+          storage_status_pending: "Ko'rib chiqilmoqda",
+          fallback_faq_1_q: "Qanday xatoliklarni yuborishim mumkin?",
+          fallback_faq_1_a:
+            "Siz tashkilot saytlarida, xabarlarida, hujjatlarida yoki boshqa harakatlarida topilgan o'zbek tilidagi imlo, grammatika, terminologiya va boshqa til xatolarini yuborishingiz mumkin.",
+          fallback_faq_2_q: "Murojaatim qancha muddat ichida ko'rib chiqiladi?",
+          fallback_faq_2_a:
+            "Til xatolari haqidagi murojaatlar 3-5 ish kuni ichida ko'rib chiqiladi. Xatolik tasdiqlangandan so'ng, tegishli bo'limlarga yuboriladi va tuzatiladi.",
+          fallback_faq_3_q: "Fayl yuklash majburiymi?",
+          fallback_faq_3_a:
+            "Yo'q, fayl yuklash ixtiyoriy. Lekin agar xatolikni ko'rsatadigan skrinshot yoki hujjat bo'lsa, uni yuklashingiz tavsiya etiladi.",
+          fallback_faq_4_q: "Qanday fayl formatlari qabul qilinadi?",
+          fallback_faq_4_a:
+            "Rasm, video, audio, PDF va boshqa ko'plab formatlar qo'llab-quvvatlanadi. Maksimal fayl hajmi 50 MB.",
+        },
+        consumer_rights_submission: {
+          meta_title:
+            "Iste'molchi huquqlari bo'yicha - O'zbekiston Respublikasi Markaziy Banki",
+          page_title: "Iste'molchi huquqlari bo'yicha",
+          page_subtitle:
+            "Huquqlaringizni himoya qiling va kerakli xizmatlardan foydalaning",
+          back: "Orqaga",
+          service_submit_complaint_title: "Murojaat yuborish",
+          service_submit_complaint_desc:
+            "Amalga oshirilgan kiber jinoyatlar va moliyaviy firibgarlik holatlari (O'zbekiston Respublikasi Markaziy Banki faoliyatiga tegishliligi bo'yicha) to'g'risida",
+          service_check_license_title: "Litsenziyani tekshirish",
+          service_check_license_desc:
+            "Tashkilot yoki bank litsenziyasini tekshiring",
+          cta_enter_service: "Xizmatga kirish",
+          cta_unavailable: "Hozircha mavjud emas",
+          faq_default_title: "Tez-tez so'raladigan savollar",
+          faq_default_description:
+            "Iste'molchi huquqlari bo'yicha eng ko'p beriladigan savollarga javoblar",
+          loading: "Yuklanmoqda...",
+          faq_empty: "Hozircha savollar mavjud emas",
+          fallback_faq_1_q: "Iste'molchi huquqlari nima?",
+          fallback_faq_1_a:
+            "Iste'molchi huquqlari - bu tovar yoki xizmatlarni sotib olayotgan shaxslarning qonun bilan himoyalangan huquqlari. Bu huquqlar sifatli mahsulot olish, to'g'ri ma'lumot olish, xavfsizlik va shikoyat qilish huquqlarini o'z ichiga oladi.",
+          fallback_faq_2_q: "Qanday hollarda murojaat yuborishim mumkin?",
+          fallback_faq_2_a:
+            "Siz quyidagi hollarda murojaat yuborishingiz mumkin: noto'g'ri shartlar bilan shartnoma tuzilganda, yashirin to'lovlar mavjud bo'lganda, yomon xizmat ko'rsatilganda, noto'g'ri yoki chalg'ituvchi ma'lumot berilganda, va boshqa huquqlaringiz buzilgan hollarda.",
+          fallback_faq_3_q: "Murojaatim qancha muddat ichida ko'rib chiqiladi?",
+          fallback_faq_3_a:
+            "Sizning murojaatingiz qabul qilingan kundan boshlab 3-5 ish kuni ichida ko'rib chiqiladi. Murakkab holatlarda bu muddat 10 ish kunigacha uzaytirilishi mumkin. Jarayon haqida sizga SMS yoki email orqali xabar beriladi.",
+          fallback_faq_4_q: "Litsenziyani qanday tekshirish mumkin?",
+          fallback_faq_4_a:
+            "Litsenziyani tekshirish uchun «Litsenziyani tekshirish» bo'limiga o'ting va tashkilotning INN raqami yoki nomini kiriting. Tizim avtomatik ravishda litsenziya mavjudligi va amal qilish muddatini ko'rsatadi.",
+          fallback_faq_5_q: "Shikoyatim maxfiy bo'ladimi?",
+          fallback_faq_5_a:
+            "Ha, sizning barcha shaxsiy ma'lumotlaringiz va shikoyat tafsilotlari to'liq maxfiy saqlanadi. Ma'lumotlar faqat tegishli bo'limlar tomonidan ko'rib chiqiladi va uchinchi shaxslarga berilmaydi.",
+          fallback_faq_6_q: "Qanday hujjatlar kerak bo'ladi?",
+          fallback_faq_6_a:
+            "Murojaatingizni tasdiqlash uchun shartnoma nusxasi, to'lov kvitansiyalari, SMS yoki email xabarlar, va boshqa muhim hujjatlarning raqamli nusxalarini yuklashingiz mumkin. Hujjatlar PDF, JPG, PNG formatida bo'lishi kerak.",
         },
         corruption_submission: {
           page_title: "Korrupsiya haqida xabar berish",
@@ -876,7 +1001,8 @@ const resources = {
       },
       currency: {
         title: "Валюта курслари",
-        subtitle: "Ўзбекистон Марказий банкининг расмий кунлик курслар",
+        subtitle:
+          "Ўзбекистон Республикаси Марказий Банкининг расмий кунлик курслари",
         last_update: "17 Сентябр, 2024 - 09:30",
         view_cards: "Карта кўриниши",
         view_table: "Жадвал кўриниши",
@@ -895,10 +1021,11 @@ const resources = {
         rates_updated: "Курслар ҳар 15 дақиқада янгиланади",
         official_exchange_rates: "Расмий валюта курслари",
         rates_description:
-          "Барча валюта курслари Ўзбекистон Марказий банки томонидан тақдим этилади ва ҳар кун 09:30 да янгиланади. Бу курслар фақат маълумот учун ва ҳақиқий транзакция курслари фарқ қилиши мумкин.",
+          "Барча валюта курслари Ўзбекистон Республикаси Марказий Банки томонидан тақдим этилади ва ҳар кун 09:30 да янгиланади. Бу курслар фақат маълумот учун ва ҳақиқий транзакция курслари фарқ қилиши мумкин.",
         updated_daily: "Ҳар кун янгиланади",
         official_rates_text: "Расмий курслар",
-        central_bank_verified: "Марказий банк тасдиқланган",
+        central_bank_verified:
+          "Ўзбекистон Республикаси Марказий банки томонидан тасдиқланган",
         all_systems_operational: "Барча тизимлар ишламоқда",
         calculator_title: "Валюта калкулятори",
         calculator_description:
@@ -911,6 +1038,37 @@ const resources = {
         exchange_rate: "Валюта курси",
         rates_reference_only:
           "Курслар фақат маълумот учун. Ҳақиқий курслар фарқ қилиши мумкин.",
+        rate: "Курс",
+        unit_uzs: "сўм",
+        code_uzs: "UZS",
+        change_up: "Ошди",
+        change_down: "Камайди",
+        change_same: "Ўзгармади",
+        updated_prefix: "Янгиланган:",
+        refresh: "Янгилаш",
+        converter_short: "Конвертер",
+        back: "Орқага",
+        loading: "Юкланмоқда...",
+        fetch_error: "Валюта курсларини юклашда хатолик юз берди",
+        show_more_extra: "Кўпроқ кўриш ({{count}} та қўшимча)",
+        show_more_extra_desktop:
+          "Кўпроқ кўриш ({{count}} та қўшимча валюта)",
+        show_less: "Камроқ кўриш",
+        converter_modal_title: "Конвертер",
+        amount_placeholder: "Миқдорни киритинг",
+        uzs_option_label: "Ўзбекистон сўми (UZS)",
+        month_1: "январ",
+        month_2: "феврал",
+        month_3: "март",
+        month_4: "апрел",
+        month_5: "май",
+        month_6: "июн",
+        month_7: "июл",
+        month_8: "август",
+        month_9: "сентябр",
+        month_10: "октябр",
+        month_11: "ноябр",
+        month_12: "декабр",
       },
       submissions: {
         title: "Мурожаатлар",
@@ -935,11 +1093,104 @@ const resources = {
 
         },
         language_error_submission: {
-          page_title: "Давлат тили билан боглик масалаларда шикоят йўллаш",
+          page_title: "Давлат тили билан боғлиқ масалаларда шикоят йўллаш",
           subtitle:
             "Марказий банк ва тижорат банклари томонидан давлат тили устунлиги таъминланмаган ҳолатлар юзасидан шикоят юбориш",
-          phone_label: "Богланиш учун телефон рақам",
-          faq_subtitle: "Давлат тили билан боглик масалаларда шикоят йўллаш бўйича саволларга жавоблар",
+          meta_title_form:
+            "Давлат тили бўйича шикоят - Ўзбекистон Республикаси Марказий Банки",
+          meta_title_success:
+            "Хабар юборилди - Ўзбекистон Республикаси Марказий Банки",
+          phone_label: "Боғланиш учун телефон рақам",
+          phone_placeholder: "+998 XX XXX XX XX",
+          full_name_label: "Ф.И.Ш (Тўлиқ)",
+          full_name_placeholder: "Масалан: Каримов Карим Каримович",
+          description_label: "Хатолик ҳақида батафсил маълумот",
+          description_placeholder:
+            "Хатолик қаерда топилган, қандай хатолик эканлиги ва тўғри вариантини ёзинг...",
+          min_chars_hint: "Минимум {{min}} белги керак",
+          char_counter: "{{current}} / {{min}}",
+          source_url_label: "Манба ҳаволаси (URL)",
+          source_url_placeholder: "https://...",
+          file_upload_label: "Файл юклаш (ихтиёрий)",
+          file_upload_action: "Файл юклаш",
+          file_upload_or_drag: "ёки бу ерга судаб ташланг",
+          file_formats_hint:
+            "PNG, JPG, PDF, HEIC, MP3, MP4, DNG, MOV ва бошқалар (макс. 50 МБ)",
+          file_remove: "Олиб ташлаш",
+          info_box_text:
+            "Илтимос, хатоликни батафсил ва аниқ тасвирлаб беринг. Қаерда топилгани, қандай хатолик эканлиги ва тўғри вариантини кўрсатинг.",
+          submit: "Мурожаатни юбориш",
+          submitting: "Юборилмоқда...",
+          back: "Орқага",
+          back_to_dashboard: "Бош саҳифа",
+          toast_file_too_large:
+            "Файл ҳажми 50 МБ дан катта бўлиши мумкин эмас",
+          toast_fill_all: "Илтимос, барча майдонларни тўлдиринг",
+          toast_success: "Мурожаат муваффақиятли юборилди!",
+          toast_submit_error:
+            "Мурожаат юборишда хатолик юз берди. Илтимос, қайта уриниб кўринг.",
+          success_title: "Мурожаат муваффақиятли юборилди!",
+          success_message:
+            "Сизнинг мурожаатингиз қабул қилинди ва тезда кўриб чиқилади. Мурожаат ҳолатини профилингиздаги «Аризаларим» бўлимидан кузатишингиз мумкин.",
+          reference_label: "Мурожаат рақами",
+          reference_hint:
+            "Бу рақамни сақланг. Мурожаат ҳолатини текшириш учун фойдаланинг.",
+          faq_title: "Тез-тез сўраладиган саволлар",
+          faq_subtitle:
+            "Давлат тили билан боғлиқ масалаларда шикоят йўллаш бўйича саволларга жавоблар",
+          storage_type_label: "Давлат тили (тил хатоликлари)",
+          storage_status_pending: "Кўриб чиқилмоқда",
+          fallback_faq_1_q: "Қандай хатоликларни юборишим мумкин?",
+          fallback_faq_1_a:
+            "Сиз ташкилот сайтларида, хабарларида, ҳужжатларида ёки бошқа ҳаракатларида топилган ўзбек тилидаги имло, грамматика, терминология ва бошқа тил хатоликларини юборишингиз мумкин.",
+          fallback_faq_2_q: "Мурожаатим қанча муддат ичида кўриб чиқилади?",
+          fallback_faq_2_a:
+            "Тил хатоликлари ҳақидаги мурожаатлар 3-5 иш куни ичида кўриб чиқилади. Хатолик тасдиқлангандан сўнг, тегишли бўлинмаларга юборилади ва тузатилади.",
+          fallback_faq_3_q: "Файл юклаш мажбурийми?",
+          fallback_faq_3_a:
+            "Йўқ, файл юклаш ихтиёрий. Лекин агар хатоликни кўрсатадиган скриншот ёки ҳужжат бўлса, уни юклашингиз тавсия этилади.",
+          fallback_faq_4_q: "Қандай файл форматлари қабул қилинади?",
+          fallback_faq_4_a:
+            "Расм, видео, аудио, PDF ва бошқа кўплаб форматлар қўллаб-қувватланади. Максимал файл ҳажми 50 МБ.",
+        },
+        consumer_rights_submission: {
+          meta_title:
+            "Истеъмолчи ҳуқуқлари бўйича - Ўзбекистон Республикаси Марказий Банки",
+          page_title: "Истеъмолчи ҳуқуқлари бўйича",
+          page_subtitle:
+            "Ҳуқуқларингизни ҳимоя қилинг ва керакли хизматлардан фойдаланинг",
+          back: "Орқага",
+          service_submit_complaint_title: "Мурожаат юбориш",
+          service_submit_complaint_desc:
+            "Амалга оширилган кибер жиноятлар ва молиявий фирибгарлик ҳолатлари (Ўзбекистон Республикаси Марказий Банки фаолиятига тегишлилиги бўйича) тўғрисида",
+          service_check_license_title: "Лицензияни текшириш",
+          service_check_license_desc:
+            "Ташкилот ёки банк лицензиясини текширинг",
+          cta_enter_service: "Хизматга кириш",
+          cta_unavailable: "Ҳозирча мавжуд эмас",
+          faq_default_title: "Тез-тез сўраладиган саволлар",
+          faq_default_description:
+            "Истеъмолчи ҳуқуқлари бўйича энг кўп бериладиган саволларга жавоблар",
+          loading: "Юкланмоқда...",
+          faq_empty: "Ҳозирча саволлар мавжуд эмас",
+          fallback_faq_1_q: "Истеъмолчи ҳуқуқлари нима?",
+          fallback_faq_1_a:
+            "Истеъмолчи ҳуқуқлари - бу товар ёки хизматларни сотиб олаётган шахсларнинг қонун билан ҳимояланган ҳуқуқлари. Бу ҳуқуқлар сифатли маҳсулот олиш, тўғри маълумот олиш, хавфсизлик ва шикоят қилиш ҳуқуқларини ўз ичига олади.",
+          fallback_faq_2_q: "Қандай ҳолларда мурожаат юборишим мумкин?",
+          fallback_faq_2_a:
+            "Сиз қуйидаги ҳолларда мурожаат юборишингиз мумкин: нотўғри шартлар билан шартнома тузилганда, яширин тўловлар мавжуд бўлганда, ёмон хизмат кўрсатилганда, нотўғри ёки чалғитувчи маълумот берилганда, ва бошқа ҳуқуқларингиз бузилган ҳолларда.",
+          fallback_faq_3_q: "Мурожаатим қанча муддат ичида кўриб чиқилади?",
+          fallback_faq_3_a:
+            "Сизнинг мурожаатингиз қабул қилинган кундан бошлаб 3-5 иш куни ичида кўриб чиқилади. Мураккаб ҳолатларда бу муддат 10 иш кунигача узайтирилиши мумкин. Жараён ҳақида сизга SMS ёки email орқали хабар берилади.",
+          fallback_faq_4_q: "Лицензияни қандай текшириш мумкин?",
+          fallback_faq_4_a:
+            "Лицензияни текшириш учун «Лицензияни текшириш» бўлимига ўтинг ва ташкилотнинг ИНН рақами ёки номини киритинг. Тизим автоматик равишда лицензия мавжудлиги ва амал қилиш муддатини кўрсатади.",
+          fallback_faq_5_q: "Шикоятим махфий бўладими?",
+          fallback_faq_5_a:
+            "Ҳа, сизнинг барча шахсий маълумотларингиз ва шикоят тафсилотлари тўлиқ махфий сақланади. Маълумотлар фақат тегишли бўлинмалар томонидан кўриб чиқилади ва учинчи шахсларга берилмайди.",
+          fallback_faq_6_q: "Қандай ҳужжатлар керак бўлади?",
+          fallback_faq_6_a:
+            "Мурожаатингизни тасдиқлаш учун шартнома нусхаси, тўлов квитансиялари, SMS ёки email хабарлар, ва бошқа муҳим ҳужжатларнинг рақамли нусхаларини юклашингиз мумкин. Ҳужжатлар PDF, JPG, PNG форматида бўлиши керак.",
         },
         corruption_submission: {
           page_title: "Коррупция ҳақида хабар бериш",
@@ -950,7 +1201,7 @@ const resources = {
           personal_info: "Шахсий маълумотлар",
           full_name: "Ф.И.Ш (Тўлиқ)",
           full_name_placeholder: "Масалан: Каримов Карим Каримович",
-          phone_label: "Богланиш учун телефон номери",
+          phone_label: "Боғланиш учун телефон номери",
           phone_placeholder: "+998 XX XXX XX XX",
           email_label: "Электрон почта манзили",
           email_placeholder: "example@mail.com",
@@ -1670,7 +1921,8 @@ const resources = {
       },
       currency: {
         title: "Курсы валют",
-        subtitle: "Официальные ежедневные курсы Центрального банка Узбекистана",
+        subtitle:
+          "Официальные ежедневные курсы Центрального банка Республики Узбекистан",
         last_update: "17 Сентября, 2024 - 09:30",
         view_cards: "Вид карточек",
         view_table: "Вид таблицы",
@@ -1689,10 +1941,11 @@ const resources = {
         rates_updated: "Курсы обновляются каждые 15 минут",
         official_exchange_rates: "Официальные курсы валют",
         rates_description:
-          "Все курсы валют предоставляются Центральным банком Узбекистана и обновляются ежедневно в 09:30. Эти курсы предназначены только для информации, и фактические курсы транзакций могут отличаться.",
+          "Все курсы валют предоставляются Центральным банком Республики Узбекистан и обновляются ежедневно в 09:30. Эти курсы предназначены только для информации, и фактические курсы транзакций могут отличаться.",
         updated_daily: "Обновляется ежедневно",
         official_rates_text: "Официальные курсы",
-        central_bank_verified: "Проверено Центральным банком",
+        central_bank_verified:
+          "Официально подтверждено Центральным банком Республики Узбекистан",
         all_systems_operational: "Все системы работают",
         calculator_title: "Валютный калькулятор",
         calculator_description:
@@ -1705,6 +1958,37 @@ const resources = {
         exchange_rate: "Курс обмена",
         rates_reference_only:
           "Курсы только для справки. Фактические курсы могут отличаться.",
+        rate: "Курс",
+        unit_uzs: "сум",
+        code_uzs: "UZS",
+        change_up: "Выросло",
+        change_down: "Снизилось",
+        change_same: "Без изменений",
+        updated_prefix: "Обновлено:",
+        refresh: "Обновить",
+        converter_short: "Конвертер",
+        back: "Назад",
+        loading: "Загрузка...",
+        fetch_error: "Ошибка при загрузке курсов валют",
+        show_more_extra: "Показать ещё (ещё {{count}})",
+        show_more_extra_desktop:
+          "Показать ещё (ещё {{count}} валют)",
+        show_less: "Показать меньше",
+        converter_modal_title: "Конвертер",
+        amount_placeholder: "Введите сумму",
+        uzs_option_label: "Узбекский сум (UZS)",
+        month_1: "января",
+        month_2: "февраля",
+        month_3: "марта",
+        month_4: "апреля",
+        month_5: "мая",
+        month_6: "июня",
+        month_7: "июля",
+        month_8: "августа",
+        month_9: "сентября",
+        month_10: "октября",
+        month_11: "ноября",
+        month_12: "декабря",
       },
       submissions: {
         title: "Обращения",
@@ -1730,8 +2014,101 @@ const resources = {
           page_title: "Подача жалобы по вопросам государственного языка",
           subtitle:
             "Подача жалобы на случаи, когда Центральный банк и коммерческие банки не обеспечили приоритет государственного языка",
+          meta_title_form:
+            "Жалоба по государственному языку - Центральный банк Республики Узбекистан",
+          meta_title_success:
+            "Сообщение отправлено - Центральный банк Республики Узбекистан",
           phone_label: "Номер телефона для связи",
-          faq_subtitle: "Ответы на вопросы по подаче жалоб по вопросам государственного языка",
+          phone_placeholder: "+998 XX XXX XX XX",
+          full_name_label: "Ф.И.О. (полностью)",
+          full_name_placeholder: "Например: Каримов Карим Каримович",
+          description_label: "Подробная информация об ошибке",
+          description_placeholder:
+            "Укажите, где найдена ошибка, в чём она заключается и какой вариант верный...",
+          min_chars_hint: "Минимум {{min}} символов",
+          char_counter: "{{current}} / {{min}}",
+          source_url_label: "Ссылка на источник (URL)",
+          source_url_placeholder: "https://...",
+          file_upload_label: "Загрузка файла (необязательно)",
+          file_upload_action: "Загрузить файл",
+          file_upload_or_drag: "или перетащите сюда",
+          file_formats_hint:
+            "PNG, JPG, PDF, HEIC, MP3, MP4, DNG, MOV и другие (макс. 50 МБ)",
+          file_remove: "Удалить",
+          info_box_text:
+            "Пожалуйста, подробно и чётко опишите ошибку: где она найдена, в чём заключается и какой вариант верный.",
+          submit: "Отправить обращение",
+          submitting: "Отправка...",
+          back: "Назад",
+          back_to_dashboard: "Главная",
+          toast_file_too_large:
+            "Размер файла не может превышать 50 МБ",
+          toast_fill_all: "Пожалуйста, заполните все поля",
+          toast_success: "Обращение успешно отправлено!",
+          toast_submit_error:
+            "Ошибка при отправке обращения. Пожалуйста, попробуйте снова.",
+          success_title: "Обращение успешно отправлено!",
+          success_message:
+            "Ваше обращение принято и будет рассмотрено в ближайшее время. Статус обращения можно отслеживать в разделе «Мои заявки» в профиле.",
+          reference_label: "Номер обращения",
+          reference_hint:
+            "Сохраните этот номер. Используйте его для проверки статуса обращения.",
+          faq_title: "Часто задаваемые вопросы",
+          faq_subtitle:
+            "Ответы на вопросы по подаче жалоб по вопросам государственного языка",
+          storage_type_label: "Государственный язык (языковые ошибки)",
+          storage_status_pending: "На рассмотрении",
+          fallback_faq_1_q: "Какие ошибки можно сообщать?",
+          fallback_faq_1_a:
+            "Вы можете сообщать об орфографических, грамматических, терминологических и иных ошибках в узбекском языке на сайтах организаций, в сообщениях, документах и других материалах.",
+          fallback_faq_2_q: "В какой срок рассматривается обращение?",
+          fallback_faq_2_a:
+            "Обращения о языковых ошибках рассматриваются в течение 3–5 рабочих дней. После подтверждения ошибки материалы направляются в соответствующие подразделения для исправления.",
+          fallback_faq_3_q: "Обязательна ли загрузка файла?",
+          fallback_faq_3_a:
+            "Нет, загрузка файла необязательна. Однако если есть скриншот или документ, наглядно показывающий ошибку, рекомендуется приложить его.",
+          fallback_faq_4_q: "Какие форматы файлов принимаются?",
+          fallback_faq_4_a:
+            "Поддерживаются изображения, видео, аудио, PDF и многие другие форматы. Максимальный размер файла — 50 МБ.",
+        },
+        consumer_rights_submission: {
+          meta_title:
+            "По правам потребителей - Центральный банк Республики Узбекистан",
+          page_title: "По правам потребителей",
+          page_subtitle:
+            "Защищайте свои права и пользуйтесь необходимыми сервисами",
+          back: "Назад",
+          service_submit_complaint_title: "Подать обращение",
+          service_submit_complaint_desc:
+            "О совершённых киберпреступлениях и случаях финансового мошенничества (в части, касающейся деятельности Центрального банка Республики Узбекистан)",
+          service_check_license_title: "Проверка лицензии",
+          service_check_license_desc:
+            "Проверьте лицензию организации или банка",
+          cta_enter_service: "Перейти к сервису",
+          cta_unavailable: "Временно недоступно",
+          faq_default_title: "Часто задаваемые вопросы",
+          faq_default_description:
+            "Ответы на наиболее распространённые вопросы о правах потребителей",
+          loading: "Загрузка...",
+          faq_empty: "Вопросы пока отсутствуют",
+          fallback_faq_1_q: "Что такое права потребителей?",
+          fallback_faq_1_a:
+            "Права потребителей — это права, защищённые законом, людей, приобретающих товары или услуги. Они включают право на качественный продукт, достоверную информацию, безопасность и право подать жалобу.",
+          fallback_faq_2_q: "В каких случаях я могу подать обращение?",
+          fallback_faq_2_a:
+            "Вы можете подать обращение в следующих случаях: заключение договора на несправедливых условиях, наличие скрытых платежей, ненадлежащее обслуживание, недостоверная или вводящая в заблуждение информация, а также в других случаях нарушения ваших прав.",
+          fallback_faq_3_q: "В какой срок рассматривается моё обращение?",
+          fallback_faq_3_a:
+            "Ваше обращение рассматривается в течение 3–5 рабочих дней с даты принятия. В сложных случаях срок может быть продлён до 10 рабочих дней. О ходе рассмотрения вам сообщат по SMS или электронной почте.",
+          fallback_faq_4_q: "Как проверить лицензию?",
+          fallback_faq_4_a:
+            "Чтобы проверить лицензию, перейдите в раздел «Проверка лицензии» и введите ИНН организации или её наименование. Система автоматически покажет наличие лицензии и срок её действия.",
+          fallback_faq_5_q: "Будет ли моя жалоба конфиденциальной?",
+          fallback_faq_5_a:
+            "Да, все ваши персональные данные и детали жалобы хранятся строго конфиденциально. Информацию рассматривают только уполномоченные подразделения и не передают третьим лицам.",
+          fallback_faq_6_q: "Какие документы понадобятся?",
+          fallback_faq_6_a:
+            "Для подтверждения обращения вы можете загрузить цифровые копии договора, платёжных квитанций, SMS или электронных сообщений и других важных документов. Форматы: PDF, JPG, PNG.",
         },
         corruption_submission: {
           page_title: "Сообщить о коррупции",

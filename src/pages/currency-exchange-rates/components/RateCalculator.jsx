@@ -6,7 +6,8 @@ import Select from "../../../components/ui/Select";
 import Button from "../../../components/ui/Button";
 
 const RateCalculator = ({ currencies }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const numberLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "uz-UZ";
   const [fromCurrency, setFromCurrency] = useState("UZS");
   const [toCurrency, setToCurrency] = useState("USD");
   const [amount, setAmount] = useState("1000");
@@ -14,7 +15,7 @@ const RateCalculator = ({ currencies }) => {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const currencyOptions = [
-    { value: "UZS", label: "Uzbekistan Som (UZS)", flag: "🇺🇿" },
+    { value: "UZS", label: t("currency.uzs_option_label"), flag: "🇺🇿" },
     ...currencies?.map((currency) => ({
       value: currency?.code,
       label: `${currency?.name} (${currency?.code})`,
@@ -87,7 +88,7 @@ const RateCalculator = ({ currencies }) => {
   };
 
   const formatResult = (value) => {
-    return new Intl.NumberFormat("uz-UZ", {
+    return new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 4,
     })?.format(value);

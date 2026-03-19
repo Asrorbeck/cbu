@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/AppIcon";
 import { faqAPI } from "../../services/api";
 
+const CRS = "submissions.consumer_rights_submission";
+
 const ConsumerRightsSubmission = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [faqData, setFaqData] = useState(null);
   const [isLoadingFaq, setIsLoadingFaq] = useState(true);
-  const [faqError, setFaqError] = useState(null);
 
   const handleBackToSubmissions = () => {
     navigate("/submissions");
@@ -21,25 +24,63 @@ const ConsumerRightsSubmission = () => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
+  const services = useMemo(
+    () => [
+      {
+        id: "submit-complaint",
+        title: t(`${CRS}.service_submit_complaint_title`),
+        description: t(`${CRS}.service_submit_complaint_desc`),
+        icon: "Send",
+        color: "text-green-600 dark:text-green-400",
+        bgColor: "bg-green-100 dark:bg-green-900/30",
+        action: () => {
+          navigate("/submit-complaint");
+        },
+      },
+      {
+        id: "check-license",
+        /** Hozircha o‘chirilgan — yo‘nalish keyin yoqiladi */
+        disabled: true,
+        title: t(`${CRS}.service_check_license_title`),
+        description: t(`${CRS}.service_check_license_desc`),
+        icon: "ShieldCheck",
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-100 dark:bg-blue-900/30",
+        action: () => {
+          navigate("/check-license");
+        },
+      },
+    ],
+    [t, navigate]
+  );
+
+  const fallbackFaqs = useMemo(
+    () =>
+      [1, 2, 3, 4, 5, 6].map((n) => ({
+        question: t(`${CRS}.fallback_faq_${n}_q`),
+        answer: t(`${CRS}.fallback_faq_${n}_a`),
+      })),
+    [t]
+  );
+
   // Fetch FAQ data from backend
   useEffect(() => {
     const fetchFaqData = async () => {
       try {
         setIsLoadingFaq(true);
-        setFaqError(null);
         const data = await faqAPI.getFaqCategories();
-        
+
         // Get the first active category
         const activeCategory = data.find(
           (category) => category.is_active && category.items?.length > 0
         );
-        
+
         if (activeCategory) {
           // Filter only active items and sort by order
           const activeItems = activeCategory.items
             .filter((item) => item.is_active)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
-          
+
           setFaqData({
             ...activeCategory,
             items: activeItems,
@@ -50,8 +91,6 @@ const ConsumerRightsSubmission = () => {
         }
       } catch (error) {
         console.error("Error fetching FAQ data:", error);
-        setFaqError("FAQ ma'lumotlarini yuklashda xatolik yuz berdi. Statik savollar ko'rsatilmoqda.");
-        // Fallback to static FAQs
         setFaqData(null);
       } finally {
         setIsLoadingFaq(false);
@@ -61,77 +100,18 @@ const ConsumerRightsSubmission = () => {
     fetchFaqData();
   }, []);
 
-  const services = [
-    {
-      id: "submit-complaint",
-      title: "Murojaat yuborish",
-      description:
-        "Amalga oshirilgan kiber jinoyatlar va moliyaviy firibgarlik holatlari (Markaziy bank faoliyatiga tegishliligi bo'yicha) to'g'risida",
-      icon: "Send",
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
-      action: () => {
-        navigate("/submit-complaint");
-      },
-    },
-    {
-      id: "check-license",
-      title: "Litsenziyani tekshirish",
-      description: "Tashkilot yoki bank litsenziyasini tekshiring",
-      icon: "ShieldCheck",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
-      action: () => {
-        navigate("/check-license");
-      },
-    },
-  ];
-
-  // Fallback FAQ data if backend fails
-  const fallbackFaqs = [
-    {
-      question: "Iste'molchi huquqlari nima?",
-      answer:
-        "Iste'molchi huquqlari - bu tovar yoki xizmatlarni sotib olayotgan shaxslarning qonun bilan himoyalangan huquqlari. Bu huquqlar sifatli mahsulot olish, to'g'ri ma'lumot olish, xavfsizlik va shikoyat qilish huquqlarini o'z ichiga oladi.",
-    },
-    {
-      question: "Qanday hollarda murojaat yuborishim mumkin?",
-      answer:
-        "Siz quyidagi hollarda murojaat yuborishingiz mumkin: noto'g'ri shartlar bilan shartnoma tuzilganda, yashirin to'lovlar mavjud bo'lganda, yomon xizmat ko'rsatilganda, noto'g'ri yoki chalg'ituvchi ma'lumot berilganda, va boshqa huquqlaringiz buzilgan hollarda.",
-    },
-    {
-      question: "Murojaatim qancha muddat ichida ko'rib chiqiladi?",
-      answer:
-        "Sizning murojaatingiz qabul qilingan kundan boshlab 3-5 ish kuni ichida ko'rib chiqiladi. Murakkab holatlarda bu muddat 10 ish kunigacha uzaytirilishi mumkin. Jarayon haqida sizga SMS yoki email orqali xabar beriladi.",
-    },
-    {
-      question: "Litsenziyani qanday tekshirish mumkin?",
-      answer:
-        "Litsenziyani tekshirish uchun 'Litsenziyani tekshirish' bo'limiga o'ting va tashkilotning INN raqami yoki nomini kiriting. Tizim avtomatik ravishda litsenziya mavjudligi va amal qilish muddatini ko'rsatadi.",
-    },
-    {
-      question: "Shikoyatim maxfiy bo'ladimi?",
-      answer:
-        "Ha, sizning barcha shaxsiy ma'lumotlaringiz va shikoyat tafsilotlari to'liq maxfiy saqlanadi. Ma'lumotlar faqat tegishli bo'limlar tomonidan ko'rib chiqiladi va uchinchi shaxslarga berilmaydi.",
-    },
-    {
-      question: "Qanday hujjatlar kerak bo'ladi?",
-      answer:
-        "Murojaatingizni tasdiqlash uchun shartnoma nusxasi, to'lov kvitansiyalari, SMS yoki email xabarlar, va boshqa muhim hujjatlarning raqamli nusxalarini yuklashingiz mumkin. Hujjatlar PDF, JPG, PNG formatida bo'lishi kerak.",
-    },
-  ];
-
   // Use backend data if available, otherwise use fallback static FAQs
   // If backend data exists but is empty, also use fallback
   const backendFaqs = faqData?.items || [];
   const faqs = backendFaqs.length > 0 ? backendFaqs : fallbackFaqs;
-  const faqTitle = faqData?.name || "Tez-tez so'raladigan savollar";
-  const faqDescription = faqData?.description || "Iste'molchi huquqlari bo'yicha eng ko'p beriladigan savollarga javoblar";
+  const faqTitle = faqData?.name || t(`${CRS}.faq_default_title`);
+  const faqDescription =
+    faqData?.description || t(`${CRS}.faq_default_description`);
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Iste'molchi huquqlari bo'yicha - Markaziy Bank</title>
+        <title>{t(`${CRS}.meta_title`)}</title>
       </Helmet>
       <Navbar />
       <main className="pt-20 pb-12">
@@ -145,17 +125,17 @@ const ConsumerRightsSubmission = () => {
               iconPosition="left"
               className="text-muted-foreground hover:text-foreground"
             >
-              Orqaga
+              {t(`${CRS}.back`)}
             </Button>
           </div>
 
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Iste'molchi huquqlari bo'yicha
+              {t(`${CRS}.page_title`)}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Huquqlaringizni himoya qiling va kerakli xizmatlardan foydalaning
+              {t(`${CRS}.page_subtitle`)}
             </p>
           </div>
 
@@ -164,8 +144,27 @@ const ConsumerRightsSubmission = () => {
             {services.map((service) => (
               <div
                 key={service.id}
-                onClick={service.action}
-                className="group relative bg-white dark:bg-slate-800 rounded-xl p-6 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 border border-gray-200 dark:border-slate-700"
+                role="button"
+                tabIndex={service.disabled ? -1 : 0}
+                aria-disabled={service.disabled ? true : undefined}
+                onClick={() => {
+                  if (!service.disabled) service.action();
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    service.disabled ||
+                    (e.key !== "Enter" && e.key !== " ")
+                  ) {
+                    return;
+                  }
+                  e.preventDefault();
+                  service.action();
+                }}
+                className={`group relative bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700 transition-all duration-300 ${
+                  service.disabled
+                    ? "opacity-60 cursor-not-allowed pointer-events-none select-none"
+                    : "cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 dark:hover:border-blue-500"
+                }`}
               >
                 {/* Icon in top-right corner */}
                 <div
@@ -190,13 +189,25 @@ const ConsumerRightsSubmission = () => {
 
                 {/* Action */}
                 <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
-                  <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
-                    <span className="text-sm font-medium">Xizmatga kirish</span>
-                    <Icon
-                      name="ArrowRight"
-                      size={16}
-                      className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
-                    />
+                  <div
+                    className={`flex items-center transition-colors duration-300 ${
+                      service.disabled
+                        ? "text-muted-foreground"
+                        : "text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300"
+                    }`}
+                  >
+                    <span className="text-sm font-medium">
+                      {service.disabled
+                        ? t(`${CRS}.cta_unavailable`)
+                        : t(`${CRS}.cta_enter_service`)}
+                    </span>
+                    {!service.disabled && (
+                      <Icon
+                        name="ArrowRight"
+                        size={16}
+                        className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -217,86 +228,60 @@ const ConsumerRightsSubmission = () => {
             {isLoadingFaq ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-muted-foreground">Yuklanmoqda...</span>
-              </div>
-            ) : faqError && faqs.length === 0 ? (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800 mb-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  {faqError}
-                </p>
+                <span className="ml-3 text-muted-foreground">
+                  {t(`${CRS}.loading`)}
+                </span>
               </div>
             ) : faqs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Hozircha savollar mavjud emas
-                </p>
+                <p className="text-muted-foreground">{t(`${CRS}.faq_empty`)}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {faqs.map((faq, index) => (
-                <div
-                  key={faq.id || index}
-                  className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden"
-                >
-                  <button
-                    onClick={() => toggleFaq(index)}
-                    className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200"
-                  >
-                    <span className="font-semibold text-foreground pr-4">
-                      {faq.question}
-                    </span>
-                    <Icon
-                      name={
-                        openFaqIndex === index ? "ChevronUp" : "ChevronDown"
-                      }
-                      size={20}
-                      className={`text-muted-foreground flex-shrink-0 transition-transform duration-300 ${
-                        openFaqIndex === index ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      openFaqIndex === index
-                        ? "grid-rows-[1fr] opacity-100"
-                        : "grid-rows-[0fr] opacity-0"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {faq.answer}
-                        </p>
+                  {faqs.map((faq, index) => (
+                    <div
+                      key={faq.id || index}
+                      className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleFaq(index)}
+                        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200"
+                      >
+                        <span className="font-semibold text-foreground pr-4">
+                          {faq.question}
+                        </span>
+                        <Icon
+                          name={
+                            openFaqIndex === index
+                              ? "ChevronUp"
+                              : "ChevronDown"
+                          }
+                          size={20}
+                          className={`text-muted-foreground flex-shrink-0 transition-transform duration-300 ${
+                            openFaqIndex === index ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <div
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          openFaqIndex === index
+                            ? "grid-rows-[1fr] opacity-100"
+                            : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {faq.answer}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-                ))}
+                  ))}
               </div>
             )}
-          </div>
-
-          {/* Contact Info */}
-          <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-start space-x-4">
-              <Icon
-                name="Info"
-                size={24}
-                className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1"
-              />
-              <div>
-                <h4 className="text-base font-semibold text-foreground mb-2">
-                  Qo'shimcha yordam kerakmi?
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Agar savollaringizga javob topa olmasangiz yoki qo'shimcha
-                  ma'lumot kerak bo'lsa, bizning qo'llab-quvvatlash xizmatimiz
-                  bilan bog'laning:{" "}
-                  <span className="font-semibold">+998 71 123 45 67</span>
-                  yoki <span className="font-semibold">support@cbu.uz</span>
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </main>

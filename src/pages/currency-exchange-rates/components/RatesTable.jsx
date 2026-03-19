@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "../../../components/AppIcon";
-import Button from "../../../components/ui/Button";
-
 const getFlagImage = (currencyCode) => {
   const flagMap = {
     USD: "https://flagcdn.com/w40/us.png",
@@ -51,7 +49,8 @@ const getFlagImage = (currencyCode) => {
 };
 
 const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const numberLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "uz-UZ";
 
   if (isLoading) {
     return (
@@ -78,7 +77,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
   const displayCurrencies = currencies;
 
   const formatRate = (rate) => {
-    return new Intl.NumberFormat("uz-UZ", {
+    return new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })?.format(rate);
@@ -144,7 +143,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                   />
                   <span>
                     {currency?.change > 0 ? "+" : ""}
-                    {formatRate(currency?.change)} so'm
+                    {formatRate(currency?.change)} {t("currency.unit_uzs")}
                   </span>
                 </div>
               </div>
@@ -183,7 +182,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                 {t("currency.name")}
               </th>
               <th className="text-right p-3 md:p-4 font-semibold text-card-foreground">
-                Kurs
+                {t("currency.rate")}
               </th>
               <th className="text-right p-3 md:p-4 font-semibold text-card-foreground">
                 {t("currency.change")}
@@ -223,7 +222,9 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                     <span className="font-bold text-card-foreground text-lg">
                       {formatRate(currency?.rate)}
                     </span>
-                    <div className="text-xs text-muted-foreground">UZS</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t("currency.code_uzs")}
+                    </div>
                   </div>
                 </td>
                 <td className="p-3 md:p-4 text-right">
@@ -244,7 +245,7 @@ const RatesTable = ({ currencies, isLoading = false, isMobile = false }) => {
                     />
                     <span className="font-medium text-sm">
                       {currency?.change > 0 ? "+" : ""}
-                      {formatRate(currency?.change)} so'm
+                      {formatRate(currency?.change)} {t("currency.unit_uzs")}
                     </span>
                   </div>
                 </td>

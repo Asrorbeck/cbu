@@ -50,7 +50,8 @@ const getFlagImage = (currencyCode) => {
 };
 
 const RatesSummary = ({ currencies, lastUpdate, isLoading = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const numberLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "uz-UZ";
   if (isLoading) {
     return (
       <div className="bg-card border border-border rounded-xl p-6 shadow-md mb-8">
@@ -75,7 +76,7 @@ const RatesSummary = ({ currencies, lastUpdate, isLoading = false }) => {
   };
 
   const formatRate = (rate) => {
-    return new Intl.NumberFormat("uz-UZ", {
+    return new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })?.format(rate);
@@ -133,7 +134,7 @@ const RatesSummary = ({ currencies, lastUpdate, isLoading = false }) => {
               {formatRate(getAverageRate(currency))}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t("currency.average_rate")} (UZS)
+              {t("currency.average_rate")} ({t("currency.code_uzs")})
             </p>
           </div>
         ))}

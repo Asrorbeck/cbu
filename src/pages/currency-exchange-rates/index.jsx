@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
@@ -10,15 +10,15 @@ import ConverterModal from "./components/ConverterModal";
 
 const CurrencyExchangeRates = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState("cards"); // 'cards', 'table'
   const [showConverterModal, setShowConverterModal] = useState(false);
   const [showAllCurrencies, setShowAllCurrencies] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   const [currencies, setCurrencies] = useState([]);
   const [error, setError] = useState(null);
-  const [lastUpdateDate, setLastUpdateDate] = useState(null);
+  /** API sanasi (DD.MM.YYYY) — til almashganda qayta formatlash uchun */
+  const [rateDateParts, setRateDateParts] = useState(null);
 
   // Mock currency data - Extended list
   const mockCurrencies = [
@@ -177,30 +177,18 @@ const CurrencyExchangeRates = () => {
 
       // Get the date from the first currency item (all currencies have the same date)
       const apiDate = data[0]?.Date; // Format: "24.09.2025"
+      const [day, month, year] = (apiDate || "").split(".");
+      const monthNum = parseInt(month, 10);
+      const formattedDate =
+        apiDate && monthNum >= 1 && monthNum <= 12
+          ? `${parseInt(day, 10)} ${t(`currency.month_${monthNum}`)}, ${year}`
+          : "";
 
-      // Parse the date manually: DD.MM.YYYY
-      const [day, month, year] = apiDate.split(".");
-
-      // Month names in Uzbek
-      const monthNames = [
-        "yanvar",
-        "fevral",
-        "mart",
-        "aprel",
-        "may",
-        "iyun",
-        "iyul",
-        "avgust",
-        "sentyabr",
-        "oktyabr",
-        "noyabr",
-        "dekabr",
-      ];
-
-      const monthName = monthNames[parseInt(month) - 1];
-      const formattedDate = `${parseInt(day)} ${monthName}, ${year}`;
-
-      setLastUpdateDate(formattedDate);
+      setRateDateParts(
+        apiDate && day && month && year
+          ? { day, month, year }
+          : null
+      );
 
       // Transform CBU API data to our format
       const transformedCurrencies = data.map((item) => ({
@@ -217,7 +205,8 @@ const CurrencyExchangeRates = () => {
       setCurrencies(transformedCurrencies);
     } catch (err) {
       console.error("Error fetching currencies:", err);
-      setError("Valyuta kurslarini yuklashda xatolik yuz berdi");
+      setError(t("currency.fetch_error"));
+      setRateDateParts(null);
       // Fallback to mock data
       setCurrencies(mockCurrencies);
     } finally {
@@ -225,28 +214,33 @@ const CurrencyExchangeRates = () => {
     }
   };
 
+  const lastUpdateDisplay = useMemo(() => {
+    if (!rateDateParts) return null;
+    const m = parseInt(rateDateParts.month, 10);
+    if (m < 1 || m > 12) return null;
+    return `${parseInt(rateDateParts.day, 10)} ${t(`currency.month_${m}`)}, ${
+      rateDateParts.year
+    }`;
+  }, [rateDateParts, t]);
+
+  const currenciesWithI18nDate = useMemo(() => {
+    if (!lastUpdateDisplay) return currencies;
+    return currencies.map((c) => ({ ...c, lastUpdated: lastUpdateDisplay }));
+  }, [currencies, lastUpdateDisplay]);
+
   // Asosiy valyutalar (faqat 3 ta)
-  const mainCurrencies = currencies.slice(0, 3);
+  const mainCurrencies = currenciesWithI18nDate.slice(0, 3);
 
   // Ko'rsatiladigan valyutalar
-  const displayedCurrencies = showAllCurrencies ? currencies : mainCurrencies;
+  const displayedCurrencies = showAllCurrencies
+    ? currenciesWithI18nDate
+    : mainCurrencies;
+
+  const extraCount = Math.max(0, currenciesWithI18nDate.length - 3);
 
   useEffect(() => {
     fetchCurrencies();
   }, []);
-
-  // Monitor language changes
-  useEffect(() => {
-    const handleLanguageChange = (lng) => {
-      setCurrentLanguage(lng);
-    };
-
-    i18n.on("languageChanged", handleLanguageChange);
-
-    return () => {
-      i18n.off("languageChanged", handleLanguageChange);
-    };
-  }, [i18n]);
 
   const handleBackToDashboard = () => {
     navigate("/home-dashboard");
@@ -270,7 +264,7 @@ const CurrencyExchangeRates = () => {
                 <span className="hidden sm:inline">
                   {t("currency.back_to_dashboard")}
                 </span>
-                <span className="sm:hidden">Orqaga</span>
+                <span className="sm:hidden">{t("currency.back")}</span>
               </Button>
             </div>
 
@@ -309,8 +303,7 @@ const CurrencyExchangeRates = () => {
                   className="w-full sm:w-auto min-w-[100px]"
                   disabled={isLoading}
                 >
-                  <span className="hidden sm:inline">Yangilash</span>
-                  <span className="sm:hidden">Yangilash</span>
+                  <span>{t("currency.refresh")}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -323,7 +316,7 @@ const CurrencyExchangeRates = () => {
                   <span className="hidden sm:inline">
                     {t("currency.calculator")}
                   </span>
-                  <span className="sm:hidden">Konverter</span>
+                  <span className="sm:hidden">{t("currency.converter_short")}</span>
                 </Button>
               </div>
             </div>
@@ -331,18 +324,15 @@ const CurrencyExchangeRates = () => {
             {/* Title Section - Mobile Optimized */}
             <div className="text-center mb-6 md:mb-8">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 md:mb-4 px-4">
-                {t("currency.title") || "Valyuta kurslari"}
+                {t("currency.title")}
               </h1>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-2 px-4">
-                {t("currency.subtitle") ||
-                  "O'zbekiston Markaziy bankining rasmiy kunlik kurslari"}
+                {t("currency.subtitle")}
               </p>
               <div className="flex items-center justify-center space-x-2 text-xs sm:text-sm text-muted-foreground">
                 <Icon name="Clock" size={14} className="md:w-4 md:h-4" />
                 <span>
-                  {lastUpdateDate ||
-                    t("currency.last_update") ||
-                    "Yuklanmoqda..."}
+                  {lastUpdateDisplay || t("currency.loading")}
                 </span>
               </div>
             </div>
@@ -368,7 +358,7 @@ const CurrencyExchangeRates = () => {
             />
 
             {/* Show More Button - Mobile */}
-            {!showAllCurrencies && currencies.length > 3 && (
+            {!showAllCurrencies && extraCount > 0 && (
               <div className="mt-6 text-center">
                 <Button
                   variant="outline"
@@ -376,7 +366,7 @@ const CurrencyExchangeRates = () => {
                   className="w-full"
                 >
                   <Icon name="ChevronDown" size={16} className="mr-2" />
-                  Ko'proq ko'rish ({currencies.length - 3} ta qo'shimcha)
+                  {t("currency.show_more_extra", { count: extraCount })}
                 </Button>
               </div>
             )}
@@ -390,7 +380,7 @@ const CurrencyExchangeRates = () => {
                   className="w-full"
                 >
                   <Icon name="ChevronUp" size={16} className="mr-2" />
-                  Kamroq ko'rish
+                  {t("currency.show_less")}
                 </Button>
               </div>
             )}
@@ -416,7 +406,7 @@ const CurrencyExchangeRates = () => {
             )}
 
             {/* Show More Button - Desktop */}
-            {!showAllCurrencies && currencies.length > 3 && (
+            {!showAllCurrencies && extraCount > 0 && (
               <div className="mt-8 text-center">
                 <Button
                   variant="outline"
@@ -424,8 +414,9 @@ const CurrencyExchangeRates = () => {
                   className="px-8"
                 >
                   <Icon name="ChevronDown" size={16} className="mr-2" />
-                  Ko'proq ko'rish ({currencies.length - 3} ta qo'shimcha
-                  valyuta)
+                  {t("currency.show_more_extra_desktop", {
+                    count: extraCount,
+                  })}
                 </Button>
               </div>
             )}
@@ -439,7 +430,7 @@ const CurrencyExchangeRates = () => {
                   className="px-8"
                 >
                   <Icon name="ChevronUp" size={16} className="mr-2" />
-                  Kamroq ko'rish
+                  {t("currency.show_less")}
                 </Button>
               </div>
             )}
@@ -490,7 +481,7 @@ const CurrencyExchangeRates = () => {
       <ConverterModal
         isOpen={showConverterModal}
         onClose={() => setShowConverterModal(false)}
-        currencies={currencies}
+        currencies={currenciesWithI18nDate}
       />
 
       {/* Bottom navigation spacing */}

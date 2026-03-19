@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
@@ -8,6 +8,9 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Icon from "../../components/AppIcon";
 import { spellingReportsAPI } from "../../services/api";
+
+const LES = "submissions.language_error_submission";
+const MIN_DESCRIPTION_LENGTH = 20;
 
 const LanguageErrorSubmission = () => {
   const navigate = useNavigate();
@@ -100,7 +103,7 @@ const LanguageErrorSubmission = () => {
       const maxSize = 50 * 1024 * 1024; // 50 MB
       
       if (file.size > maxSize) {
-        toast.error("Fayl hajmi 50 MB dan katta bo'lishi mumkin emas");
+        toast.error(t(`${LES}.toast_file_too_large`));
         return;
       }
       
@@ -124,14 +127,14 @@ const LanguageErrorSubmission = () => {
     return (
       formData.fullName.trim() !== "" &&
       phoneDigits.length === 9 &&
-      formData.description.trim().length >= 20
+      formData.description.trim().length >= MIN_DESCRIPTION_LENGTH
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid()) {
-      toast.error("Iltimos, barcha maydonlarni to'ldiring");
+      toast.error(t(`${LES}.toast_fill_all`));
       return;
     }
 
@@ -171,9 +174,9 @@ const LanguageErrorSubmission = () => {
       const submission = {
         id: refNumber,
         type: "language-error",
-        typeLabel: "Til xatolari",
+        typeLabel: t(`${LES}.storage_type_label`),
         ...formData,
-        status: "Ko'rib chiqilmoqda",
+        status: t(`${LES}.storage_status_pending`),
         submittedAt: new Date().toISOString(),
       };
 
@@ -183,7 +186,7 @@ const LanguageErrorSubmission = () => {
       existingSubmissions.push(submission);
       localStorage.setItem("submissions", JSON.stringify(existingSubmissions));
 
-      toast.success("Murojaat muvaffaqiyatli yuborildi!");
+      toast.success(t(`${LES}.toast_success`));
       setShowSuccess(true);
 
       setFormData({
@@ -196,9 +199,7 @@ const LanguageErrorSubmission = () => {
       setSelectedFile(null);
     } catch (error) {
       console.error("Error submitting:", error);
-      toast.error(
-        "Murojaat yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-      );
+      toast.error(t(`${LES}.toast_submit_error`));
     } finally {
       setIsSubmitting(false);
     }
@@ -216,11 +217,20 @@ const LanguageErrorSubmission = () => {
     setSelectedFile(null);
   };
 
+  const fallbackFaqs = useMemo(
+    () =>
+      [1, 2, 3, 4].map((n) => ({
+        question: t(`${LES}.fallback_faq_${n}_q`),
+        answer: t(`${LES}.fallback_faq_${n}_a`),
+      })),
+    [t]
+  );
+
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
-          <title>Xabar yuborildi - Markaziy Bank</title>
+          <title>{t(`${LES}.meta_title_success`)}</title>
         </Helmet>
         <Navbar />
         <main className="pt-20 pb-12">
@@ -236,24 +246,21 @@ const LanguageErrorSubmission = () => {
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-2xl font-bold text-foreground">
-                    Murojaat muvaffaqiyatli yuborildi!
+                    {t(`${LES}.success_title`)}
                   </h2>
                   <p className="text-muted-foreground">
-                    Sizning murojaatingiz qabul qilindi va tezda ko'rib chiqiladi.
-                    Murojaat holatini profilingizdagi "Arizalarim" bo'limidan
-                    kuzatishingiz mumkin.
+                    {t(`${LES}.success_message`)}
                   </p>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-muted-foreground mb-3 font-semibold">
-                    Murojaat raqami
+                    {t(`${LES}.reference_label`)}
                   </p>
                   <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 tracking-wider font-mono">
                     {referenceNumber}
                   </p>
                   <p className="text-xs text-muted-foreground mt-3">
-                    Bu raqamni saqlang. Murojaat holatini tekshirish uchun
-                    foydalaning.
+                    {t(`${LES}.reference_hint`)}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
@@ -264,10 +271,10 @@ const LanguageErrorSubmission = () => {
                     iconPosition="left"
                     className="flex-1"
                   >
-                    Orqaga
+                    {t(`${LES}.back`)}
                   </Button>
                   <Button onClick={handleBackToDashboard} className="flex-1">
-                    Bosh sahifa
+                    {t(`${LES}.back_to_dashboard`)}
                   </Button>
                 </div>
               </div>
@@ -281,7 +288,7 @@ const LanguageErrorSubmission = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Til xatolari haqida xabar berish - Markaziy Bank</title>
+        <title>{t(`${LES}.meta_title_form`)}</title>
       </Helmet>
       <Navbar />
       <main className="pt-20 pb-12">
@@ -295,17 +302,17 @@ const LanguageErrorSubmission = () => {
               iconPosition="left"
               className="text-muted-foreground hover:text-foreground"
             >
-              Orqaga
+              {t(`${LES}.back`)}
             </Button>
           </div>
 
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              {t("submissions.language_error_submission.page_title")}
+              {t(`${LES}.page_title`)}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              {t("submissions.language_error_submission.subtitle")}
+              {t(`${LES}.subtitle`)}
             </p>
           </div>
 
@@ -314,22 +321,22 @@ const LanguageErrorSubmission = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Full Name */}
               <Input
-                label="F.I.SH (To'liq)"
+                label={t(`${LES}.full_name_label`)}
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                placeholder="Masalan: Karimov Karim Karimovich"
+                placeholder={t(`${LES}.full_name_placeholder`)}
                 required
               />
 
               {/* Phone Number */}
               <Input
-                label={t("submissions.language_error_submission.phone_label")}
+                label={t(`${LES}.phone_label`)}
                 name="phone"
                 type="tel"
                 value={formData.phone}
                 onChange={handleInputChange}
-                placeholder="+998 XX XXX XX XX"
+                placeholder={t(`${LES}.phone_placeholder`)}
                 required
                 maxLength={17}
               />
@@ -337,7 +344,7 @@ const LanguageErrorSubmission = () => {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Xatolik haqida batafsil ma'lumot{" "}
+                  {t(`${LES}.description_label`)}{" "}
                   <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -346,39 +353,44 @@ const LanguageErrorSubmission = () => {
                   onChange={handleInputChange}
                   rows={8}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-foreground focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200"
-                  placeholder="Xatolik qayerda topilgan, qanday xatolik ekanligi va to'g'ri variantini yozing..."
+                  placeholder={t(`${LES}.description_placeholder`)}
                   required
                 />
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-xs text-muted-foreground">
-                    Minimum 20 belgi kerak
+                    {t(`${LES}.min_chars_hint`, {
+                      min: MIN_DESCRIPTION_LENGTH,
+                    })}
                   </p>
                   <p
                     className={`text-xs ${
-                      formData.description.length >= 20
+                      formData.description.length >= MIN_DESCRIPTION_LENGTH
                         ? "text-green-600 dark:text-green-400"
                         : "text-muted-foreground"
                     }`}
                   >
-                    {formData.description.length} / 20
+                    {t(`${LES}.char_counter`, {
+                      current: formData.description.length,
+                      min: MIN_DESCRIPTION_LENGTH,
+                    })}
                   </p>
                 </div>
               </div>
 
               {/* Source URL */}
               <Input
-                label="Manba havolasi (URL)"
+                label={t(`${LES}.source_url_label`)}
                 name="sourceUrl"
                 type="url"
                 value={formData.sourceUrl}
                 onChange={handleInputChange}
-                placeholder="https://..."
+                placeholder={t(`${LES}.source_url_placeholder`)}
               />
 
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Fayl yuklash (ixtiyoriy)
+                  {t(`${LES}.file_upload_label`)}
                 </label>
                 <div className="mt-1">
                   {selectedFile ? (
@@ -408,7 +420,7 @@ const LanguageErrorSubmission = () => {
                         iconName="X"
                         className="text-red-600 hover:text-red-700"
                       >
-                        Olib tashlash
+                        {t(`${LES}.file_remove`)}
                       </Button>
                     </div>
                   ) : (
@@ -420,11 +432,13 @@ const LanguageErrorSubmission = () => {
                           className="text-gray-400 dark:text-gray-500 mb-2"
                         />
                         <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-semibold">Fayl yuklash</span> yoki
-                          bu yerga sudrab tashlang
+                          <span className="font-semibold">
+                            {t(`${LES}.file_upload_action`)}
+                          </span>{" "}
+                          {t(`${LES}.file_upload_or_drag`)}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          PNG, JPG, PDF, HEIC, MP3, MP4, DNG, MOV va boshqalar (MAX. 50MB)
+                          {t(`${LES}.file_formats_hint`)}
                         </p>
                       </div>
                       <input
@@ -447,9 +461,7 @@ const LanguageErrorSubmission = () => {
                     className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Iltimos, xatolikni batafsil va aniq tasvirlab bering. Qayerda
-                    topilgani, qanday xatolik ekanligi va to'g'ri variantini
-                    ko'rsating.
+                    {t(`${LES}.info_box_text`)}
                   </p>
                 </div>
               </div>
@@ -464,7 +476,7 @@ const LanguageErrorSubmission = () => {
                   iconPosition="left"
                   className="flex-1"
                 >
-                  Orqaga
+                  {t(`${LES}.back`)}
                 </Button>
                 <Button
                   type="submit"
@@ -473,7 +485,9 @@ const LanguageErrorSubmission = () => {
                   iconPosition="left"
                   className="flex-1"
                 >
-                  {isSubmitting ? "Yuborilmoqda..." : "Murojaatni yuborish"}
+                  {isSubmitting
+                    ? t(`${LES}.submitting`)
+                    : t(`${LES}.submit`)}
                 </Button>
               </div>
             </form>
@@ -483,36 +497,15 @@ const LanguageErrorSubmission = () => {
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-slate-700">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Tez-tez so'raladigan savollar
+                {t(`${LES}.faq_title`)}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {t("submissions.language_error_submission.faq_subtitle")}
+                {t(`${LES}.faq_subtitle`)}
               </p>
             </div>
 
             <div className="space-y-3">
-              {[
-                {
-                  question: "Qanday xatoliklarni yuborishim mumkin?",
-                  answer:
-                    "Siz tashkilot saytlarida, xabarlarida, hujjatlarida yoki boshqa harakatlarida topilgan o'zbek tilidagi imlo, grammatika, terminologiya va boshqa til xatolarini yuborishingiz mumkin.",
-                },
-                {
-                  question: "Murojaatim qancha muddat ichida ko'rib chiqiladi?",
-                  answer:
-                    "Til xatolari haqidagi murojaatlar 3-5 ish kuni ichida ko'rib chiqiladi. Xatolik tasdiqlangandan so'ng, tegishli bo'limlarga yuboriladi va tuzatiladi.",
-                },
-                {
-                  question: "Fayl yuklash majburiymi?",
-                  answer:
-                    "Yo'q, fayl yuklash ixtiyoriy. Lekin agar xatolikni ko'rsatadigan skrinshot yoki hujjat bo'lsa, uni yuklashingiz tavsiya etiladi.",
-                },
-                {
-                  question: "Qanday fayl formatlari qabul qilinadi?",
-                  answer:
-                    "Rasmlar (PNG, JPG) va hujjatlar (PDF) formatida fayllarni yuklashingiz mumkin. Maksimal fayl hajmi 10MB.",
-                },
-              ].map((faq, index) => (
+              {fallbackFaqs.map((faq, index) => (
                 <div
                   key={index}
                   className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden"

@@ -50,7 +50,8 @@ const getFlagImage = (currencyCode) => {
 };
 
 const CurrencyCard = ({ currency, isLoading = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const numberLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "uz-UZ";
 
   if (isLoading) {
     return (
@@ -81,7 +82,7 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
   }
 
   const formatRate = (rate) => {
-    return new Intl.NumberFormat("uz-UZ", {
+    return new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })?.format(rate);
@@ -122,11 +123,15 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-muted-foreground mb-1">Kurs</div>
+          <div className="text-xs text-muted-foreground mb-1">
+            {t("currency.rate")}
+          </div>
           <div className="text-2xl font-bold text-card-foreground">
             {formatRate(currency?.rate)}
           </div>
-          <div className="text-xs text-muted-foreground">UZS</div>
+          <div className="text-xs text-muted-foreground">
+            {t("currency.code_uzs")}
+          </div>
         </div>
       </div>
 
@@ -145,15 +150,15 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
             <Icon name={getRateChangeIcon(currency?.change)} size={16} />
             <span className="text-sm font-medium">
               {currency?.change > 0
-                ? "Oshdi"
+                ? t("currency.change_up")
                 : currency?.change < 0
-                ? "Kamaydi"
-                : "O'zgarmadi"}
+                ? t("currency.change_down")
+                : t("currency.change_same")}
             </span>
           </div>
           <span className="font-semibold text-base">
             {currency?.change > 0 ? "+" : ""}
-            {formatRate(currency?.change)} so'm
+            {formatRate(currency?.change)} {t("currency.unit_uzs")}
           </span>
         </div>
       </div>
@@ -163,7 +168,7 @@ const CurrencyCard = ({ currency, isLoading = false }) => {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center space-x-1">
             <Icon name="Clock" size={12} />
-            <span>Yangilangan:</span>
+            <span>{t("currency.updated_prefix")}</span>
           </div>
           <span className="font-medium">{currency?.lastUpdated}</span>
         </div>
