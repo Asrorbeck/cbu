@@ -58,7 +58,7 @@ const VacancyContactFixed = () => {
     >
       <PhoneIcon />
       <span className="hidden sm:inline">Murojaat uchun tel:</span>
-      <span className="font-medium tabular-nums">71 212 62 02</span>
+      <span className="font-medium tabular-nums">71 212 60 91</span>
     </a>
   );
 };
