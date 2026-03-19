@@ -266,6 +266,10 @@ const resources = {
         submissions: "Murojaatlar",
         profile: "Profil",
       },
+      vacancy_contact: {
+        phone_label: "Murojaat uchun tel:",
+        phone_aria_label: "Murojaat uchun telefon: {{phone}}",
+      },
       profile: {
         title: "Profil",
         subtitle: "Shaxsiy ma'lumotlar va sozlamalar",
@@ -1056,6 +1060,10 @@ const resources = {
         submissions: "Мурожаатлар",
         profile: "Профил",
       },
+      vacancy_contact: {
+        phone_label: "Мурожаат учун тел:",
+        phone_aria_label: "Мурожаат учун телефон: {{phone}}",
+      },
       profile: {
         title: "Профил",
         subtitle: "Шахсий маълумотлар ва созламалар",
@@ -1842,6 +1850,10 @@ const resources = {
         feedback: "Обратная связь",
         submissions: "Обращения",
         profile: "Профиль",
+      },
+      vacancy_contact: {
+        phone_label: "Тел. для обращений:",
+        phone_aria_label: "Телефон для обращений: {{phone}}",
       },
       profile: {
         title: "Профиль",

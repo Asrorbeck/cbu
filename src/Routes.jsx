@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import BottomNavigation from "components/ui/BottomNavigation";
@@ -47,18 +48,23 @@ const PhoneIcon = () => (
   </svg>
 );
 
+const VACANCY_CONTACT_PHONE_DISPLAY = "71 212 60 91";
+
 const VacancyContactFixed = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   if (!isVacancyPath(location.pathname)) return null;
   return (
     <a
       href="tel:712126202"
       className="fixed bottom-24 right-4 z-40 flex min-w-0 items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-2.5 py-2 text-xs text-muted-foreground shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800/95 dark:hover:border-slate-500 dark:hover:bg-slate-700/95 dark:hover:text-foreground sm:px-3"
-      aria-label="Murojaat uchun telefon: 71 212 62 02"
+      aria-label={t("vacancy_contact.phone_aria_label", {
+        phone: VACANCY_CONTACT_PHONE_DISPLAY,
+      })}
     >
       <PhoneIcon />
-      <span className="hidden sm:inline">Murojaat uchun tel:</span>
-      <span className="font-medium tabular-nums">71 212 60 91</span>
+      <span className="hidden sm:inline">{t("vacancy_contact.phone_label")}</span>
+      <span className="font-medium tabular-nums">{VACANCY_CONTACT_PHONE_DISPLAY}</span>
     </a>
   );
 };
