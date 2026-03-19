@@ -63,17 +63,17 @@ const ProfileActions = () => {
         navigate("/applications");
       },
     },
-    {
-      id: "help",
-      icon: "HelpCircle",
-      title: t("profile.actions.help"),
-      description: t("profile.actions.help_desc"),
-      color: "blue",
-      onClick: () => {
-        // Help functionality
-        console.log("Help clicked");
-      },
-    },
+    // {
+    //   id: "help",
+    //   icon: "HelpCircle",
+    //   title: t("profile.actions.help"),
+    //   description: t("profile.actions.help_desc"),
+    //   color: "blue",
+    //   onClick: () => {
+    //     // Help functionality
+    //     console.log("Help clicked");
+    //   },
+    // },
   ];
 
   const getColorClasses = (color) => {

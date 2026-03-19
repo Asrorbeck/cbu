@@ -11,6 +11,8 @@ import {
   myApplicationsAPI,
 } from "../../services/api";
 
+const APP = "applications_page";
+
 const Applications = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -82,8 +84,8 @@ const Applications = () => {
               return {
                 ...app,
                 applicationType: "job",
-                vacancyTitle: "Noma'lum vakansiya",
-                departmentName: "Noma'lum",
+                vacancyTitle: t(`${APP}.unknown_vacancy`),
+                departmentName: t(`${APP}.unknown_department`),
                 submittedAt: app.created_at || app.submittedAt,
                 status: app.status || "pending",
               };
@@ -95,7 +97,7 @@ const Applications = () => {
               jobData.title_uz ||
               jobData.title_cr ||
               jobData.title_ru ||
-              "Noma'lum vakansiya";
+              t(`${APP}.unknown_vacancy`);
 
             // Get department name and management name
             let departmentName = "";
@@ -156,8 +158,8 @@ const Applications = () => {
             return {
               ...app,
               applicationType: "job",
-              vacancyTitle: "Noma'lum vakansiya",
-              departmentName: "Noma'lum",
+              vacancyTitle: t(`${APP}.unknown_vacancy`),
+              departmentName: t(`${APP}.unknown_department`),
               submittedAt: app.created_at || app.submittedAt,
               status: app.status || "pending",
             };
@@ -170,16 +172,15 @@ const Applications = () => {
           applicationType: "submission",
           type:
             report.summary?.toLowerCase().includes("korruptsiya") ||
-            report.summary?.toLowerCase().includes("коррупция") ||
             report.summary?.toLowerCase().includes("коррупция")
               ? "corruption"
               : "consumer_rights",
           typeLabel:
             report.summary?.toLowerCase().includes("korruptsiya") ||
             report.summary?.toLowerCase().includes("коррупция")
-              ? "Korruptsiya"
-              : "Iste'molchilar huquqlari",
-          subject: report.summary || "Murojaat",
+              ? t(`${APP}.label_corruption`)
+              : t(`${APP}.label_consumer_rights`),
+          subject: report.summary || t(`${APP}.subject_default`),
           submittedAt: report.created_at,
           status: report.is_archived ? "archived" : "pending",
         }));
@@ -189,8 +190,8 @@ const Applications = () => {
           ...appeal,
           applicationType: "submission",
           type: "appeal",
-          typeLabel: "Murojaat",
-          subject: appeal.subject || "Murojaat",
+          typeLabel: t(`${APP}.label_appeal`),
+          subject: appeal.subject || t(`${APP}.subject_default`),
           submittedAt: appeal.created_at,
           status: appeal.status || "pending",
         }));
@@ -200,8 +201,9 @@ const Applications = () => {
           ...report,
           applicationType: "submission",
           type: "spelling",
-          typeLabel: "Orfografik xatolar",
-          subject: report.description || "Orfografik xato haqida murojaat",
+          typeLabel: t(`${APP}.label_spelling`),
+          subject:
+            report.description || t(`${APP}.subject_spelling_default`),
           submittedAt: report.created_at,
           status:
             report.status === "new" ? "pending" : report.status || "pending",
@@ -245,13 +247,18 @@ const Applications = () => {
     };
 
     loadApplications();
+    // i18n.language — til o‘zgarganda API dan kelgan sarlavhalar t() bilan qayta ishlanadi
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t() closure yangilanadi
   }, [type, i18n.language]);
 
   const getStatusColor = (status) => {
+    const reviewing = t(`${APP}.status_reviewing`);
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
+      case reviewing:
       case "NEW":
+      case "new":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "approved":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
@@ -260,27 +267,35 @@ const Applications = () => {
         return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
       case "TEST_SCHEDULED":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+      case "archived":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
   };
 
   const getStatusText = (status) => {
-    if (status === "Ko'rib chiqilmoqda") return status;
+    const reviewing = t(`${APP}.status_reviewing`);
+    if (status === "Ko'rib chiqilmoqda" || status === reviewing) {
+      return reviewing;
+    }
 
     switch (status) {
       case "pending":
       case "NEW":
-        return "Kutilmoqda";
+      case "new":
+        return t(`${APP}.status_pending`);
       case "approved":
-        return "Qabul qilindi";
+        return t(`${APP}.status_approved`);
       case "rejected":
       case "REJECTED_DOCS":
-        return "Rad etilgan";
+        return t(`${APP}.status_rejected`);
       case "TEST_SCHEDULED":
-        return "Testga qabul qilindi";
+        return t(`${APP}.status_test_scheduled`);
+      case "archived":
+        return t(`${APP}.status_archived`);
       default:
-        return status || "Noma'lum";
+        return status || t(`${APP}.status_unknown`);
     }
   };
 
@@ -295,13 +310,13 @@ const Applications = () => {
   const getTypeTitle = (typeName) => {
     switch (typeName) {
       case "jobs":
-        return "Ish arizalari";
+        return t(`${APP}.type_jobs`);
       case "reports":
-        return "Shikoyatlar";
+        return t(`${APP}.type_reports`);
       case "appeals":
-        return "Murojaatlar";
+        return t(`${APP}.type_appeals`);
       case "spelling":
-        return "Orfografik xatolar";
+        return t(`${APP}.type_spelling`);
       default:
         return "";
     }
@@ -338,10 +353,13 @@ const Applications = () => {
   };
 
   const getStatusIcon = (status) => {
+    const reviewing = t(`${APP}.status_reviewing`);
     switch (status) {
       case "pending":
       case "Ko'rib chiqilmoqda":
+      case reviewing:
       case "NEW":
+      case "new":
         return "Clock";
       case "approved":
         return "CheckCircle";
@@ -447,12 +465,14 @@ const Applications = () => {
           <div className="mb-8">
             <div className="text-center">
               <h1 className="text-3xl font-bold text-foreground mb-3">
-                {type ? getTypeTitle(type) : "Mening arizalarim"}
+                {type ? getTypeTitle(type) : t(`${APP}.page_title_all`)}
               </h1>
               <p className="text-muted-foreground">
                 {type
-                  ? `${getTypeTitle(type)} ro'yxati`
-                  : "Barcha yuborilgan ariza va murojaatlaringizni ko'ring"}
+                  ? t(`${APP}.page_subtitle_list`, {
+                      type: getTypeTitle(type),
+                    })
+                  : t(`${APP}.page_subtitle_all`)}
               </p>
             </div>
           </div>
@@ -472,10 +492,12 @@ const Applications = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-foreground mb-1">
-                        Ish arizalari
+                        {t(`${APP}.type_jobs`)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {applicationsData.apply_jobs.length} ta ariza
+                        {t(`${APP}.count_jobs`, {
+                          count: applicationsData.apply_jobs.length,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -501,10 +523,12 @@ const Applications = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-foreground mb-1">
-                        Shikoyatlar
+                        {t(`${APP}.type_reports`)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {applicationsData.reports.length} ta shikoyat
+                        {t(`${APP}.count_reports`, {
+                          count: applicationsData.reports.length,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -530,10 +554,12 @@ const Applications = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-foreground mb-1">
-                        Murojaatlar
+                        {t(`${APP}.type_appeals`)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {applicationsData.appeals.length} ta murojaat
+                        {t(`${APP}.count_appeals`, {
+                          count: applicationsData.appeals.length,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -559,10 +585,12 @@ const Applications = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-foreground mb-1">
-                        Orfografik xatolar
+                        {t(`${APP}.type_spelling`)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {applicationsData.spelling_reports.length} ta xato
+                        {t(`${APP}.count_spelling`, {
+                          count: applicationsData.spelling_reports.length,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -586,7 +614,7 @@ const Applications = () => {
                 iconPosition="left"
                 className="text-muted-foreground hover:text-foreground"
               >
-                Barcha arizalarga qaytish
+                {t(`${APP}.back_to_all`)}
               </Button>
             </div>
           )}
@@ -602,11 +630,10 @@ const Applications = () => {
                     className="text-muted-foreground mx-auto mb-4"
                   />
                   <h3 className="text-xl font-semibold text-card-foreground mb-2">
-                    {getTypeTitle(type)} topilmadi
+                    {t(`${APP}.empty_title`, { type: getTypeTitle(type) })}
                   </h3>
                   <p className="text-muted-foreground">
-                    Siz hali hech qanday {getTypeTitle(type).toLowerCase()}{" "}
-                    yubormagansiz
+                    {t(`${APP}.empty_subtitle`)}
                   </p>
                   {type === "jobs" && (
                     <div className="mt-6">
@@ -615,7 +642,7 @@ const Applications = () => {
                         className="inline-flex items-center space-x-2"
                       >
                         <Icon name="Plus" size={16} />
-                        <span>Ish qidirish</span>
+                        <span>{t(`${APP}.find_jobs`)}</span>
                       </Button>
                     </div>
                   )}
@@ -631,7 +658,7 @@ const Applications = () => {
                         {applications.length}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Jami arizalar
+                        {t(`${APP}.stat_total`)}
                       </div>
                     </div>
                     <div className="bg-card border border-border rounded-xl p-4 text-center">
@@ -647,7 +674,7 @@ const Applications = () => {
                         }
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Kutilmoqda
+                        {t(`${APP}.stat_pending`)}
                       </div>
                     </div>
                     <div className="bg-card border border-border rounded-xl p-4 text-center">
@@ -661,7 +688,7 @@ const Applications = () => {
                         }
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Qabul qilingan
+                        {t(`${APP}.stat_accepted`)}
                       </div>
                     </div>
                   </div>
@@ -703,7 +730,9 @@ const Applications = () => {
                               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {application.applicationType === "job"
                                   ? application.departmentName
-                                  : `Murojaat raqami: ${application.id}`}
+                                  : t(`${APP}.ref_label`, {
+                                      id: application.id,
+                                    })}
                               </p>
                             </div>
 
@@ -723,7 +752,7 @@ const Applications = () => {
                           <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Holati:
+                                {t(`${APP}.status_label`)}
                               </span>
                               <div
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${getStatusColor(

@@ -6,7 +6,8 @@ import Button from "../../../components/ui/Button";
 
 const HeroSection = ({ currencies = [], lastUpdateDate }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRuBankInfoOrder = i18n.language === "ru";
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Quick action services
@@ -249,12 +250,25 @@ const HeroSection = ({ currencies = [], lastUpdateDate }) => {
                   />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t("home.bank_info.country")}
-                  </div>
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
-                    {t("home.bank_info.bank_name")}
-                  </div>
+                  {isRuBankInfoOrder ? (
+                    <>
+                      <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {t("home.bank_info.bank_name")}
+                      </div>
+                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wider">
+                        {t("home.bank_info.country")}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t("home.bank_info.country")}
+                      </div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {t("home.bank_info.bank_name")}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
