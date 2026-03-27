@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import Routes from "./Routes";
 import migrateDates from "./utils/migrateDates";
@@ -6,6 +6,9 @@ import { chatsAPI } from "./services/api";
 import SnowEffect from "./components/SnowEffect";
 
 function App() {
+  const [telegramUserId, setTelegramUserId] = useState(null);
+  const [telegramCheckDone, setTelegramCheckDone] = useState(false);
+
   // Run date migration on app load (only once per version)
   useEffect(() => {
     const MIGRATION_VERSION = "1.0";
@@ -46,6 +49,7 @@ function App() {
 
             // Only send if we have required user_id
             if (userData.user_id) {
+              setTelegramUserId(userData.user_id);
               try {
                 await chatsAPI.registerUser(userData);
                 console.log("User registered successfully:", userData);
@@ -54,6 +58,7 @@ function App() {
                 // Don't show error to user, just log it
               }
             }
+            setTelegramCheckDone(true);
             return;
           }
 
@@ -66,23 +71,13 @@ function App() {
             // Here you could parse initData if needed
           }
         }
-
-        // If Telegram Web App is not available, use default user
-        console.log("Telegram WebApp not available, registering default user");
-        const defaultUserData = {
-          user_id: 905770018,
-          username: null,
-          phone_number: null,
-        };
-
-        try {
-          await chatsAPI.registerUser(defaultUserData);
-          console.log("Default user registered successfully:", defaultUserData);
-        } catch (error) {
-          console.error("Error registering default user:", error);
-        }
+        // No Telegram user in current session
+        setTelegramUserId(null);
+        setTelegramCheckDone(true);
       } catch (error) {
         console.error("Error in registerTelegramUser:", error);
+        setTelegramUserId(null);
+        setTelegramCheckDone(true);
       }
     };
 
@@ -95,7 +90,10 @@ function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       {/* <SnowEffect /> */}
-      <Routes />
+      <Routes
+        telegramUserId={telegramUserId}
+        telegramCheckDone={telegramCheckDone}
+      />
       <Toaster
         position="top-center"
         reverseOrder={false}

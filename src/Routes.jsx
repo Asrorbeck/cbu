@@ -23,12 +23,31 @@ const VACANCY_PATHS = [
 const isVacancyPath = (pathname) =>
   VACANCY_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
+const TELEGRAM_OPTIONAL_PATHS = ["/test"];
+const isTelegramOptionalPath = (pathname) =>
+  TELEGRAM_OPTIONAL_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+
 const ConditionalBottomNavigation = () => {
   const location = useLocation();
   if (location.pathname === "/test" || location.pathname.startsWith("/test/")) {
     return null;
   }
   return <BottomNavigation />;
+};
+
+const BottomNavigationGate = ({ telegramUserId, telegramCheckDone }) => {
+  const location = useLocation();
+  const isBlockedByTelegramGuard =
+    !isTelegramOptionalPath(location.pathname) &&
+    (!telegramCheckDone || !telegramUserId);
+
+  if (isBlockedByTelegramGuard) {
+    return null;
+  }
+
+  return <ConditionalBottomNavigation />;
 };
 
 const PhoneIcon = () => (
@@ -92,94 +111,142 @@ import EditCorruption from "./pages/edit-corruption";
 import VacancyTest from "./pages/vacancy-test";
 import Surveys from "./pages/surveys";
 
-const Routes = () => {
+const TelegramAccessGuard = ({
+  telegramUserId,
+  telegramCheckDone,
+  children,
+}) => {
+  const location = useLocation();
+
+  if (isTelegramOptionalPath(location.pathname)) {
+    return children;
+  }
+
+  if (!telegramCheckDone) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!telegramUserId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full rounded-xl border border-border bg-card p-6 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            Kirish vaqtincha cheklangan
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Sahifani ochish uchun Telegram WebApp ma'lumotlari talab qilinadi.
+            Ba'zi qurilmalarda (masalan, korporativ yoki cheklangan tarmoqlarda)
+            Telegram ushbu ma'lumotlarni uzata olmasligi mumkin. Iloji bo'lsa,
+            mobil telefondagi Telegram ilovasi orqali qayta urinib ko'ring.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+};
+
+const Routes = ({ telegramUserId, telegramCheckDone }) => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
-        <RouterRoutes>
-          {/* Define your route here */}
-          <Route path="/" element={<HomeDashboard />} />
-          <Route path="/home-dashboard" element={<HomeDashboard />} />
-          <Route path="/news-articles-hub" element={<NewsArticlesHub />} />
-          <Route path="/submissions" element={<FeedbackSubmission />} />
-          <Route path="/departments" element={<JobVacanciesBrowser />} />
-          <Route
-            path="/departments/central"
-            element={<CentralDepartmentsPage />}
-          />
-          <Route path="/departments/regional" element={<RegionsPage />} />
-          <Route
-            path="/departments/central/:departmentId"
-            element={<DepartmentPage />}
-          />
-          <Route
-            path="/departments/:departmentId"
-            element={<DepartmentPage />}
-          />
-          <Route
-            path="/departments/:departmentId/:vacancyId"
-            element={<VacancyDetailPage />}
-          />
-          <Route
-            path="/departments/:departmentId/:vacancyId/form"
-            element={<JobApplicationForm />}
-          />
-          <Route
-            path="/region/:regionName/:vacancyId/form"
-            element={<JobApplicationForm />}
-          />
-          <Route path="/region" element={<RegionsPage />} />
-          <Route path="/region/:regionName" element={<RegionPage />} />
-          <Route
-            path="/region/:regionName/:vacancyId"
-            element={<VacancyDetailPage />}
-          />
-          <Route path="/test" element={<VacancyTest />} />
-          <Route path="/test/:test_id/:test_token" element={<VacancyTest />} />
-          <Route
-            path="/departments/:departmentId/:vacancyId/terms-and-conditions"
-            element={<TermsAndConditionsPage />}
-          />
-          <Route
-            path="/region/:regionName/:vacancyId/terms-and-conditions"
-            element={<TermsAndConditionsPage />}
-          />
-          <Route path="/vacancy/:vacancyId" element={<VacancyDetailPage />} />
-          <Route
-            path="/terms-and-conditions"
-            element={<TermsAndConditionsPage />}
-          />
-          <Route
-            path="/currency-exchange-rates"
-            element={<CurrencyExchangeRates />}
-          />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/applications/:type" element={<Applications />} />
-          <Route
-            path="/applications/:type/:id"
-            element={<ApplicationDetail />}
-          />
-          <Route
-            path="/submissions/consumer-rights"
-            element={<ConsumerRightsSubmission />}
-          />
-          <Route
-            path="/submissions/corruption"
-            element={<CorruptionSubmission />}
-          />
-          <Route path="/check-license" element={<CheckLicense />} />
-          <Route path="/submit-complaint" element={<SubmitComplaint />} />
-          <Route
-            path="/submissions/language-error"
-            element={<LanguageErrorSubmission />}
-          />
-          <Route path="/edit-corruption/:id" element={<EditCorruption />} />
-          <Route path="/surveys" element={<Surveys />} />
-          <Route path="*" element={<NotFound />} />
-        </RouterRoutes>
-        <ConditionalBottomNavigation />
+        <TelegramAccessGuard
+          telegramUserId={telegramUserId}
+          telegramCheckDone={telegramCheckDone}
+        >
+          <RouterRoutes>
+            {/* Define your route here */}
+            <Route path="/" element={<HomeDashboard />} />
+            <Route path="/home-dashboard" element={<HomeDashboard />} />
+            <Route path="/news-articles-hub" element={<NewsArticlesHub />} />
+            <Route path="/submissions" element={<FeedbackSubmission />} />
+            <Route path="/departments" element={<JobVacanciesBrowser />} />
+            <Route
+              path="/departments/central"
+              element={<CentralDepartmentsPage />}
+            />
+            <Route path="/departments/regional" element={<RegionsPage />} />
+            <Route
+              path="/departments/central/:departmentId"
+              element={<DepartmentPage />}
+            />
+            <Route
+              path="/departments/:departmentId"
+              element={<DepartmentPage />}
+            />
+            <Route
+              path="/departments/:departmentId/:vacancyId"
+              element={<VacancyDetailPage />}
+            />
+            <Route
+              path="/departments/:departmentId/:vacancyId/form"
+              element={<JobApplicationForm />}
+            />
+            <Route
+              path="/region/:regionName/:vacancyId/form"
+              element={<JobApplicationForm />}
+            />
+            <Route path="/region" element={<RegionsPage />} />
+            <Route path="/region/:regionName" element={<RegionPage />} />
+            <Route
+              path="/region/:regionName/:vacancyId"
+              element={<VacancyDetailPage />}
+            />
+            <Route path="/test" element={<VacancyTest />} />
+            <Route path="/test/:test_id/:test_token" element={<VacancyTest />} />
+            <Route
+              path="/departments/:departmentId/:vacancyId/terms-and-conditions"
+              element={<TermsAndConditionsPage />}
+            />
+            <Route
+              path="/region/:regionName/:vacancyId/terms-and-conditions"
+              element={<TermsAndConditionsPage />}
+            />
+            <Route path="/vacancy/:vacancyId" element={<VacancyDetailPage />} />
+            <Route
+              path="/terms-and-conditions"
+              element={<TermsAndConditionsPage />}
+            />
+            <Route
+              path="/currency-exchange-rates"
+              element={<CurrencyExchangeRates />}
+            />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/applications" element={<Applications />} />
+            <Route path="/applications/:type" element={<Applications />} />
+            <Route
+              path="/applications/:type/:id"
+              element={<ApplicationDetail />}
+            />
+            <Route
+              path="/submissions/consumer-rights"
+              element={<ConsumerRightsSubmission />}
+            />
+            <Route
+              path="/submissions/corruption"
+              element={<CorruptionSubmission />}
+            />
+            <Route path="/check-license" element={<CheckLicense />} />
+            <Route path="/submit-complaint" element={<SubmitComplaint />} />
+            <Route
+              path="/submissions/language-error"
+              element={<LanguageErrorSubmission />}
+            />
+            <Route path="/edit-corruption/:id" element={<EditCorruption />} />
+            <Route path="/surveys" element={<Surveys />} />
+            <Route path="*" element={<NotFound />} />
+          </RouterRoutes>
+        </TelegramAccessGuard>
+        <BottomNavigationGate
+          telegramUserId={telegramUserId}
+          telegramCheckDone={telegramCheckDone}
+        />
         <VacancyContactFixed />
       </ErrorBoundary>
     </BrowserRouter>
