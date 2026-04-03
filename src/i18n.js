@@ -79,7 +79,20 @@ const resources = {
           country: "O'zbekiston Respublikasi",
           bank_name: "Markaziy Banki",
         },
-      }, 
+        press_center: {
+          section_title: "Matbuot markazi",
+          section_subtitle:
+            "Markaziy Bankning rasmiy saytida sharhlar va yangiliklarni kuzating.",
+          reviews_title: "Sharhlar",
+          reviews_desc:
+            "Ekspertlar va ommaviy axborot vositalari sharhlari, press-relizlar.",
+          reviews_url: "https://cbu.uz/uz/press_center/reviews/",
+          news_title: "Yangiliklar",
+          news_desc: "Bank yangiliklari va e'lonlar.",
+          news_url: "https://cbu.uz/uz/press_center/news/",
+          open: "Ochish",
+        },
+      },
       currency: {
         title: "Valyuta kurslari",
         subtitle: "O'zbekiston Respublikasi Markaziy Bankining rasmiy kunlik kurslari",
@@ -1036,6 +1049,19 @@ const resources = {
         bank_info: {
           country: "Ўзбекистон Республикаси",
           bank_name: "Марказий Банки",
+        },
+        press_center: {
+          section_title: "Матбуот маркази",
+          section_subtitle:
+            "Марказий Банкнинг расмий сайтида шарҳлар ва янгиликларни кузатинг.",
+          reviews_title: "Шарҳлар",
+          reviews_desc:
+            "Экспертлар ва оммавий ахборот воситалари шарҳлари, пресс-релизлар.",
+          reviews_url: "https://cbu.uz/uz/press_center/reviews/",
+          news_title: "Янгиликлар",
+          news_desc: "Банк янгиликлари ва эълонлар.",
+          news_url: "https://cbu.uz/uz/press_center/news/",
+          open: "Очиш",
         },
       },
       currency: {
@@ -1995,6 +2021,19 @@ const resources = {
         bank_info: {
           country: "Республики Узбекистан",
           bank_name: "Центральный банк",
+        },
+        press_center: {
+          section_title: "Пресс-центр",
+          section_subtitle:
+            "Обзоры и новости на официальном сайте Центрального банка.",
+          reviews_title: "Обзоры",
+          reviews_desc:
+            "Комментарии экспертов и СМИ, пресс-релизы.",
+          reviews_url: "https://cbu.uz/uz/press_center/reviews/",
+          news_title: "Новости",
+          news_desc: "Новости и объявления банка.",
+          news_url: "https://cbu.uz/uz/press_center/news/",
+          open: "Открыть",
         },
       },
       currency: {

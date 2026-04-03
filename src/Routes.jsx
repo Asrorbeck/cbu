@@ -29,6 +29,17 @@ const isTelegramOptionalPath = (pathname) =>
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 
+/** Dev: localhost:4029 va boshqa local portlarda Telegram talab qilinmaydi */
+const isLocalDevHost = () => {
+  if (typeof window === "undefined") return false;
+  const { hostname } = window.location;
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+};
+
 const ConditionalBottomNavigation = () => {
   const location = useLocation();
   if (location.pathname === "/test" || location.pathname.startsWith("/test/")) {
@@ -40,6 +51,7 @@ const ConditionalBottomNavigation = () => {
 const BottomNavigationGate = ({ telegramUserId, telegramCheckDone }) => {
   const location = useLocation();
   const isBlockedByTelegramGuard =
+    !isLocalDevHost() &&
     !isTelegramOptionalPath(location.pathname) &&
     (!telegramCheckDone || !telegramUserId);
 
@@ -117,6 +129,10 @@ const TelegramAccessGuard = ({
   children,
 }) => {
   const location = useLocation();
+
+  if (isLocalDevHost()) {
+    return children;
+  }
 
   if (isTelegramOptionalPath(location.pathname)) {
     return children;

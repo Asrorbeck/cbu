@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Navbar from "../../components/ui/Navbar";
 import HeroSection from "./components/HeroSection";
 import ServicesGrid from "./components/ServicesGrid";
+import PressCenterLinks from "./components/PressCenterLinks";
 import LoadingComponent from "../../components/ui/LoadingComponent";
 
 const HomeDashboard = () => {
@@ -162,6 +163,8 @@ const HomeDashboard = () => {
             </div>
             <ServicesGrid />
           </div>
+
+          <PressCenterLinks />
         </div>
       </main>
       {/* Bottom navigation spacing */}
