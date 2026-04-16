@@ -784,6 +784,13 @@ const resources = {
           cancel_button: "Bekor qilish",
           confirm_button: "Testdan chiqish",
         },
+        time_warning_modal: {
+          title: "Vaqt tugashiga oz qoldi",
+          subtitle: "Diqqat",
+          message:
+            "Sizning vaqtingizga 1 daqiqadan kam vaqt qoldi. Vaqt tugagach, faqat javob berilgan savollar qabul qilinadi va tizimga yuboriladi. Javob berilmagan savollar ochiq qoladi va baholanmaydi.",
+          confirm_button: "Tushundim",
+        },
         unanswered_warning:
           "{{count}} ta savolga javob berilmadi. Testni yakunlashni xohlaysizmi?",
         success_message: "Test muvaffaqiyatli topshirildi!",
@@ -1751,6 +1758,13 @@ const resources = {
             "Тестдан чиқиш натижасида сизга 90 кунлик чеклов ўрнатилади. Бу вақт давомида тестни қайта топшира олмайсиз.",
           cancel_button: "Бекор қилиш",
           confirm_button: "Тестдан чиқиш",
+        },
+        time_warning_modal: {
+          title: "Вақт тугашига оз қолди",
+          subtitle: "Диққат",
+          message:
+            "Сизнинг вақтингизга 1 дақиқадан кам вақт қолди. Вақт тугагач, фақат жавоб берилган саволлар қабул қилинади ва тизимга юборилади. Жавоб берилмаган саволлар очиқ қолади ва баҳоланмайди.",
+          confirm_button: "Тушундим",
         },
         unanswered_warning:
           "{{count}} та саволга жавоб берилмади. Тестни якунлашни хоҳлайсизми?",
@@ -2741,6 +2755,13 @@ const resources = {
             "В результате выхода из теста вам будет установлено 90-дневное ограничение. В течение этого времени вы не сможете пройти тест повторно.",
           cancel_button: "Отмена",
           confirm_button: "Выйти из теста",
+        },
+        time_warning_modal: {
+          title: "Мало времени до окончания",
+          subtitle: "Внимание",
+          message:
+            "До окончания времени осталось менее 1 минуты. По истечении времени будут приняты и отправлены на сервер только ответы на вопросы, на которые вы ответили. На вопросы без ответа ответ останется открытым и не будет оценён.",
+          confirm_button: "Понятно",
         },
         unanswered_warning:
           "На {{count}} вопросов не дан ответ. Завершить тест?",

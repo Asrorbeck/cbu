@@ -85,6 +85,7 @@ const VacancyTest = () => {
   const [showDevToolsModal, setShowDevToolsModal] = useState(false);
   const [devToolsDetected, setDevToolsDetected] = useState(false);
   const [showScreenshotModal, setShowScreenshotModal] = useState(false);
+  const [showTimeWarningModal, setShowTimeWarningModal] = useState(false);
   // Test data from backend API
   const [testData, setTestData] = useState(null);
   const [attemptId, setAttemptId] = useState(null);
@@ -100,6 +101,7 @@ const VacancyTest = () => {
   const startTimeRef = useRef(null); // Store when timer started
   const initialTimeRef = useRef(null); // Store initial time from backend
   const pageLoadTimeRef = useRef(null); // Store when page loaded to avoid false positives
+  const oneMinuteWarningShownRef = useRef(false);
 
   // Use test_id from URL params, fallback to decoded token if available
   const tokenPayload = useMemo(
@@ -144,7 +146,7 @@ const VacancyTest = () => {
       });
 
       // Set default time (30 minutes)
-      const defaultTime = 30 * 60;
+      const defaultTime = 2 * 60;
       setTimeRemaining(defaultTime);
       initialTimeRef.current = defaultTime;
       startTimeRef.current = Date.now();
@@ -1022,13 +1024,23 @@ const VacancyTest = () => {
 
         console.log("Submitting answers:", submitPayload);
 
-        // Submit answers
-        await testsAPI.submitAnswers({
-          token: test_token,
-          answers: submitPayload,
-        });
-
-        console.log("Answers submitted successfully");
+        // Submit only answered questions; empty list may be rejected by API — still finish attempt
+        try {
+          await testsAPI.submitAnswers({
+            token: test_token,
+            answers: submitPayload,
+          });
+          console.log("Answers submitted successfully");
+        } catch (submitErr) {
+          if (responses.length === 0) {
+            console.warn(
+              "submitAnswers with no responses failed; continuing to finish test:",
+              submitErr,
+            );
+          } else {
+            throw submitErr;
+          }
+        }
 
         // Step 2: Finish the test
         finishResponse = await testsAPI.finishTest({
@@ -1139,6 +1151,38 @@ const VacancyTest = () => {
     test_id,
     activeTestId,
     t,
+    testData,
+  ]);
+
+  useEffect(() => {
+    if (timeRemaining <= 0) {
+      setShowTimeWarningModal(false);
+    }
+  }, [timeRemaining]);
+
+  useEffect(() => {
+    if (
+      timeRemaining <= 60 &&
+      timeRemaining > 0 &&
+      !oneMinuteWarningShownRef.current &&
+      !alreadySubmitted &&
+      testData &&
+      !isBlocked &&
+      !testSubmitted &&
+      !showResultModal &&
+      !loading
+    ) {
+      oneMinuteWarningShownRef.current = true;
+      setShowTimeWarningModal(true);
+    }
+  }, [
+    timeRemaining,
+    alreadySubmitted,
+    testData,
+    isBlocked,
+    testSubmitted,
+    showResultModal,
+    loading,
   ]);
 
   // Timer countdown - Fixed to continue even when modals are shown
@@ -1199,23 +1243,22 @@ const VacancyTest = () => {
     };
   }, [testData, isBlocked, alreadySubmitted]); // Start timer when test data loads, stop when blocked/submitted
 
-  // Auto-submit test when time runs out
+  // Auto-submit test when time runs out (partial answers only; demo flow included)
   useEffect(() => {
-    if (
+    const canAutoSubmit =
       timeRemaining <= 0 &&
       !isSubmitting &&
       !alreadySubmitted &&
-      test_token &&
       attemptId &&
-      test_id
-    ) {
-      console.log("Time is up - automatically submitting test...");
-      // Use setTimeout to ensure this runs after state updates
-      const timeoutId = setTimeout(() => {
-        handleSubmit();
-      }, 100);
-      return () => clearTimeout(timeoutId);
-    }
+      ((test_token && test_id) || activeTestId === "demo");
+
+    if (!canAutoSubmit) return;
+
+    console.log("Time is up - automatically submitting test...");
+    const timeoutId = setTimeout(() => {
+      handleSubmit();
+    }, 100);
+    return () => clearTimeout(timeoutId);
   }, [
     timeRemaining,
     isSubmitting,
@@ -1223,6 +1266,7 @@ const VacancyTest = () => {
     test_token,
     attemptId,
     test_id,
+    activeTestId,
     handleSubmit,
   ]);
 
@@ -2109,6 +2153,41 @@ const VacancyTest = () => {
                     "⚠️ Dasturchi vositalarini yopmaguningizcha, bu oyna yopilmaydi va testda hech qanday amal bajarilmaydi."}
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ~1 minute left — informational modal (timer keeps running) */}
+      {showTimeWarningModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[52] p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-amber-200/80 dark:border-amber-800/50">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-700 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/20">
+                  <Icon name="Clock" size={24} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-100">
+                    {t("test.time_warning_modal.subtitle")}
+                  </p>
+                  <h2 className="text-lg font-bold text-white leading-tight">
+                    {t("test.time_warning_modal.title")}
+                  </h2>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-5 space-y-4">
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                {t("test.time_warning_modal.message")}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowTimeWarningModal(false)}
+                className="w-full py-3 rounded-lg font-semibold text-sm bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white transition-colors"
+              >
+                {t("test.time_warning_modal.confirm_button")}
+              </button>
             </div>
           </div>
         </div>
