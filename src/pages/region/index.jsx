@@ -144,6 +144,7 @@ const RegionPage = () => {
 
     // Special case: Toshkent shahar should be "toshkent shahar"
     if (
+      regionLower === "toshkent_city" ||
       regionLower === "toshkent_shahar" ||
       regionLower === "toshkent-shahar"
     ) {
