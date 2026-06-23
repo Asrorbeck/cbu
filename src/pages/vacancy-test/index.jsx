@@ -82,8 +82,6 @@ const VacancyTest = () => {
   const [violationType, setViolationType] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [showDevToolsModal, setShowDevToolsModal] = useState(false);
-  const [devToolsDetected, setDevToolsDetected] = useState(false);
   const [showScreenshotModal, setShowScreenshotModal] = useState(false);
   const [showTimeWarningModal, setShowTimeWarningModal] = useState(false);
   // Test data from backend API
@@ -277,7 +275,7 @@ const VacancyTest = () => {
   // Get max violations from API or default to 5
   const maxViolations = testData?.max_violations || 5;
 
-  // Apply blur when screenshot modal or devtools modal is open - ONLY to main content, NOT body
+  // Apply blur when screenshot modal is open - ONLY to main content, NOT body
   // BUT NOT when error or status message is shown OR test is already submitted
   useEffect(() => {
     const mainElement = document.querySelector("main");
@@ -302,8 +300,8 @@ const VacancyTest = () => {
       return;
     }
 
-    // Apply blur if screenshot modal OR devtools modal is open (only if test is not submitted)
-    if (showScreenshotModal || (showDevToolsModal && devToolsDetected)) {
+    // Apply blur if screenshot modal is open (only if test is not submitted)
+    if (showScreenshotModal) {
       // Blur is already applied in keydown handler (synchronous) for screenshot
       // This is just a backup to ensure blur is applied
       if (mainElement && !mainElement.style.filter.includes("blur")) {
@@ -337,8 +335,6 @@ const VacancyTest = () => {
     };
   }, [
     showScreenshotModal,
-    showDevToolsModal,
-    devToolsDetected,
     error,
     statusMessage,
     testAlreadyCompleted,
@@ -558,22 +554,12 @@ const VacancyTest = () => {
       return false;
     };
 
-    // Disable keyboard shortcuts for DevTools, PrintScreen, Copy, etc.
+    // Disable keyboard shortcuts for PrintScreen, Copy, etc.
     const handleKeyDown = (e) => {
-      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (DevTools) - ACTIVE
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey &&
-          e.shiftKey &&
-          (e.key === "I" || e.key === "J" || e.key === "C")) ||
-        (e.ctrlKey && e.key === "U")
-      ) {
+      // Ctrl+U (View Source)
+      if (e.ctrlKey && e.key === "U") {
         e.preventDefault();
         e.stopPropagation();
-        toast.error(t("test.security.no_devtools"), {
-          duration: 2000,
-          position: "top-center",
-        });
         return false;
       }
 
@@ -835,37 +821,6 @@ const VacancyTest = () => {
       }
     };
 
-    // Detect DevTools opening - ACTIVE (blocks test while DevTools is open)
-    const detectDevTools = () => {
-      const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold =
-        window.outerHeight - window.innerHeight > threshold;
-
-      const isDevToolsOpen = widthThreshold || heightThreshold;
-
-      // Update state if devtools detected - BUT NOT if test is submitted
-      if (isDevToolsOpen) {
-        if (
-          !devToolsDetected &&
-          !testSubmitted &&
-          !alreadySubmitted &&
-          !showResultModal
-        ) {
-          setDevToolsDetected(true);
-          setShowDevToolsModal(true);
-        }
-      } else {
-        // Devtools closed - hide modal
-        if (devToolsDetected) {
-          setDevToolsDetected(false);
-          setShowDevToolsModal(false);
-        }
-      }
-    };
-
-    const devToolsInterval = setInterval(detectDevTools, 500);
-
     // Add event listeners
     document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown, true); // Use capture phase for better detection
@@ -892,7 +847,6 @@ const VacancyTest = () => {
       window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(devToolsInterval);
       // Remove blur on cleanup
       const mainElement = document.querySelector("main");
       if (mainElement) {
@@ -905,9 +859,8 @@ const VacancyTest = () => {
       document.body.style.transition = "";
       // Close modals on cleanup
       setShowScreenshotModal(false);
-      setShowDevToolsModal(false);
     };
-  }, [t, isBlocked, devToolsDetected, testSubmitted]);
+  }, [t, isBlocked, testSubmitted]);
 
   // Format time to MM:SS
   const formatTime = (seconds) => {
@@ -920,7 +873,6 @@ const VacancyTest = () => {
 
   // Handle answer selection
   const handleAnswerSelect = (questionId, optionId) => {
-    if (devToolsDetected) return; // Block if devtools detected
     setAnswers((prev) => ({
       ...prev,
       [questionId]: optionId,
@@ -929,7 +881,6 @@ const VacancyTest = () => {
 
   // Navigate to next question
   const handleNext = () => {
-    if (devToolsDetected) return; // Block if devtools detected
     if (currentQuestion < testQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
     }
@@ -937,7 +888,6 @@ const VacancyTest = () => {
 
   // Navigate to previous question
   const handlePrevious = () => {
-    if (devToolsDetected) return; // Block if devtools detected
     if (currentQuestion > 0) {
       setCurrentQuestion((prev) => prev - 1);
     }
@@ -945,13 +895,6 @@ const VacancyTest = () => {
 
   // Submit test
   const handleSubmit = useCallback(async () => {
-    if (devToolsDetected) {
-      toast.error(
-        t("test.security.devtools_blocked_submit") ||
-          "Dasturchi vositalari ochilgan. Testni topshirib bo'lmaydi.",
-      );
-      return;
-    }
     // Check if all questions are answered
     const unansweredQuestions = testQuestions.filter(
       (q) => !answers[q.id],
@@ -1142,7 +1085,6 @@ const VacancyTest = () => {
       setIsSubmitting(false);
     }
   }, [
-    devToolsDetected,
     testQuestions,
     answers,
     timeRemaining,
@@ -1722,12 +1664,7 @@ const VacancyTest = () => {
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={handleBack}
-                disabled={devToolsDetected}
-                className={`flex items-center space-x-2 transition-colors ${
-                  devToolsDetected
-                    ? "opacity-50 cursor-not-allowed text-gray-400"
-                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                }`}
+                className="flex items-center space-x-2 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               >
                 <Icon name="ArrowLeft" size={16} />
                 <span>{t("test.back_button")}</span>
@@ -1796,11 +1733,7 @@ const VacancyTest = () => {
                 {question.options.map((option) => (
                   <label
                     key={option.id}
-                    className={`flex items-start p-4 rounded-lg border-2 transition-all ${
-                      devToolsDetected
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    } ${
+                    className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
                       answers[question.id] === option.id
                         ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                         : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -1814,7 +1747,6 @@ const VacancyTest = () => {
                       onChange={() =>
                         handleAnswerSelect(question.id, option.id)
                       }
-                      disabled={devToolsDetected}
                       className="mt-1 h-5 w-5 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="ml-3 flex-1 text-gray-900 dark:text-white">
@@ -1834,7 +1766,7 @@ const VacancyTest = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={handlePrevious}
-                disabled={currentQuestion === 0 || devToolsDetected}
+                disabled={currentQuestion === 0}
                 variant="outline"
                 className="flex-1"
               >
@@ -1845,7 +1777,6 @@ const VacancyTest = () => {
               {currentQuestion < testQuestions.length - 1 ? (
                 <Button
                   onClick={handleNext}
-                  disabled={devToolsDetected}
                   className="flex-1"
                 >
                   {t("test.next")}
@@ -1854,7 +1785,7 @@ const VacancyTest = () => {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || devToolsDetected}
+                  disabled={isSubmitting}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
                   {isSubmitting ? (
@@ -1882,15 +1813,8 @@ const VacancyTest = () => {
               {testQuestions.map((q, index) => (
                 <button
                   key={q.id}
-                  onClick={() => {
-                    if (!devToolsDetected) {
-                      setCurrentQuestion(index);
-                    }
-                  }}
-                  disabled={devToolsDetected}
+                  onClick={() => setCurrentQuestion(index)}
                   className={`h-10 w-10 rounded-lg font-medium transition-all ${
-                    devToolsDetected ? "opacity-50 cursor-not-allowed" : ""
-                  } ${
                     index === currentQuestion
                       ? "bg-blue-600 text-white"
                       : answers[q.id]
@@ -2072,92 +1996,6 @@ const VacancyTest = () => {
           document.body,
         )}
 
-      {/* DevTools Warning Modal - Cannot be closed while devtools is open */}
-      {showDevToolsModal && devToolsDetected && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-red-600 to-red-700 dark:from-red-700 dark:to-red-800 px-6 py-5">
-              <div className="flex items-center justify-center space-x-3">
-                <Icon name="AlertTriangle" size={28} className="text-white" />
-                <div className="text-left">
-                  <h2 className="text-lg font-bold text-white uppercase tracking-wide">
-                    {t("test.security.devtools_detected")}
-                  </h2>
-                  <p className="text-red-100 text-xs mt-0.5">
-                    {t("test.security.official_warning") ||
-                      "Rasmiy ogohlantirish"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="px-6 py-6 space-y-4">
-              {/* Warning Message */}
-              <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-600 p-4 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Icon
-                    name="AlertCircle"
-                    size={20}
-                    className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
-                      {t("test.security.devtools_blocked_title") ||
-                        "Dasturchi vositalari aniqlandi!"}
-                    </p>
-                    <p className="text-sm text-red-700 dark:text-red-400 leading-relaxed">
-                      {t("test.security.devtools_blocked_message") ||
-                        "Dasturchi vositalari (DevTools) ochilganligi aniqlandi. Test davomida dasturchi vositalaridan foydalanish taqiqlanadi. Iltimos, dasturchi vositalarini yoping va sahifani yangilang."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div className="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-600 p-4 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Icon
-                    name="Info"
-                    size={20}
-                    className="text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-2">
-                      {t("test.security.devtools_instructions_title") ||
-                        "Qanday yopish kerak:"}
-                    </p>
-                    <ul className="text-sm text-orange-700 dark:text-orange-400 leading-relaxed list-disc list-inside space-y-1">
-                      <li>
-                        {t("test.security.devtools_close_f12") ||
-                          "F12 tugmasini bosing"}
-                      </li>
-                      <li>
-                        {t("test.security.devtools_close_shortcut") ||
-                          "Ctrl+Shift+I (yoki Cmd+Option+I Mac da)"}
-                      </li>
-                      <li>
-                        {t("test.security.devtools_close_manual") ||
-                          "Yoki brauzer menyusidan dasturchi vositalarini yoping"}
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Note: Modal cannot be closed while devtools is open */}
-              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg text-center">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {t("test.security.devtools_close_note") ||
-                    "⚠️ Dasturchi vositalarini yopmaguningizcha, bu oyna yopilmaydi va testda hech qanday amal bajarilmaydi."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ~1 minute left — informational modal (timer keeps running) */}
       {showTimeWarningModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[52] p-4">
@@ -2337,7 +2175,7 @@ const VacancyTest = () => {
       )}
 
       {/* Leave Confirmation Modal */}
-      {showLeaveModal && !devToolsDetected && (
+      {showLeaveModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
             {/* Header */}
