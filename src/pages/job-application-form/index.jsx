@@ -208,11 +208,12 @@ const JobApplicationForm = () => {
     }
   };
 
-  // Generate year options (from 1950 to current year)
-  const generateYearOptions = (minYear = 1950) => {
+  // Generate year options (from minYear to maxYear)
+  const generateYearOptions = (minYear = 1950, maxYear = null) => {
     const currentYear = new Date().getFullYear();
+    const endYear = maxYear !== null ? maxYear : currentYear;
     const years = [];
-    for (let year = currentYear; year >= minYear; year--) {
+    for (let year = endYear; year >= minYear; year--) {
       years.push({ value: year.toString(), label: year.toString() });
     }
     return years;
@@ -221,10 +222,13 @@ const JobApplicationForm = () => {
   const yearOptions = generateYearOptions();
 
   // Generate filtered year options for end year based on start year
+  // Maksimum yil: hozirgi yil + 4
   const getEndYearOptions = (startYear) => {
-    if (!startYear) return yearOptions;
+    const currentYear = new Date().getFullYear();
+    const maxEndYear = currentYear + 4;
+    if (!startYear) return generateYearOptions(1950, maxEndYear);
     const start = parseInt(startYear);
-    return generateYearOptions(start);
+    return generateYearOptions(start, maxEndYear);
   };
 
   // Month options in Uzbek
