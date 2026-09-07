@@ -82,7 +82,6 @@ const VacancyTest = () => {
   const [violationType, setViolationType] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [showScreenshotModal, setShowScreenshotModal] = useState(false);
   const [showTimeWarningModal, setShowTimeWarningModal] = useState(false);
   // Test data from backend API
   const [testData, setTestData] = useState(null);
@@ -93,6 +92,20 @@ const VacancyTest = () => {
   const [statusMessage, setStatusMessage] = useState(null); // For status messages like "Vaqt tugadi"
   const [statusType, setStatusType] = useState(null); // "time_up", "already_completed", "error", etc.
   const [testSubmitted, setTestSubmitted] = useState(false); // Track if test is submitted to disable security checks
+  // Violation warning modal state
+  const [showViolationWarningModal, setShowViolationWarningModal] = useState(false);
+  const [violationWarningData, setViolationWarningData] = useState(null); // { violations, max_violations, remaining }
+  const [showDisqualifiedModal, setShowDisqualifiedModal] = useState(false);
+  const [disqualifiedData, setDisqualifiedData] = useState(null); // { message, violations }
+  // Demo mode: track how many times violation was triggered to simulate backend responses
+  const demoViolationCountRef = useRef(0);
+  // Debounce ref: prevent double-counting when blur + visibilitychange fire together
+  const lastViolationTimeRef = useRef(0);
+  // Suppress violations when any modal is open (so modals don't cause false positives)
+  const suppressViolationsRef = useRef(false);
+  // Submit confirmation modal
+  const [showSubmitConfirmModal, setShowSubmitConfirmModal] = useState(false);
+  const [unansweredCount, setUnansweredCount] = useState(0);
 
   // Refs for timer management
   const timerIntervalRef = useRef(null);
@@ -275,11 +288,9 @@ const VacancyTest = () => {
   // Get max violations from API or default to 5
   const maxViolations = testData?.max_violations || 5;
 
-  // Apply blur when screenshot modal is open - ONLY to main content, NOT body
-  // BUT NOT when error or status message is shown OR test is already submitted
+  // Apply blur is no longer needed (old screenshot modal removed)
   useEffect(() => {
     const mainElement = document.querySelector("main");
-    // Don't apply blur if error or status message is shown OR test is already submitted
     if (
       error ||
       statusMessage ||
@@ -288,30 +299,6 @@ const VacancyTest = () => {
       showResultModal ||
       testSubmitted
     ) {
-      // Remove blur when error/status is shown or test is submitted
-      if (mainElement) {
-        mainElement.style.filter = "";
-        mainElement.style.transition = "";
-        mainElement.style.pointerEvents = "";
-        mainElement.style.opacity = "";
-      }
-      document.body.style.filter = "";
-      document.body.style.transition = "";
-      return;
-    }
-
-    // Apply blur if screenshot modal is open (only if test is not submitted)
-    if (showScreenshotModal) {
-      // Blur is already applied in keydown handler (synchronous) for screenshot
-      // This is just a backup to ensure blur is applied
-      if (mainElement && !mainElement.style.filter.includes("blur")) {
-        mainElement.style.filter = "blur(15px)";
-        mainElement.style.transition = "none";
-        mainElement.style.pointerEvents = "none";
-        mainElement.style.opacity = "0.3";
-      }
-    } else {
-      // Remove blur when modals close
       if (mainElement) {
         mainElement.style.filter = "";
         mainElement.style.transition = "";
@@ -321,20 +308,7 @@ const VacancyTest = () => {
       document.body.style.filter = "";
       document.body.style.transition = "";
     }
-
-    return () => {
-      // Cleanup on unmount
-      if (mainElement) {
-        mainElement.style.filter = "";
-        mainElement.style.transition = "";
-        mainElement.style.pointerEvents = "";
-        mainElement.style.opacity = "";
-      }
-      document.body.style.filter = "";
-      document.body.style.transition = "";
-    };
   }, [
-    showScreenshotModal,
     error,
     statusMessage,
     testAlreadyCompleted,
@@ -343,12 +317,99 @@ const VacancyTest = () => {
     testSubmitted,
   ]);
 
-  // Handle violations - DISABLED (no API calls, no modals)
+  // Keep suppressViolationsRef in sync with all open modals
+  // so that ANY modal being open prevents false violation counts
+  useEffect(() => {
+    suppressViolationsRef.current =
+      showViolationWarningModal ||
+      showDisqualifiedModal ||
+      showSubmitConfirmModal ||
+      showLeaveModal ||
+      showTimeWarningModal ||
+      showResultModal;
+  }, [
+    showViolationWarningModal,
+    showDisqualifiedModal,
+    showSubmitConfirmModal,
+    showLeaveModal,
+    showTimeWarningModal,
+    showResultModal,
+  ]);
+
+  // Handle violations - calls /api/v1/tests/report_violation/
   const handleViolation = useCallback(async (type) => {
-    // Violation handling is completely disabled
-    // No API calls, no modals, no backend communication
-    return;
-  }, []);
+    // Don't report if test is submitted, blocked, or already disqualified
+    if (testSubmitted || alreadySubmitted || isBlocked || showResultModal || isDisqualified) return;
+
+    // Don't report while any of our own modals are open (avoids false positives)
+    if (suppressViolationsRef.current) return;
+
+    // Debounce: ignore duplicate events within 1 second (blur + visibilitychange fire together)
+    const now = Date.now();
+    if (now - lastViolationTimeRef.current < 1000) return;
+    lastViolationTimeRef.current = now;
+
+    const isDemoTest = !test_token || !attemptId || !test_id || activeTestId === "demo";
+
+    if (isDemoTest) {
+      // Demo mode: simulate violation responses statically
+      demoViolationCountRef.current += 1;
+      const count = demoViolationCountRef.current;
+      const maxViol = testData?.max_violations || 5;
+
+      if (count >= maxViol) {
+        // Disqualified
+        setDisqualifiedData({
+          message: "Siz testdan chetlashtirildi",
+          violations: maxViol,
+        });
+        setShowDisqualifiedModal(true);
+        setIsDisqualified(true);
+        setDisqualificationMessage("Siz testdan chetlashtirildi");
+        setIsBlocked(true);
+      } else {
+        // Warning
+        setViolationWarningData({
+          violations: count,
+          max_violations: maxViol,
+          remaining: maxViol - count,
+        });
+        setShowViolationWarningModal(true);
+      }
+      return;
+    }
+
+    // Real mode — call backend
+    try {
+      const result = await testsAPI.reportViolation({
+        token: test_token,
+        attemptId: attemptId,
+        violationType: type,
+      });
+
+      if (result?.disqualified) {
+        // 403 — testdan chetlashtirildi
+        setDisqualifiedData({
+          message: result.message || "Siz testdan chetlashtirildi",
+          violations: result.violations,
+        });
+        setShowDisqualifiedModal(true);
+        setIsDisqualified(true);
+        setDisqualificationMessage(result.message || "Siz testdan chetlashtirildi");
+        setIsBlocked(true);
+      } else if (result?.warning) {
+        // 200 — ogohlantirish, qancha urinish qolganini ko'rsat
+        setViolationWarningData({
+          violations: result.violations,
+          max_violations: result.max_violations,
+          remaining: result.remaining,
+        });
+        setShowViolationWarningModal(true);
+      }
+    } catch (err) {
+      console.error("Violation report error:", err);
+    }
+  }, [testSubmitted, alreadySubmitted, isBlocked, showResultModal, isDisqualified, test_token, attemptId, test_id, activeTestId, testData]);
 
   // Prevent page refresh/close
   useEffect(() => {
@@ -556,6 +617,34 @@ const VacancyTest = () => {
 
     // Disable keyboard shortcuts for PrintScreen, Copy, etc.
     const handleKeyDown = (e) => {
+      // F12 — DevTools
+      if (e.key === "F12" || e.keyCode === 123) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Ctrl+Shift+I — DevTools
+      if (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Ctrl+Shift+J — Console
+      if (e.ctrlKey && e.shiftKey && (e.key === "J" || e.key === "j")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Ctrl+Shift+C — Inspect element
+      if (e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
       // Ctrl+U (View Source)
       if (e.ctrlKey && e.key === "U") {
         e.preventDefault();
@@ -573,16 +662,8 @@ const VacancyTest = () => {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        // Apply blur IMMEDIATELY to DOM (synchronous, before screenshot)
-        const mainElement = document.querySelector("main");
-        if (mainElement) {
-          mainElement.style.filter = "blur(15px)";
-          mainElement.style.transition = "none";
-          mainElement.style.pointerEvents = "none";
-          mainElement.style.opacity = "0.3";
-        }
-        // Show modal immediately
-        setShowScreenshotModal(true);
+        // Report screenshot violation
+        handleViolation("screenshot");
         return false;
       }
 
@@ -714,15 +795,16 @@ const VacancyTest = () => {
       return false;
     };
 
-    // Detect tab switch / window blur - DISABLED (no violation reporting)
+    // Detect tab switch / window blur — report tab_switch violation (single handler)
     const handleBlur = () => {
-      // Window blur detection disabled - no violation reporting
-      // handleViolation("tab_switch"); // DISABLED
+      if (testSubmitted || alreadySubmitted || showResultModal || loading) return;
+      if (pageLoadTimeRef.current && Date.now() - pageLoadTimeRef.current < 2000) return;
+      handleViolation("tab_switch");
     };
 
-    // Detect page visibility change - Enhanced for screenshot detection
+    // Detect page visibility change - tab_switch + screenshot detection
     const handleVisibilityChange = () => {
-      // Don't apply blur if error or status message is shown OR test is submitted OR still loading
+      // Don't trigger if error/status shown, test submitted, or still loading
       if (
         error ||
         statusMessage ||
@@ -741,21 +823,12 @@ const VacancyTest = () => {
       ) {
         return;
       }
-      // Screenshot olishda page visibility o'zgarishi mumkin
       if (document.hidden) {
-        // Apply blur IMMEDIATELY to DOM (synchronous, before screenshot)
-        const mainElement = document.querySelector("main");
-        if (mainElement) {
-          mainElement.style.filter = "blur(15px)";
-          mainElement.style.transition = "none";
-          mainElement.style.pointerEvents = "none";
-          mainElement.style.opacity = "0.3";
-        }
-        // Show modal IMMEDIATELY (no delay for better UX)
-        setShowScreenshotModal(true);
+        // Show screenshot warning and report tab_switch violation
+        handleViolation("tab_switch");
       } else {
         // Page visible again - remove blur if modal is not showing
-        if (!showScreenshotModal) {
+        if (!showViolationWarningModal && !showDisqualifiedModal) {
           const mainElement = document.querySelector("main");
           if (mainElement) {
             mainElement.style.filter = "";
@@ -767,38 +840,7 @@ const VacancyTest = () => {
       }
     };
 
-    // Detect window blur - screenshot olishda window blur bo'lishi mumkin
-    const handleWindowBlur = () => {
-      // Don't apply blur if error or status message is shown OR test is submitted OR still loading
-      if (
-        error ||
-        statusMessage ||
-        testAlreadyCompleted ||
-        testSubmitted ||
-        alreadySubmitted ||
-        showResultModal ||
-        loading
-      ) {
-        return;
-      }
-      // Don't trigger on page load (first 2 seconds)
-      if (
-        pageLoadTimeRef.current &&
-        Date.now() - pageLoadTimeRef.current < 2000
-      ) {
-        return;
-      }
-      // Apply blur IMMEDIATELY to DOM (synchronous, before screenshot)
-      const mainElement = document.querySelector("main");
-      if (mainElement) {
-        mainElement.style.filter = "blur(15px)";
-        mainElement.style.transition = "none";
-        mainElement.style.pointerEvents = "none";
-        mainElement.style.opacity = "0.3";
-      }
-      // Show modal IMMEDIATELY (no delay for better UX)
-      setShowScreenshotModal(true);
-    };
+    // handleWindowBlur removed — handled by handleBlur above with debounce
 
     // Detect window focus - screenshot olishdan keyin focus qaytadi
     // NOTE: Clipboard check removed to avoid permission dialogs
@@ -830,7 +872,6 @@ const VacancyTest = () => {
     document.addEventListener("dragstart", handleDragStart);
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     window.addEventListener("blur", handleBlur);
-    window.addEventListener("blur", handleWindowBlur);
     window.addEventListener("focus", handleWindowFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -844,7 +885,6 @@ const VacancyTest = () => {
       document.removeEventListener("dragstart", handleDragStart);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       // Remove blur on cleanup
@@ -858,7 +898,6 @@ const VacancyTest = () => {
       document.body.style.filter = "";
       document.body.style.transition = "";
       // Close modals on cleanup
-      setShowScreenshotModal(false);
     };
   }, [t, isBlocked, testSubmitted]);
 
@@ -885,7 +924,6 @@ const VacancyTest = () => {
       setCurrentQuestion((prev) => prev + 1);
     }
   };
-
   // Navigate to previous question
   const handlePrevious = () => {
     if (currentQuestion > 0) {
@@ -893,22 +931,8 @@ const VacancyTest = () => {
     }
   };
 
-  // Submit test
-  const handleSubmit = useCallback(async () => {
-    // Check if all questions are answered
-    const unansweredQuestions = testQuestions.filter(
-      (q) => !answers[q.id],
-    ).length;
-
-    // For auto-submit on time up, skip confirmation
-    const isAutoSubmit = timeRemaining <= 0;
-    if (unansweredQuestions > 0 && !isAutoSubmit) {
-      const confirmSubmit = window.confirm(
-        t("test.unanswered_warning", { count: unansweredQuestions }),
-      );
-      if (!confirmSubmit) return;
-    }
-
+  // Actual submission logic (called from handleSubmit or modal confirm)
+  const doSubmit = useCallback(async () => {
     // Check if this is a demo/fallback test
     const isDemoTest =
       !test_token || !attemptId || !test_id || activeTestId === "demo";
@@ -1095,6 +1119,25 @@ const VacancyTest = () => {
     t,
     testData,
   ]);
+
+  // Submit test
+  const handleSubmit = useCallback(async () => {
+    // Check if all questions are answered
+    const unansweredQuestions = testQuestions.filter(
+      (q) => !answers[q.id],
+    ).length;
+
+    // For auto-submit on time up, skip confirmation
+    const isAutoSubmit = timeRemaining <= 0;
+    if (unansweredQuestions > 0 && !isAutoSubmit) {
+      // Show custom confirmation modal instead of window.confirm
+      setUnansweredCount(unansweredQuestions);
+      setShowSubmitConfirmModal(true);
+      return;
+    }
+
+    await doSubmit();
+  }, [testQuestions, answers, timeRemaining, doSubmit]);
 
   useEffect(() => {
     if (timeRemaining <= 0) {
@@ -1635,29 +1678,7 @@ const VacancyTest = () => {
       <Navbar />
 
       {/* Violation Counter - DISABLED */}
-      <main
-        className={`pt-20 pb-32 transition-all ${
-          showScreenshotModal &&
-          !error &&
-          !statusMessage &&
-          !testAlreadyCompleted
-            ? "blur-md pointer-events-none opacity-30"
-            : ""
-        }`}
-        style={
-          showScreenshotModal &&
-          !error &&
-          !statusMessage &&
-          !testAlreadyCompleted
-            ? {
-                filter: "blur(15px)",
-                zIndex: 1,
-                isolation: "isolate",
-                position: "relative",
-              }
-            : {}
-        }
-      >
+      <main className="pt-20 pb-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-6">
@@ -1830,171 +1851,163 @@ const VacancyTest = () => {
         </div>
       </main>
 
-      {/* Violation Warning Modal - DISABLED */}
-
-      {/* Screenshot Warning Modal - Blur overlay with warning */}
-      {showScreenshotModal &&
-        createPortal(
+      {/* Violation Warning Modal - shows remaining attempts */}
+      {showViolationWarningModal && violationWarningData && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{
+            zIndex: 99999,
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.65)",
+            isolation: "isolate",
+          }}
+        >
           <div
-            className="fixed inset-0 flex items-center justify-center p-4"
-            style={{
-              zIndex: 99999,
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              pointerEvents: "auto",
-              filter: "none !important",
-              WebkitFilter: "none !important",
-              backdropFilter: "none !important",
-              WebkitBackdropFilter: "none !important",
-              isolation: "isolate",
-              transform: "translateZ(0)",
-              willChange: "transform",
-            }}
+            className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            style={{ zIndex: 100000, transform: "translateZ(0)", willChange: "transform" }}
           >
-            {/* Modal - Must not be affected by parent blur */}
-            <div
-              className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full overflow-hidden"
-              style={{
-                zIndex: 100000,
-                filter: "none !important",
-                WebkitFilter: "none !important",
-                backdropFilter: "none !important",
-                WebkitBackdropFilter: "none !important",
-                position: "relative",
-                willChange: "transform",
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-                isolation: "isolate",
-                mixBlendMode: "normal",
-              }}
-            >
-              {/* Header with X button */}
-              <div
-                className="bg-gradient-to-r from-red-600 to-red-700 dark:from-red-700 dark:to-red-800 px-6 py-5 relative"
-                style={{
-                  filter: "none !important",
-                  WebkitFilter: "none !important",
-                  backdropFilter: "none !important",
-                  WebkitBackdropFilter: "none !important",
-                }}
-              >
-                <button
-                  onClick={() => setShowScreenshotModal(false)}
-                  className="absolute top-4 right-4 text-white hover:text-red-200 transition-colors p-1 rounded-full hover:bg-white/20"
-                  aria-label="Close"
-                  style={{
-                    filter: "none !important",
-                    WebkitFilter: "none !important",
-                    backdropFilter: "none !important",
-                    WebkitBackdropFilter: "none !important",
-                  }}
-                >
-                  <Icon name="X" size={20} />
-                </button>
-                <div className="flex items-center justify-center space-x-3 pr-8">
-                  <Icon name="AlertTriangle" size={28} className="text-white" />
-                  <div className="text-left">
-                    <h2 className="text-lg font-bold text-white uppercase tracking-wide">
-                      {t("test.security.violation_warning_title") ||
-                        "Qoida buzarlik qilmang"}
-                    </h2>
-                    <p className="text-red-100 text-xs mt-0.5">
-                      {t("test.security.official_warning") ||
-                        "Rasmiy ogohlantirish"}
-                    </p>
-                  </div>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 flex-shrink-0">
+                  <Icon name="AlertTriangle" size={26} className="text-white" />
                 </div>
-              </div>
-
-              {/* Content */}
-              <div
-                className="px-6 py-6 space-y-4"
-                style={{
-                  filter: "none !important",
-                  WebkitFilter: "none !important",
-                  backdropFilter: "none !important",
-                  WebkitBackdropFilter: "none !important",
-                }}
-              >
-                {/* Warning Message */}
-                <div
-                  className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-600 p-4 rounded-lg"
-                  style={{
-                    filter: "none !important",
-                    WebkitFilter: "none !important",
-                    backdropFilter: "none !important",
-                    WebkitBackdropFilter: "none !important",
-                  }}
-                >
-                  <div className="flex items-start space-x-3">
-                    <Icon
-                      name="AlertCircle"
-                      size={20}
-                      className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
-                        {t("test.security.violation_warning_title") ||
-                          "Qoida buzarlik qilmang!"}
-                      </p>
-                      <p className="text-sm text-red-700 dark:text-red-400 leading-relaxed">
-                        {t("test.security.violation_warning_message") ||
-                          "Test davomida qoida buzarlik qilish qat'iyan taqiqlanadi. Skrinshot olish, ekran yozib olish yoki boshqa noqonuniy harakatlar test qoidalarini buzish hisoblanadi va test natijalaringiz bekor qilinishi mumkin."}
-                      </p>
-                    </div>
-                  </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-100 mb-0.5">
+                    Rasmiy ogohlantirish
+                  </p>
+                  <h2 className="text-lg font-bold text-white leading-tight">
+                    Qoidabuzarlik qayd etildi!
+                  </h2>
                 </div>
-
-                {/* Instructions */}
-                <div
-                  className="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-600 p-4 rounded-lg"
-                  style={{
-                    filter: "none !important",
-                    WebkitFilter: "none !important",
-                    backdropFilter: "none !important",
-                    WebkitBackdropFilter: "none !important",
-                  }}
-                >
-                  <div className="flex items-start space-x-3">
-                    <Icon
-                      name="Info"
-                      size={20}
-                      className="text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5"
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-2">
-                        {t("test.security.violation_note_title") || "Diqqat:"}
-                      </p>
-                      <p className="text-sm text-orange-700 dark:text-orange-400 leading-relaxed">
-                        {t("test.security.violation_note_message") ||
-                          "Qoida buzarlik qilish test natijalaringizni bekor qilishi va testdan chetlashtirilishingizga olib kelishi mumkin. Iltimos, test qoidalariga rioya qiling va halollik bilan test topshiring."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Close Button */}
-                <button
-                  onClick={() => setShowScreenshotModal(false)}
-                  className="w-full py-3 px-6 rounded-lg font-semibold text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white transition-colors"
-                  style={{
-                    filter: "none !important",
-                    WebkitFilter: "none !important",
-                    backdropFilter: "none !important",
-                    WebkitBackdropFilter: "none !important",
-                  }}
-                >
-                  {t("test.security.violation_understood") ||
-                    "Tushundim, qoidalarga rioya qilaman"}
-                </button>
               </div>
             </div>
-          </div>,
-          document.body,
-        )}
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Violation counter */}
+              <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-5 py-4">
+                <div>
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-0.5">
+                    Qoidabuzarliklar
+                  </p>
+                  <p className="text-3xl font-extrabold text-amber-600 dark:text-amber-300">
+                    {violationWarningData.violations}
+                    <span className="text-base font-medium text-amber-500 dark:text-amber-400">
+                      &nbsp;/ {violationWarningData.max_violations}
+                    </span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide mb-0.5">
+                    Qolgan urinishlar
+                  </p>
+                  <p className="text-3xl font-extrabold text-red-600 dark:text-red-400">
+                    {violationWarningData.remaining}
+                  </p>
+                </div>
+              </div>
+
+              {/* Warning message */}
+              <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="AlertCircle" size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
+                    Agar siz yana qoidabuzarlik qilsangiz va umumiy qoidabuzarliklar soni
+                    <span className="font-bold"> {violationWarningData.max_violations} </span>
+                    taga yetsa, siz <span className="font-bold">testdan chetlashtirilasiz</span>.
+                    Iltimos, qoidalarga rioya qiling va xatolikni qayta takrorlamang.
+                  </p>
+                </div>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setShowViolationWarningModal(false)}
+                className="w-full py-3 px-6 rounded-xl font-bold text-sm bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 text-white transition-colors tracking-wide"
+              >
+                Tushundim, xatolikni qayta takrorlamayman
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Disqualification Modal — testdan chetlashtirildi */}
+      {showDisqualifiedModal && disqualifiedData && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{
+            zIndex: 99999,
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.75)",
+            isolation: "isolate",
+          }}
+        >
+          <div
+            className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            style={{ zIndex: 100000, transform: "translateZ(0)", willChange: "transform" }}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-600 to-rose-700 dark:from-red-700 dark:to-rose-800 px-6 py-6">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
+                  <Icon name="ShieldOff" size={34} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-red-200 mb-1">
+                    Rasmiy qaror
+                  </p>
+                  <h2 className="text-xl font-extrabold text-white leading-tight">
+                    Testdan chetlashtirildi
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Disqualification message */}
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-5 text-center">
+                <Icon name="XCircle" size={32} className="text-red-500 mx-auto mb-3" />
+                <p className="text-base font-bold text-red-700 dark:text-red-300 mb-2">
+                  {disqualifiedData.message || "Siz testdan chetlashtirildi"}
+                </p>
+                {disqualifiedData.violations != null && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Jami qoidabuzarliklar:{" "}
+                    <span className="font-extrabold">{disqualifiedData.violations}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Info block */}
+              <div className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="Info" size={18} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    Siz testda ruxsat etilgan qoidabuzarliklar sonidan oshib kettingiz.
+                    Test natijalaringiz bekor qilindi. Bosh sahifaga qaytishingiz mumkin.
+                  </p>
+                </div>
+              </div>
+
+              {/* Go home button */}
+              <button
+                onClick={() => navigate("/")}
+                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-gray-800 hover:bg-gray-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white transition-colors tracking-wide uppercase"
+              >
+                Bosh sahifaga qaytish
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
 
       {/* ~1 minute left — informational modal (timer keeps running) */}
       {showTimeWarningModal && (
@@ -2251,6 +2264,85 @@ const VacancyTest = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Submit Confirmation Modal — unanswered questions warning */}
+      {showSubmitConfirmModal && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{
+            zIndex: 99999,
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.65)",
+            isolation: "isolate",
+          }}
+        >
+          <div
+            className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            style={{ zIndex: 100000, transform: "translateZ(0)", willChange: "transform" }}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 flex-shrink-0">
+                  <Icon name="AlertCircle" size={26} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-blue-100 mb-0.5">
+                    Tasdiqlash
+                  </p>
+                  <h2 className="text-lg font-bold text-white leading-tight">
+                    Testni yakunlash
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Warning */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="AlertTriangle" size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-300 mb-1">
+                      {unansweredCount} ta savol javobsiz qoldi
+                    </p>
+                    <p className="text-sm text-amber-600 dark:text-amber-400 leading-relaxed">
+                      Siz barcha savollarga javob bermadingiz. Javob berilmagan savollar
+                      noto'g'ri hisoblanadi.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                Shunday bo'lsa ham testni yakunlamoqchimisiz?
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSubmitConfirmModal(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 transition-colors"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSubmitConfirmModal(false);
+                    doSubmit();
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white transition-colors"
+                >
+                  Ha, yakunlayman
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
