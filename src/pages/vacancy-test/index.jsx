@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import Navbar from "../../components/ui/Navbar";
 import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
-import { vacanciesAPI, testsAPI } from "../../services/api";
+import { testsAPI } from "../../services/api";
 import LoadingSkeleton from "../job-vacancies-browser/components/LoadingSkeleton";
 
 const decodeBase64Url = (value) => {
@@ -74,12 +74,9 @@ const VacancyTest = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
-  const [violations, setViolations] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [showViolationModal, setShowViolationModal] = useState(false);
-  const [violationType, setViolationType] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showTimeWarningModal, setShowTimeWarningModal] = useState(false);
@@ -97,8 +94,6 @@ const VacancyTest = () => {
   const [violationWarningData, setViolationWarningData] = useState(null); // { violations, max_violations, remaining }
   const [showDisqualifiedModal, setShowDisqualifiedModal] = useState(false);
   const [disqualifiedData, setDisqualifiedData] = useState(null); // { message, violations }
-  // Demo mode: track how many times violation was triggered to simulate backend responses
-  const demoViolationCountRef = useRef(0);
   // Debounce ref: prevent double-counting when blur + visibilitychange fire together
   const lastViolationTimeRef = useRef(0);
   // Suppress violations when any modal is open (so modals don't cause false positives)
@@ -114,27 +109,6 @@ const VacancyTest = () => {
   const pageLoadTimeRef = useRef(null); // Store when page loaded to avoid false positives
   const oneMinuteWarningShownRef = useRef(false);
 
-  // Use test_id from URL params, fallback to decoded token if available
-  const tokenPayload = useMemo(
-    () => decodeJwtPayload(test_token),
-    [test_token],
-  );
-  const decodedTestId = tokenPayload?.test_id
-    ? String(tokenPayload.test_id)
-    : null;
-
-  // Use test_id from URL as primary source
-  const activeTestId = test_id || decodedTestId || "demo";
-  const isFallbackTest = !test_id && !decodedTestId;
-
-  useEffect(() => {
-    if (!test_token || isFallbackTest) {
-      console.warn(
-        "VacancyTest: using fallback test flow due to missing or invalid token.",
-      );
-      setError(null);
-    }
-  }, [test_token, isFallbackTest]);
 
   // Store page load time to avoid false positives
   useEffect(() => {
@@ -143,35 +117,9 @@ const VacancyTest = () => {
 
   // Call backend API when component loads
   useEffect(() => {
-    // If no test_id or test_token, use fallback demo test
+    // If no test_id or test_token, show error
     if (!test_id || !test_token) {
-      console.warn(
-        "VacancyTest: Missing test_id or test_token in URL - using fallback demo test",
-      );
-
-      // Set default test data for demo
-      setVacancy({
-        id: "demo",
-        title: "Umumiy bilim testi",
-        description: "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
-      });
-
-      // Set default time (30 minutes)
-      const defaultTime = 2 * 60;
-      setTimeRemaining(defaultTime);
-      initialTimeRef.current = defaultTime;
-      startTimeRef.current = Date.now();
-
-      // Set demo test data
-      setTestData({
-        id: "demo",
-        title: "Umumiy bilim testi",
-        questions: [], // Will use hardcoded questions from testQuestions
-        max_violations: 5,
-        passing_score: 60,
-      });
-
-      setAttemptId("demo-attempt");
+      setError("Test ma'lumotlari topilmadi. Iltimos, to'g'ri havola orqali kiring.");
       setLoading(false);
       return;
     }
@@ -271,22 +219,7 @@ const VacancyTest = () => {
     startTest();
   }, [test_id, test_token]);
 
-  // To'g'ri javoblar (Correct answers)
-  const correctAnswers = {
-    1: "a", // 1991 yil 1 sentyabr
-    2: "b", // Milliy valyuta barqarorligini ta'minlash
-    3: "c", // So'm
-    4: "b", // Xodimlarni tanlash va rivojlantirish
-    5: "a", // Ma'suliyatlilik va halollik
-    6: "b", // Rasmiy biznes uslubida
-    7: "c", // Oliy Majlisga
-    8: "b", // Mehnat shartnomasi shartlariga rioya qilinishi
-    9: "c", // Maxfiy joyda tartibli
-    10: "b", // Xushmuomalalik va hurmat
-  };
-
-  // Get max violations from API or default to 5
-  const maxViolations = testData?.max_violations || 5;
+  // Get max violations from API
 
   // Apply blur is no longer needed (old screenshot modal removed)
   useEffect(() => {
@@ -349,37 +282,7 @@ const VacancyTest = () => {
     if (now - lastViolationTimeRef.current < 1000) return;
     lastViolationTimeRef.current = now;
 
-    const isDemoTest = !test_token || !attemptId || !test_id || activeTestId === "demo";
-
-    if (isDemoTest) {
-      // Demo mode: simulate violation responses statically
-      demoViolationCountRef.current += 1;
-      const count = demoViolationCountRef.current;
-      const maxViol = testData?.max_violations || 5;
-
-      if (count >= maxViol) {
-        // Disqualified
-        setDisqualifiedData({
-          message: "Siz testdan chetlashtirildi",
-          violations: maxViol,
-        });
-        setShowDisqualifiedModal(true);
-        setIsDisqualified(true);
-        setDisqualificationMessage("Siz testdan chetlashtirildi");
-        setIsBlocked(true);
-      } else {
-        // Warning
-        setViolationWarningData({
-          violations: count,
-          max_violations: maxViol,
-          remaining: maxViol - count,
-        });
-        setShowViolationWarningModal(true);
-      }
-      return;
-    }
-
-    // Real mode — call backend
+    // Always call backend
     try {
       const result = await testsAPI.reportViolation({
         token: test_token,
@@ -409,7 +312,7 @@ const VacancyTest = () => {
     } catch (err) {
       console.error("Violation report error:", err);
     }
-  }, [testSubmitted, alreadySubmitted, isBlocked, showResultModal, isDisqualified, test_token, attemptId, test_id, activeTestId, testData]);
+  }, [testSubmitted, alreadySubmitted, isBlocked, showResultModal, isDisqualified, test_token, attemptId]);
 
   // Prevent page refresh/close
   useEffect(() => {
@@ -551,54 +454,7 @@ const VacancyTest = () => {
     ];
   }, [testData, t]);
 
-  // Fetch vacancy data
-  useEffect(() => {
-    const fetchVacancyData = async () => {
-      if (!decodedTestId) {
-        setVacancy({
-          id: activeTestId,
-          title: "Umumiy bilim testi",
-          description:
-            "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
-        });
-        setLoading(false);
-        return;
-      }
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Try to fetch vacancy data from API
-        try {
-          const vacancyData = await vacanciesAPI.getVacancyById(decodedTestId);
-          setVacancy(vacancyData);
-        } catch (apiError) {
-          // If API fails, use default test data
-          console.log("Using default test data");
-          setVacancy({
-            id: activeTestId,
-            title: "Umumiy bilim testi",
-            description:
-              "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching vacancy:", error);
-        // Use default data even on error
-        setVacancy({
-          id: activeTestId,
-          title: "Umumiy bilim testi",
-          description:
-            "Markaziy Bank mutaxassisligi bo'yicha umumiy bilim testi",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVacancyData();
-  }, [decodedTestId, activeTestId]);
 
   // Security: Prevent cheating
   useEffect(() => {
@@ -933,10 +789,6 @@ const VacancyTest = () => {
 
   // Actual submission logic (called from handleSubmit or modal confirm)
   const doSubmit = useCallback(async () => {
-    // Check if this is a demo/fallback test
-    const isDemoTest =
-      !test_token || !attemptId || !test_id || activeTestId === "demo";
-
     setIsSubmitting(true);
     // Don't set alreadySubmitted yet - wait until result modal is shown
 
@@ -946,103 +798,72 @@ const VacancyTest = () => {
       let isPassed = false;
       let finishResponse = null;
 
-      if (isDemoTest) {
-        // Demo test - calculate results locally
-        console.log("Demo test - calculating results locally");
+      // Submit to backend
+      // Step 1: Submit all answers to backend
+      const responses = testQuestions
+        .filter((q) => answers[q.id]) // Only include questions with answers
+        .map((q) => ({
+          question_id: q.id,
+          selected_choice_id: parseInt(answers[q.id]), // Convert to integer
+        }));
 
-        const totalQuestions = testQuestions.length;
+      const submitPayload = {
+        attempt_id: attemptId,
+        responses: responses,
+      };
 
-        // Calculate correct answers using hardcoded correctAnswers
-        correctCount = testQuestions.filter((q) => {
-          const userAnswer = answers[q.id];
-          const correctAnswer = correctAnswers[q.id];
-          return userAnswer === correctAnswer;
-        }).length;
+      console.log("Submitting answers:", submitPayload);
 
-        // Calculate percentage
-        if (totalQuestions > 0) {
-          percentage = Math.round((correctCount / totalQuestions) * 100);
-        }
-
-        // Determine if passed (60% passing score)
-        const passingScore = testData?.passing_score || 60;
-        isPassed = percentage >= passingScore;
-
-        finishResponse = {
-          correct_answers: correctCount,
-          score: percentage,
-          passed: isPassed,
-          success: "Test muvaffaqiyatli yakunlandi",
-        };
-      } else {
-        // Real test - submit to backend
-        // Step 1: Submit all answers to backend
-        const responses = testQuestions
-          .filter((q) => answers[q.id]) // Only include questions with answers
-          .map((q) => ({
-            question_id: q.id,
-            selected_choice_id: parseInt(answers[q.id]), // Convert to integer
-          }));
-
-        const submitPayload = {
-          attempt_id: attemptId,
-          responses: responses,
-        };
-
-        console.log("Submitting answers:", submitPayload);
-
-        // Submit only answered questions; empty list may be rejected by API — still finish attempt
-        try {
-          await testsAPI.submitAnswers({
-            token: test_token,
-            answers: submitPayload,
-          });
-          console.log("Answers submitted successfully");
-        } catch (submitErr) {
-          if (responses.length === 0) {
-            console.warn(
-              "submitAnswers with no responses failed; continuing to finish test:",
-              submitErr,
-            );
-          } else {
-            throw submitErr;
-          }
-        }
-
-        // Step 2: Finish the test
-        finishResponse = await testsAPI.finishTest({
-          testId: test_id,
+      // Submit only answered questions; empty list may be rejected by API — still finish attempt
+      try {
+        await testsAPI.submitAnswers({
           token: test_token,
+          answers: submitPayload,
         });
-
-        console.log("Test finished, response:", finishResponse);
-
-        // Step 3: Calculate results - use backend data if available, otherwise calculate locally
-        correctCount = finishResponse.correct_answers ?? 0;
-        const totalQuestions = testQuestions.length;
-
-        // Calculate percentage from backend score or from correct answers
-        if (
-          finishResponse.score !== undefined &&
-          finishResponse.score !== null
-        ) {
-          percentage = Math.round(Number(finishResponse.score));
-        } else if (totalQuestions > 0) {
-          percentage = Math.round((correctCount / totalQuestions) * 100);
+        console.log("Answers submitted successfully");
+      } catch (submitErr) {
+        if (responses.length === 0) {
+          console.warn(
+            "submitAnswers with no responses failed; continuing to finish test:",
+            submitErr,
+          );
+        } else {
+          throw submitErr;
         }
-
-        // Determine if passed - use backend value or calculate (assuming 60% is passing)
-        const passingScore = testData?.passing_score || 60; // Default 60% passing score
-        isPassed =
-          finishResponse.passed !== undefined
-            ? Boolean(finishResponse.passed)
-            : percentage >= passingScore;
       }
 
-      // Step 4: Show results
+      // Step 2: Finish the test
+      finishResponse = await testsAPI.finishTest({
+        testId: test_id,
+        token: test_token,
+      });
+
+      console.log("Test finished, response:", finishResponse);
+
+      // Step 3: Calculate results - use backend data if available, otherwise calculate locally
+      correctCount = finishResponse.correct_answers ?? 0;
       const totalQuestions = testQuestions.length;
+
+      // Calculate percentage from backend score or from correct answers
+      if (
+        finishResponse.score !== undefined &&
+        finishResponse.score !== null
+      ) {
+        percentage = Math.round(Number(finishResponse.score));
+      } else if (totalQuestions > 0) {
+        percentage = Math.round((correctCount / totalQuestions) * 100);
+      }
+
+      // Determine if passed - use backend value or calculate
+      const passingScore = testData?.passing_score || 60;
+      isPassed =
+        finishResponse.passed !== undefined
+          ? Boolean(finishResponse.passed)
+          : percentage >= passingScore;
+
+      // Step 4: Show results
       const testResults = {
-        testId: activeTestId,
+        testId: test_id,
         answers: answers,
         correctCount: correctCount,
         totalQuestions: totalQuestions,
@@ -1115,7 +936,6 @@ const VacancyTest = () => {
     test_token,
     attemptId,
     test_id,
-    activeTestId,
     t,
     testData,
   ]);
@@ -1228,14 +1048,15 @@ const VacancyTest = () => {
     };
   }, [testData, isBlocked, alreadySubmitted]); // Start timer when test data loads, stop when blocked/submitted
 
-  // Auto-submit test when time runs out (partial answers only; demo flow included)
+  // Auto-submit test when time runs out
   useEffect(() => {
     const canAutoSubmit =
       timeRemaining <= 0 &&
       !isSubmitting &&
       !alreadySubmitted &&
       attemptId &&
-      ((test_token && test_id) || activeTestId === "demo");
+      test_token &&
+      test_id;
 
     if (!canAutoSubmit) return;
 
@@ -1251,7 +1072,6 @@ const VacancyTest = () => {
     test_token,
     attemptId,
     test_id,
-    activeTestId,
     handleSubmit,
   ]);
 
