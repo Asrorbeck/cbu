@@ -888,9 +888,9 @@ const resources = {
           time_spent: "Sarflangan vaqt",
           minutes: "daqiqa",
           pass_info:
-            "Siz kamida 50% to'g'ri javob berdingiz va testdan muvaffaqiyatli o'tdingiz!",
+            "Siz kamida {{passingScore}}% to'g'ri javob berdingiz va testdan muvaffaqiyatli o'tdingiz!",
           fail_info:
-            "Testdan o'tish uchun kamida 50% to'g'ri javob berish kerak edi.",
+            "Testdan o'tish uchun kamida {{passingScore}}% to'g'ri javob berish kerak edi.",
           pass_detail:
             "Siz {{percentage}}% ball to'pladingiz va {{correctCount}} ta to'g'ri javob berdingiz.",
           fail_detail:
@@ -1863,9 +1863,9 @@ const resources = {
           time_spent: "Сарфланган вақт",
           minutes: "дақиқа",
           pass_info:
-            "Сиз камида 50% тўғри жавоб бердингиз ва тестдан муваффақиятли ўтдингиз!",
+            "Сиз камида {{passingScore}}% тўғри жавоб бердингиз ва тестдан муваффақиятли ўтдингиз!",
           fail_info:
-            "Тестдан ўтиш учун камида 50% тўғри жавоб бериш керак еди.",
+            "Тестдан ўтиш учун камида {{passingScore}}% тўғри жавоб бериш керак еди.",
           pass_detail:
             "Сиз {{percentage}}% балл тўпладингиз ва {{correctCount}} та тўғри жавоб бердингиз.",
           fail_detail:
@@ -2862,9 +2862,9 @@ const resources = {
           time_spent: "Затраченное время",
           minutes: "минут",
           pass_info:
-            "Вы дали не менее 50% правильных ответов и успешно прошли тест!",
+            "Вы дали не менее {{passingScore}}% правильных ответов и успешно прошли тест!",
           fail_info:
-            "Для прохождения теста необходимо было дать не менее 50% правильных ответов.",
+            "Для прохождения теста необходимо было дать не менее {{passingScore}}% правильных ответов.",
           pass_detail:
             "Вы набрали {{percentage}}% баллов и дали {{correctCount}} правильных ответов.",
           fail_detail:

@@ -855,7 +855,11 @@ const VacancyTest = () => {
       }
 
       // Determine if passed - use backend value or calculate
-      const passingScore = testData?.passing_score || 60;
+      // Backend passing_score ishlatiladi, kelmasa 80 default
+      const passingScore =
+        finishResponse?.passing_score ??
+        testData?.passing_score ??
+        80;
       isPassed =
         finishResponse.passed !== undefined
           ? Boolean(finishResponse.passed)
@@ -869,6 +873,7 @@ const VacancyTest = () => {
         totalQuestions: totalQuestions,
         percentage: percentage,
         isPassed: isPassed,
+        passingScore: passingScore, // backend yoki default qiymat
         submittedAt: new Date().toISOString(),
         timeSpent: (initialTimeRef.current || 30 * 60) - timeRemaining,
         success: finishResponse?.success || "Test muvaffaqiyatli yakunlandi",
@@ -1983,9 +1988,13 @@ const VacancyTest = () => {
                       }`}
                     >
                       {testResult.isPassed
-                        ? t("test.result.pass_info") ||
+                        ? t("test.result.pass_info", {
+                            passingScore: testResult.passingScore,
+                          }) ||
                           "🎉 Tabriklaymiz! Siz testdan muvaffaqiyatli o'tdingiz!"
-                        : t("test.result.fail_info") ||
+                        : t("test.result.fail_info", {
+                            passingScore: testResult.passingScore,
+                          }) ||
                           "😔 Afsuski, siz testdan o'ta olmadingiz. Keyingi safar omad!"}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -1996,7 +2005,7 @@ const VacancyTest = () => {
                           })
                         : t("test.result.fail_detail", {
                             percentage: testResult.percentage,
-                            passingScore: testData?.passing_score ?? 60,
+                            passingScore: testResult.passingScore,
                           })}
                     </p>
                   </div>
